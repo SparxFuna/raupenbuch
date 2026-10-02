@@ -1,0 +1,1930 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Raupenbuch</title>
+<meta name="description" content="Zuchttagebuch für Raupen und Falter – offline auf deinem Gerät.">
+<meta name="theme-color" content="#ECEEE7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111412" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:400;font-display:swap;src:url(ibm-plex-sans-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:500;font-display:swap;src:url(ibm-plex-sans-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-style:normal;font-weight:600;font-display:swap;src:url(ibm-plex-sans-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:400;font-display:swap;src:url(ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-style:normal;font-weight:500;font-display:swap;src:url(ibm-plex-mono-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:600;font-display:swap;src:url(spectral-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:400;font-display:swap;src:url(spectral-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:600;font-display:swap;src:url(spectral-latin-600-italic.woff2) format("woff2")}
+html,body{margin:0;padding:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+/* Layout: one-column field notebook, sticky top bar, fixed bottom tab bar; records look like specimen labels */
+:root{
+  --bg:#ECEEE7; --surface:#F8F9F4; --sunk:#E2E5DC; --ink:#1C1F1A; --muted:#5B6157; --line:#CDD2C5;
+  --accent:#2F5276; --accent-ink:#FFFFFF; --accent-soft:#D9E3EE;
+  --ochre:#8A6200; --ochre-soft:#F2E4BC;
+  --good:#356231; --good-soft:#DCEAD6; --warn:#8A5A00; --warn-soft:#F5E3BF; --crit:#A0362A; --crit-soft:#F4D9D3;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --f-name:"Spectral",Georgia,"Times New Roman",serif;
+  --r:10px; --gut:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111412; --surface:#1A1E1B; --sunk:#232824; --ink:#E5E8E0; --muted:#9BA196; --line:#30362F;
+  --accent:#8EB0D8; --accent-ink:#0F1A26; --accent-soft:#1F2D3D;
+  --ochre:#E2B547; --ochre-soft:#3A3018;
+  --good:#86BC7C; --good-soft:#1E2E1C; --warn:#E2B547; --warn-soft:#3A3018; --crit:#E8806D; --crit-soft:#3D221D;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111412; --surface:#1A1E1B; --sunk:#232824; --ink:#E5E8E0; --muted:#9BA196; --line:#30362F;
+  --accent:#8EB0D8; --accent-ink:#0F1A26; --accent-soft:#1F2D3D;
+  --ochre:#E2B547; --ochre-soft:#3A3018;
+  --good:#86BC7C; --good-soft:#1E2E1C; --warn:#E2B547; --warn-soft:#3A3018; --crit:#E8806D; --crit-soft:#3D221D;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{background:var(--bg);color:var(--ink)}
+body{font:15px/1.5 var(--f-body);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{margin:0;text-wrap:balance;line-height:1.2}
+.sp{font-family:var(--f-name);font-style:italic}
+.mono,.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;padding:10px var(--gut)}
+.top .brand{font-family:var(--f-name);font-weight:600;font-size:20px;letter-spacing:.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .brand small{font-family:var(--f-data);font-weight:400;font-size:11px;color:var(--muted);margin-left:6px;letter-spacing:.06em;text-transform:uppercase}
+.iconbtn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;width:40px;height:40px;display:grid;place-items:center;cursor:pointer;flex:none}
+.iconbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.backbtn{appearance:none;border:0;background:none;padding:6px 4px;cursor:pointer;display:flex;align-items:center;gap:2px;color:var(--accent);font-weight:500}
+.backbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+
+main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+
+/* bottom nav */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(5,1fr);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
+.tabs button{appearance:none;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11px;color:var(--muted);cursor:pointer;border-radius:8px}
+.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+
+/* sections */
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sec-h h2{font-size:12px;font-family:var(--f-data);font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.sec-h .link{font-size:13px}
+.pagehead{display:flex;flex-direction:column;gap:6px}
+.pagehead h1{font-family:var(--f-name);font-weight:600;font-size:30px}
+.pagehead .meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+/* specimen-label card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.row{appearance:none;border:0;background:none;text-align:left;width:100%;display:flex;align-items:center;gap:12px;padding:11px 14px;border-top:1px solid var(--line);cursor:pointer;min-height:52px}
+.row:first-child{border-top:0}
+.row:hover{background:var(--sunk)}
+.row .main{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .end{display:flex;gap:6px;align-items:center;flex:none}
+.row.static{cursor:default}
+.row.static:hover{background:none}
+.empty{padding:18px 14px;color:var(--muted);text-align:left;font-size:14px;line-height:1.5}
+.empty b{color:var(--ink)}
+
+/* pills */
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;font-size:12px;font-family:var(--f-data);line-height:20px;white-space:nowrap;background:var(--sunk);color:var(--ink)}
+.pill.stage{background:var(--accent-soft);color:var(--accent)}
+.pill.falter{background:var(--ochre-soft);color:var(--ochre)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.sex{font-family:var(--f-data);font-weight:500;width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-size:14px;flex:none;background:var(--sunk);color:var(--muted)}
+.sex.f{background:var(--crit-soft);color:var(--crit)}
+.sex.m{background:var(--accent-soft);color:var(--accent)}
+
+/* buttons */
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 15px;cursor:pointer;font-weight:500;font-size:14px;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{color:var(--crit);border-color:var(--crit)}
+.btn.ghost{border-color:transparent;background:none;color:var(--accent);padding-inline:8px}
+.btn.block{width:100%;justify-content:center}
+.btn:disabled{opacity:.5;cursor:default}
+.quick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.quick .btn{border-radius:var(--r);justify-content:flex-start;padding:10px 12px;min-height:48px;text-align:left}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:9px 12px;display:flex;flex-direction:column;gap:0}
+.stat b{font-family:var(--f-data);font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+
+/* funnel */
+.funnel{display:flex;flex-direction:column;gap:6px}
+.frow{display:grid;grid-template-columns:96px 1fr 64px;align-items:center;gap:8px;font-size:13px}
+.frow .lbl{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fbar{height:14px;border-radius:4px;background:var(--sunk);display:flex;overflow:hidden}
+.fbar i{display:block;height:100%}
+.fbar .r{background:var(--good)}
+.fbar .p{background:repeating-linear-gradient(135deg,var(--line) 0 4px,transparent 4px 8px)}
+.fbar .l{background:var(--crit)}
+.frow .v{font-family:var(--f-data);text-align:right;font-variant-numeric:tabular-nums}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+
+/* timeline */
+.tl{display:flex;flex-direction:column}
+.tl .ev{display:grid;grid-template-columns:18px 1fr;gap:10px;padding:0;appearance:none;border:0;background:none;text-align:left;cursor:pointer;width:100%}
+.tl .dot{position:relative}
+.tl .dot::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--line)}
+.tl .ev:first-child .dot::before{top:14px}
+.tl .ev:last-child .dot::before{bottom:calc(100% - 14px)}
+.tl .dot::after{content:"";position:absolute;left:3px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
+.tl .ev.stagechg .dot::after{background:var(--accent)}
+.tl .ev.death .dot::after{border-color:var(--crit);background:var(--crit)}
+.tl .ev.falter .dot::after{border-color:var(--ochre);background:var(--ochre)}
+.tl .body{padding:5px 0 12px;min-width:0}
+.tl .body .w{font-family:var(--f-data);font-size:12px;color:var(--muted)}
+.tl .body .x{font-weight:500}
+.tl .body .n{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+
+/* photos */
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
+.ph{position:relative;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--sunk);border:0;padding:0;cursor:pointer;max-width:100%}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph span{position:absolute;left:4px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;font-size:10px;font-family:var(--f-data);padding:0 5px;border-radius:4px}
+.ph.add{display:grid;place-items:center;border:1.5px dashed var(--line);background:none;color:var(--muted);font-size:13px}
+.compare{display:grid;gap:8px;grid-auto-flow:column;grid-auto-columns:minmax(150px,1fr);overflow-x:auto;padding-bottom:6px}
+.compare .col{display:flex;flex-direction:column;gap:6px;min-width:0}
+.compare .col h3{font-size:14px}
+.compare img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:8px;background:var(--sunk)}
+.compare .noimg{aspect-ratio:4/5;border-radius:8px;background:var(--sunk);display:grid;place-items:center;color:var(--muted);font-size:12px;text-align:center;padding:8px}
+
+/* chips/segmented */
+.seg{display:flex;gap:4px;background:var(--sunk);padding:3px;border-radius:999px;overflow-x:auto}
+.seg button{appearance:none;border:0;background:none;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:14px;display:inline-flex;gap:6px;align-items:center}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* search */
+.search{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 14px}
+.search input{border:0;background:none;outline:none;flex:1;min-width:0;padding:10px 0}
+
+/* callouts */
+.note{border-radius:var(--r);padding:10px 14px;font-size:14px;background:var(--accent-soft);color:var(--ink)}
+.note.warn{background:var(--warn-soft)}
+.uncertain{border:1.5px dashed var(--ochre);border-radius:var(--r);padding:12px 14px;background:var(--surface);display:flex;flex-direction:column;gap:8px}
+
+/* forecast */
+.fc{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center}
+.fc .win{font-family:var(--f-data);font-size:13px}
+.track{grid-column:1/-1;position:relative;height:8px;background:var(--sunk);border-radius:4px;margin-top:6px}
+.track .w{position:absolute;top:0;bottom:0;background:var(--ochre-soft);border:1px solid var(--ochre);border-radius:4px}
+.track .today{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+
+/* chart */
+.chart svg{width:100%;height:auto;display:block}
+.chart text{fill:var(--muted);font-family:var(--f-data);font-size:10px}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:minmax(0,1.3fr) 2fr 28px;gap:8px;align-items:center;font-size:13px}
+.bar .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track2{height:12px;background:var(--sunk);border-radius:3px;overflow:hidden;display:flex}
+.bar .track2 i{display:block;height:100%;background:var(--crit)}
+.bar .track2 i.v{background:repeating-linear-gradient(135deg,var(--crit) 0 3px,var(--crit-soft) 3px 6px)}
+.bar .v{font-family:var(--f-data);text-align:right}
+
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{font-weight:500;color:var(--muted);text-align:left;font-size:12px;padding:4px 6px;border-bottom:1px solid var(--line)}
+table.t td{padding:6px;border-bottom:1px solid var(--line);font-family:var(--f-data);font-variant-numeric:tabular-nums}
+table.t td:first-child{font-family:var(--f-body)}
+.tw{overflow-x:auto}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(10,12,10,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:92%;overflow:auto;border-radius:16px 16px 0 0;padding:14px var(--gut) calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);align-self:center}
+.sheet h2{font-family:var(--f-name);font-weight:600;font-size:22px}
+.f{display:flex;flex-direction:column;gap:5px}
+.f label,.f .lab{font-size:13px;font-weight:500;color:var(--muted)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px 12px;width:100%;min-height:44px}
+.f textarea{min-height:90px;resize:vertical}
+.f .hint{font-size:12px;color:var(--muted)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.checks{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;max-height:260px;overflow:auto}
+.checks label{display:flex;gap:10px;align-items:center;padding:9px 12px;border-top:1px solid var(--line);font-size:14px;color:var(--ink);font-weight:400}
+.checks label:first-child{border-top:0}
+.checks input{width:20px;height:20px;min-height:0;flex:none}
+.confirm{border:1px solid var(--crit);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--crit-soft)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;max-width:calc(100% - 32px)}
+.viewer{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.92);display:flex;flex-direction:column}
+.viewer img{flex:1;min-height:0;object-fit:contain;width:100%}
+.viewer .bar2{display:flex;gap:8px;padding:12px var(--gut) calc(12px + env(safe-area-inset-bottom,0px));justify-content:space-between;align-items:center;color:#fff;flex-wrap:wrap}
+.viewer .btn{background:#222;color:#fff;border-color:#444}
+.spin{opacity:.6}
+.filebtn{position:relative;overflow:hidden}
+.vh{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+@media (max-width:380px){.frow{grid-template-columns:80px 1fr 56px}}
+
+/* PWA-Ergänzungen */
+.scanbox{position:relative;border-radius:var(--r);overflow:hidden;background:#000;aspect-ratio:3/4;max-height:58vh}
+.scanbox video{width:100%;height:100%;object-fit:cover;display:block}
+.scanbox .aim{position:absolute;inset:18%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.25)}
+.backup{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.backup.due{border-color:var(--warn);background:var(--warn-soft)}
+.sensor{display:flex;flex-direction:column;gap:8px}
+.sensor .vals{display:flex;gap:14px;font-family:var(--f-data);font-size:20px}
+.update{position:fixed;left:var(--gut);right:var(--gut);bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:61;background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;max-width:640px;margin:0 auto}
+.update .btn{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink);min-height:34px;padding:6px 12px}
+#printArea{display:none}
+@media print{
+  @page{size:A4;margin:0}
+  body>*:not(#printArea){display:none!important}
+  html,body{background:#fff!important}
+  #printArea{display:block!important;color:#000;font-family:Helvetica,Arial,sans-serif}
+  .pp{width:210mm;height:297mm;display:grid;page-break-after:always;break-after:page;overflow:hidden}
+  .pp:last-child{page-break-after:auto;break-after:auto}
+  .lb{border:.1mm dashed #bbb;display:flex;gap:2.5mm;align-items:stretch;overflow:hidden}
+  .lb svg{flex:none;height:100%;width:auto}
+  .lb .tx{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+  .lb b{font-weight:700;line-height:1.15}
+  .lb i,.lb span{line-height:1.25}
+  .lb code{margin-top:auto;font-family:Courier,monospace;color:#555}
+}
+</style>
+</head>
+<body>
+<header class="top" id="top"></header>
+<main id="main" aria-live="polite"><p class="muted">Lade dein Raupenbuch …</p></main>
+<nav class="tabs" id="tabs" aria-label="Hauptnavigation"></nav>
+<div id="printArea" aria-hidden="true"></div>
+<script>
+"use strict";
+/* ============ Konstanten ============ */
+const APP_VERSION = "5.0.0";
+const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
+const S = {}; COLS.forEach(c => S[c] = {});
+
+const STAGES = [
+  {k:"ei", l:"Ei"}, {k:"L1", l:"L1"}, {k:"L2", l:"L2"}, {k:"L3", l:"L3"}, {k:"L4", l:"L4"}, {k:"L5", l:"L5"},
+  {k:"vorpuppe", l:"Eingegraben"}, {k:"puppe", l:"Puppe"}, {k:"falter", l:"Falter"}
+];
+const SIDX = Object.fromEntries(STAGES.map((s,i)=>[s.k,i]));
+const stageLabel = k => (STAGES[SIDX[k]]||{l:k||"–"}).l;
+
+const ET = {
+  schlupf_ei:   {l:"Aus dem Ei geschlüpft", stage:()=>"L1"},
+  haeutung:     {l:"Häutung", stage:d=>d.to||null},
+  eingegraben:  {l:"Eingegraben", stage:()=>"vorpuppe"},
+  verpuppt:     {l:"Verpuppt", stage:()=>"puppe"},
+  falterschlupf:{l:"Falter geschlüpft", stage:()=>"falter"},
+  geschlecht:   {l:"Geschlecht bestimmt"},
+  gewicht:      {l:"Gewogen"},
+  futter:       {l:"Futter"},
+  umgesetzt:    {l:"Umgesetzt"},
+  tod:          {l:"Gestorben"},
+  praepariert:  {l:"Präpariert"},
+  abgegeben:    {l:"Abgegeben"},
+  freigelassen: {l:"Freigelassen"},
+  notiz:        {l:"Notiz"}
+};
+const CAUSES = {
+  tachinen:"Parasitoid: Raupenfliege (Tachinidae)",
+  wespe:"Parasitoid: Schlupfwespe",
+  krankheit:"Krankheit (Virus, Bakterien, Pilz)",
+  haeutung:"Häutungsproblem",
+  verpuppung:"Verpuppung missglückt",
+  schlupf:"Schlupf missglückt / Flügel nicht entfaltet",
+  austrocknung:"Austrocknung",
+  naesse:"Nässe / Schimmel",
+  verletzung:"Verletzung",
+  unbekannt:"Unbekannt"
+};
+const PREC = {exakt:"Uhrzeit bekannt", tag:"Tag bekannt", nacht:"In der Nacht", zeitraum:"Zeitraum"};
+const SEXL = {f:"Weibchen", m:"Männchen", u:"unbekannt"};
+const SEXS = {f:"♀", m:"♂", u:"?"};
+
+/* ============ Helfer ============ */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,5);
+const pad = n => String(n).padStart(2,"0");
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const nowLocal = () => { const d=new Date(); return `${todayISO()}T${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const addDays = (iso, n) => { const d=new Date(iso.slice(0,10)+"T12:00"); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const ms = s => s ? new Date(s.length===10 ? s+"T12:00" : s).getTime() : NaN;
+const dDE = iso => { if(!iso) return "–"; const [y,m,d]=iso.slice(0,10).split("-"); return `${d}.${m}.${y}`; };
+const dShort = iso => { if(!iso) return "–"; const [,m,d]=iso.slice(0,10).split("-"); return `${d}.${m}.`; };
+const dFromMs = t => { const d=new Date(t); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const parseDE = s => { s=(s||"").trim(); let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/); if(m){ let y=+m[3]; if(y<100) y+=2000; return `${y}-${pad(+m[2])}-${pad(+m[1])}`;} m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m? m[0] : null; };
+const median = a => { const s=[...a].sort((x,y)=>x-y); const n=s.length; return n? (n%2? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2) : NaN; };
+const fmtN = (n,dec=0) => Number.isFinite(n) ? n.toLocaleString("de-DE",{maximumFractionDigits:dec,minimumFractionDigits:0}) : "–";
+const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"","de",{numeric:true});
+
+/* Zeitangaben: t0 [t1] prec */
+function makeTime(prec, date, time, dateTo){
+  if(prec==="exakt") return {t0:`${date}T${time||"12:00"}`, t1:null, prec};
+  if(prec==="nacht") return {t0:`${date}T20:00`, t1:`${addDays(date,1)}T08:00`, prec};
+  if(prec==="zeitraum") return {t0:`${date}T00:00`, t1:`${(dateTo&&dateTo>=date?dateTo:date)}T23:59`, prec};
+  return {t0:`${date}T12:00`, t1:null, prec:"tag"};
+}
+function evMid(e){ const a=ms(e.t0); const b=e.t1?ms(e.t1):a; return (a+b)/2; }
+function fmtTime(e){
+  if(!e||!e.t0) return "–";
+  const d0=e.t0.slice(0,10);
+  if(e.prec==="exakt") return `${dDE(d0)} ${e.t0.slice(11,16)}`;
+  if(e.prec==="nacht"){ const d1=e.t1.slice(0,10); return `Nacht ${dShort(d0).slice(0,3)}/${dDE(d1)}`; }
+  if(e.prec==="zeitraum"){ const d1=e.t1.slice(0,10); return d0===d1? dDE(d0) : `${dShort(d0)}–${dDE(d1)}`; }
+  return dDE(d0);
+}
+const daysBetween = (a,b) => Math.round((evMid(b)-evMid(a))/864e5);
+
+/* Automatische Namen: "A. atropos 01" je Art fortlaufend */
+function speciesShort(sp){ if(!sp) return "Tier"; const p=(sp.sci||"").split(/\s+/); return p.length>1 ? `${p[0][0]}. ${p.slice(1).join(" ")}` : (sp.sci||"Tier"); }
+function nextAutoNames(speciesId, n){
+  const sp = S.species[speciesId]; const pre = speciesShort(sp);
+  const re = new RegExp("^"+pre.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+" (\\d+)$");
+  let mx = 0; for(const i of Object.values(S.individuals)){ const m=(i.name||"").match(re); if(m) mx=Math.max(mx,+m[1]); }
+  return Array.from({length:Math.max(0,n)},(_,k)=>`${pre} ${String(mx+k+1).padStart(2,"0")}`);
+}
+
+/* ============ Abfragen ============ */
+const all = c => Object.values(S[c]);
+const indsOf = broodId => all("individuals").filter(i=>i.broodId===broodId).sort(byName);
+const speciesOfBrood = b => b && S.species[b.speciesId];
+const speciesOfInd = i => speciesOfBrood(S.broods[i.broodId]);
+let _evIdx = null;
+function evIndex(){
+  if(_evIdx) return _evIdx;
+  _evIdx = {ind:{}, cont:{}, brood:{}};
+  for(const e of all("events")){
+    const k = e.individualId? ["ind",e.individualId] : e.containerId? ["cont",e.containerId] : ["brood",e.broodId];
+    (_evIdx[k[0]][k[1]] ||= []).push(e);
+  }
+  for(const m of Object.values(_evIdx)) for(const k in m) m[k].sort((a,b)=>ms(a.t0)-ms(b.t0));
+  return _evIdx;
+}
+const evOf = indId => evIndex().ind[indId] || [];
+function stageEventsOf(ind){ return evOf(ind.id).filter(e=>ET[e.type]?.stage && ET[e.type].stage(e.data||{})); }
+function currentStage(ind){
+  const se = stageEventsOf(ind);
+  if(se.length){ const e=se[se.length-1]; return ET[e.type].stage(e.data||{}); }
+  return S.broods[ind.broodId]?.startStage || "L1";
+}
+function maxStageIdx(ind){
+  let m = SIDX[S.broods[ind.broodId]?.startStage || "L1"] ?? 1;
+  for(const e of stageEventsOf(ind)) m = Math.max(m, SIDX[ET[e.type].stage(e.data||{})] ?? 0);
+  return m;
+}
+function statusOf(ind){
+  const ev = evOf(ind.id);
+  if(ev.some(e=>e.type==="praepariert")) return "praepariert";
+  if(ev.some(e=>e.type==="tod")) return "tot";
+  if(ev.some(e=>e.type==="abgegeben")) return "abgegeben";
+  if(ev.some(e=>e.type==="freigelassen")) return "freigelassen";
+  return "aktiv";
+}
+const deathOf = ind => evOf(ind.id).find(e=>e.type==="tod");
+const isAlive = ind => statusOf(ind)==="aktiv";
+const firstEv = (ind,type) => evOf(ind.id).find(e=>e.type===type);
+
+/* Puppenruhe & Prognose */
+function pupalStart(ind){
+  const p=firstEv(ind,"verpuppt"); if(p) return {ev:p, basis:"verpuppt"};
+  const b=firstEv(ind,"eingegraben"); if(b) return {ev:b, basis:"eingegraben"};
+  return null;
+}
+function pupalDurations(speciesId, basis){
+  const out=[];
+  for(const ind of all("individuals")){
+    if(speciesOfInd(ind)?.id!==speciesId) continue;
+    const st = basis==="verpuppt" ? firstEv(ind,"verpuppt") : firstEv(ind,"eingegraben");
+    const ec = firstEv(ind,"falterschlupf");
+    if(st && ec) out.push({ind, d:daysBetween(st,ec), sex:ind.sex||"u"});
+  }
+  return out;
+}
+function forecast(ind){
+  if(firstEv(ind,"falterschlupf") || !isAlive(ind)) return null;
+  const st = pupalStart(ind); if(!st) return null;
+  const sp = speciesOfInd(ind); if(!sp) return null;
+  const ds = pupalDurations(sp.id, st.basis);
+  const same = ds.filter(x=>ind.sex && ind.sex!=="u" && x.sex===ind.sex);
+  const use = same.length>=2 ? same : ds;
+  const startMs = evMid(st.ev);
+  if(use.length<2) return {insufficient:true, n:use.length, basis:st.basis, startMs};
+  const v = use.map(x=>x.d);
+  const mn=Math.min(...v), mx=Math.max(...v), md=median(v);
+  const from=startMs+mn*864e5, to=startMs+mx*864e5, med=startMs+md*864e5;
+  const now=Date.now(); const elapsed=Math.floor((now-startMs)/864e5);
+  const state = now<from ? "vor" : now<=to+864e5 ? "im" : "ueber";
+  return {from,to,med,mn,mx,md,n:use.length,bySex:use===same,basis:st.basis,startMs,elapsed,state};
+}
+
+/* Falter / Zuordnung */
+const openImagos = () => all("imagos").filter(m=>!m.individualId);
+const candidateImagosOfInd = id => openImagos().filter(m=>(m.candidates||[]).includes(id));
+const indName = id => S.individuals[id]?.name || "(gelöscht)";
+const photosOf = (type,id) => all("photos").filter(p=>p.subjectType===type && p.subjectId===id).sort((a,b)=>(a.takenAt||"").localeCompare(b.takenAt||""));
+const photoSrc = p => (p.blobId && store.urls.get(p.blobId)) || p.dataUrl || "";
+const PVIEWS = {thorax:"Thorax oben", vfl:"Vorderflügel", hfl:"Hinterflügel", unten:"Unterseite", ganz:"Ganzes Tier", puppe:"Puppe", raupe:"Raupe", sonst:"Sonstiges"};
+/* ============ Speicher (IndexedDB) ============ */
+/* Eine Datenbank „raupenbuch“: ein Object Store je Collection (Schlüssel = id),
+   dazu „blobs“ (Fotos als Blob, Schlüssel = blobId) und „meta“ (Einstellungen, letztes Backup …). */
+const IDB_NAME = "raupenbuch", IDB_VER = 1;
+function idbOpen(){
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open(IDB_NAME, IDB_VER);
+    rq.onupgradeneeded = () => {
+      const db = rq.result;
+      for(const c of COLS) if(!db.objectStoreNames.contains(c)) db.createObjectStore(c, {keyPath:"id"});
+      if(!db.objectStoreNames.contains("blobs")) db.createObjectStore("blobs");
+      if(!db.objectStoreNames.contains("meta")) db.createObjectStore("meta");
+    };
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+    rq.onblocked = () => toast("Bitte andere Raupenbuch-Tabs schließen");
+  });
+}
+const idbReq = rq => new Promise((res, rej) => { rq.onsuccess = () => res(rq.result); rq.onerror = () => rej(rq.error); });
+const idbDone = tx => new Promise((res, rej) => { tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error("abgebrochen")); });
+
+const store = {
+  mode: "loading", db: null, loaded: new Set(), urls: new Map(), meta: {}, persisted: null, estimate: null,
+  async init(){
+    try {
+      this.db = await idbOpen();
+      const tx = this.db.transaction([...COLS, "meta", "blobs"], "readonly");
+      const jobs = COLS.map(c => idbReq(tx.objectStore(c).getAll()).then(rows => { const m = {}; rows.forEach(r => m[r.id] = r); S[c] = m; }));
+      jobs.push(Promise.all([idbReq(tx.objectStore("meta").getAllKeys()), idbReq(tx.objectStore("meta").getAll())]).then(([k, v]) => { k.forEach((key, i) => this.meta[key] = v[i]); }));
+      jobs.push(Promise.all([idbReq(tx.objectStore("blobs").getAllKeys()), idbReq(tx.objectStore("blobs").getAll())]).then(([k, v]) => { k.forEach((key, i) => this.urls.set(key, URL.createObjectURL(v[i]))); }));
+      await Promise.all(jobs);
+      this.mode = "idb";
+      if(!Object.keys(S.species).length){ seedSpeciesLocal(); for(const sp of Object.values(S.species)) await this.raw("species", sp); }
+    } catch(e){
+      console.error(e); this.mode = "mem";
+      toast("Speicher nicht verfügbar: Daten gehen beim Schließen verloren");
+      if(!Object.keys(S.species).length) seedSpeciesLocal();
+    }
+    _evIdx = null;
+    COLS.forEach(c => this.loaded.add(c));
+    scheduleRender();
+    this.checkPersist(true);
+  },
+  async checkPersist(ask){
+    try {
+      if(navigator.storage?.persisted) this.persisted = await navigator.storage.persisted();
+      if(ask && this.persisted === false && navigator.storage?.persist) this.persisted = await navigator.storage.persist();
+      if(navigator.storage?.estimate) this.estimate = await navigator.storage.estimate();
+    } catch(e){}
+    scheduleRender();
+  },
+  ready(){ return COLS.every(c => this.loaded.has(c)); },
+  async raw(col, doc){
+    if(this.mode !== "idb") return;
+    const tx = this.db.transaction(col, "readwrite"); tx.objectStore(col).put(doc); await idbDone(tx);
+  },
+  async put(col, obj){
+    const id = obj.id || uid();
+    const body = {...obj, id};
+    body.updatedAt = new Date().toISOString();
+    if(!body.createdAt) body.createdAt = body.updatedAt;
+    for(const k of Object.keys(body)) if(body[k] === undefined) delete body[k];
+    S[col][id] = body; if(col==="events") _evIdx = null;
+    scheduleRender();
+    try { await this.raw(col, body); }
+    catch(e){ toast(e && e.name === "QuotaExceededError" ? "Speicher voll: bitte Fotos löschen oder Backup machen" : "Konnte nicht speichern ("+(e&&e.name||"Fehler")+")"); }
+    return id;
+  },
+  /* Import: Dokument unverändert übernehmen (Zeitstempel bleiben) */
+  async putRaw(col, doc){
+    if(!doc || !doc.id) return;
+    S[col][doc.id] = doc; if(col==="events") _evIdx = null;
+    await this.raw(col, doc);
+  },
+  async del(col, id){
+    delete S[col][id]; if(col==="events") _evIdx = null;
+    scheduleRender();
+    if(this.mode !== "idb") return;
+    try { const tx = this.db.transaction(col, "readwrite"); tx.objectStore(col).delete(id); await idbDone(tx); }
+    catch(e){ toast("Löschen fehlgeschlagen"); }
+  },
+  async putBlob(blobId, blob){
+    if(this.mode === "idb"){ const tx = this.db.transaction("blobs", "readwrite"); tx.objectStore("blobs").put(blob, blobId); await idbDone(tx); }
+    const old = this.urls.get(blobId); if(old) URL.revokeObjectURL(old);
+    this.urls.set(blobId, URL.createObjectURL(blob));
+  },
+  async getBlob(blobId){
+    if(this.mode === "idb"){ const tx = this.db.transaction("blobs", "readonly"); const b = await idbReq(tx.objectStore("blobs").get(blobId)); if(b) return b; }
+    const u = this.urls.get(blobId); if(u) return await (await fetch(u)).blob();
+    return null;
+  },
+  async uploadPhoto(blob){
+    const blobId = "b" + uid();
+    await this.putBlob(blobId, blob);
+    return {blobId};
+  },
+  async deletePhotoAsset(p){
+    if(!p.blobId) return;
+    const u = this.urls.get(p.blobId); if(u){ URL.revokeObjectURL(u); this.urls.delete(p.blobId); }
+    if(this.mode === "idb"){ try { const tx = this.db.transaction("blobs", "readwrite"); tx.objectStore("blobs").delete(p.blobId); await idbDone(tx); } catch(e){} }
+  },
+  async setMeta(k, v){
+    this.meta[k] = v;
+    if(this.mode === "idb"){ try { const tx = this.db.transaction("meta", "readwrite"); tx.objectStore("meta").put(v, k); await idbDone(tx); } catch(e){} }
+  },
+  /* Datei speichern: normaler Browser-Download */
+  async save(filename, data){
+    try {
+      const blob = data instanceof Blob ? data : new Blob([data], {type: filename.endsWith(".json") ? "application/json" : filename.endsWith(".csv") ? "text/csv" : "application/octet-stream"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = filename; a.rel = "noopener";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      toast("Download gestartet");
+      return true;
+    } catch(e){ toast("Download fehlgeschlagen"); return false; }
+  }
+};
+
+const SPECIES_SEED = [
+  ["Acherontia atropos","Totenkopfschwärmer"],["Agrius convolvuli","Windenschwärmer"],["Sphinx ligustri","Ligusterschwärmer"],
+  ["Smerinthus ocellata","Abendpfauenauge"],["Laothoe populi","Pappelschwärmer"],["Mimas tiliae","Lindenschwärmer"],
+  ["Deilephila elpenor","Mittlerer Weinschwärmer"],["Hyles euphorbiae","Wolfsmilchschwärmer"],["Daphnis nerii","Oleanderschwärmer"],
+  ["Macroglossum stellatarum","Taubenschwänzchen"]
+];
+function seedSpeciesLocal(){
+  SPECIES_SEED.forEach(([sci,de]) => { const id = sci.toLowerCase().replace(/[^a-z]+/g,"-"); S.species[id] = {id, sci, de, family:"Sphingidae", instars:5}; });
+}
+
+/* ============ Fotos verkleinern ============ */
+async function shrinkImage(file, max=1600, q=.85){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    const sc = Math.min(1, max/Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*sc); c.height = Math.round(img.naturalHeight*sc);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise(res => c.toBlob(res, "image/jpeg", q));
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/* ============ Bibliotheken bei Bedarf laden ============ */
+const LIBS = {
+  jsqr: "jsQR.js",
+  qrgen: "qrcode.js",
+  jspdf: "jspdf.umd.min.js"
+};
+const _libP = {};
+function loadLib(k){
+  return _libP[k] ||= new Promise((res, rej) => {
+    const s = document.createElement("script"); s.src = LIBS[k]; s.async = true;
+    s.onload = () => res(); s.onerror = () => { delete _libP[k]; rej(new Error("Bibliothek konnte nicht geladen werden")); };
+    document.head.appendChild(s);
+  });
+}
+/* ============ UI-Grundlagen ============ */
+const IC = {
+  home:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+  bug:'<path d="M8 7c0-2.2 1.8-4 4-4s4 1.8 4 4"/><rect x="7" y="7" width="10" height="13" rx="5"/><path d="M7 12H3M21 12h-4M7 16l-3 2M17 16l3 2M7 9L4 7M17 9l3-2"/>',
+  moth:'<path d="M12 6v14"/><path d="M12 9C9 4 3 4 3 9c0 4 5 5 9 3"/><path d="M12 9c3-5 9-5 9 0 0 4-5 5-9 3"/><path d="M12 13c-3 1-6 3-5 6 2 1 4-1 5-3M12 13c3 1 6 3 5 6-2 1-4-1-5-3"/><path d="M11 6l-2-3M13 6l2-3"/>',
+  temp:'<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
+  more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3"/>',
+  back:'<path d="M15 5l-7 7 7 7"/>'
+};
+const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
+
+const R = { stack: [{v:"home"}], q: "", animalFilter: "aktiv", imagoTab: "offen" };
+const cur = () => R.stack[R.stack.length-1];
+function nav(v, p={}){ R.stack.push({v, ...p}); window.scrollTo(0,0); render(); }
+function tab(v){ R.stack = [{v}]; window.scrollTo(0,0); render(); }
+function back(){ if(R.stack.length>1) R.stack.pop(); render(); }
+
+let _rq = false;
+function scheduleRender(){ if(_rq) return; _rq = true; requestAnimationFrame(()=>{ _rq=false; render(); }); }
+
+const TABS = [["home","Übersicht","home"],["animals","Tiere","bug"],["imagos","Zuordnen","moth"],["climate","Klima","temp"],["more","Mehr","more"]];
+const TAB_OF = {home:"home",animals:"animals",animal:"animals",brood:"animals",broods:"animals",imagos:"imagos",imago:"imagos",compare:"imagos",
+  climate:"climate",location:"climate",more:"more",species:"more",sources:"more",containers:"more",labels:"more",data:"more",stats:"home",search:"",scanresult:""};
+
+function render(){
+  const ae = document.activeElement; const focusId = ae && ae.id && $("#main").contains(ae) ? ae.id : null;
+  const selS = focusId && ae.selectionStart;
+  const r = cur();
+  const top = $("#top");
+  const isRoot = R.stack.length===1;
+  const unresolved = openImagos().length;
+  top.innerHTML = (isRoot
+      ? `<div class="brand">Raupenbuch${store.mode==="mem"?'<small>ohne Speicher</small>':''}</div>`
+      : `<button class="backbtn" data-act="back">${svg("back")}Zurück</button><div class="brand"></div>`)
+    + `<button class="iconbtn" data-act="search" aria-label="Suchen">${svg("search")}</button>`
+    + `<button class="iconbtn" data-act="scan" aria-label="QR-Etikett scannen">${svg("scan")}</button>`;
+  const active = TAB_OF[r.v] ?? "";
+  $("#tabs").innerHTML = TABS.map(([v,l,i]) => `<button data-tab="${v}" ${active===v?'aria-current="page"':''}>${svg(i)}<span>${l}${v==="imagos"&&unresolved?` (${unresolved})`:''}</span></button>`).join("");
+  if(!store.ready()){ $("#main").innerHTML = `<p class="muted">Lade dein Raupenbuch …</p>`; return; }
+  if(!_migrated) setTimeout(()=>migrateImagos().catch(()=>{}),0);
+  const fn = VIEWS[r.v] || VIEWS.home;
+  let html; try { html = fn(r); } catch(e){ console.error(e); html = `<div class="note warn">Diese Ansicht konnte nicht angezeigt werden: ${esc(e.message)}</div>`; }
+  $("#main").innerHTML = html;
+  if(focusId){ const el = document.getElementById(focusId); if(el){ el.focus(); try{ el.setSelectionRange(selS,selS); }catch(e){} } }
+}
+
+/* Delegation */
+const ACTS = {};
+document.addEventListener("click", ev => {
+  const t = ev.target.closest("[data-act],[data-tab],[data-go]");
+  if(!t) return;
+  if(t.dataset.tab){ tab(t.dataset.tab); return; }
+  if(t.dataset.go){ const [v,id] = t.dataset.go.split(":"); nav(v, id?{id}:{}); return; }
+  const a = t.dataset.act; if(ACTS[a]){ ev.preventDefault(); ACTS[a](t.dataset, t, ev); }
+});
+ACTS.back = () => back();
+ACTS.search = () => nav("search");
+
+/* Toast */
+let _tt;
+function toast(msg){
+  let el = $(".toast"); if(!el){ el = document.createElement("div"); el.className = "toast"; el.setAttribute("role","status"); document.body.appendChild(el); }
+  el.textContent = msg; clearTimeout(_tt); _tt = setTimeout(()=>el.remove(), 2600);
+}
+
+/* Bottom sheet */
+function openSheet(html, onMount){
+  closeSheet();
+  const sc = document.createElement("div"); sc.className = "scrim"; sc.id = "scrim";
+  sc.innerHTML = `<div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div>${html}</div>`;
+  sc.addEventListener("click", e => { if(e.target === sc) closeSheet(); });
+  document.body.appendChild(sc);
+  document.body.style.overflow = "hidden";
+  onMount && onMount(sc.firstElementChild);
+  return sc.firstElementChild;
+}
+let _sheetCleanup = null;
+function closeSheet(){ if(_sheetCleanup){ const f = _sheetCleanup; _sheetCleanup = null; try { f(); } catch(e){} } const s = $("#scrim"); if(s) s.remove(); document.body.style.overflow = ""; }
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeSheet(); });
+
+/* Formular-Bausteine */
+const fld = {
+  text:(id,l,v="",ph="") => `<div class="f"><label for="${id}">${l}</label><input id="${id}" value="${esc(v)}" placeholder="${esc(ph)}" autocomplete="off"></div>`,
+  num:(id,l,v="",step="any") => `<div class="f"><label for="${id}">${l}</label><input id="${id}" type="number" inputmode="decimal" step="${step}" value="${esc(v)}"></div>`,
+  date:(id,l,v="") => `<div class="f"><label for="${id}">${l}</label><input id="${id}" type="date" value="${esc(v)}"></div>`,
+  area:(id,l,v="",ph="") => `<div class="f"><label for="${id}">${l}</label><textarea id="${id}" placeholder="${esc(ph)}">${esc(v)}</textarea></div>`,
+  sel:(id,l,opts,v="") => `<div class="f"><label for="${id}">${l}</label><select id="${id}">${opts.map(([k,t])=>`<option value="${esc(k)}" ${String(k)===String(v)?"selected":""}>${esc(t)}</option>`).join("")}</select></div>`,
+  hint:t => `<div class="f"><span class="hint">${t}</span></div>`
+};
+const val = (root,id) => { const el = root.querySelector("#"+id); return el ? el.value.trim() : ""; };
+
+/* Zeit-Eingabe (Präzision) */
+function timeFields(pfx, e){
+  const prec = e?.prec || "tag";
+  const d0 = e?.t0 ? e.t0.slice(0,10) : todayISO();
+  const tm = e?.t0 && e.prec==="exakt" ? e.t0.slice(11,16) : (nowLocal().slice(11,16));
+  const d1 = e?.t1 ? e.t1.slice(0,10) : d0;
+  return `<div class="f"><span class="lab">Wann?</span><div class="seg" role="group" id="${pfx}precseg">${Object.entries(PREC).map(([k,l])=>`<button type="button" data-prec="${k}" aria-pressed="${k===prec}">${l}</button>`).join("")}</div></div>
+  <input type="hidden" id="${pfx}prec" value="${prec}">
+  <div class="frow2"><div class="f"><label for="${pfx}d0" id="${pfx}d0l">${prec==="nacht"?"Abend":prec==="zeitraum"?"Von":"Datum"}</label><input id="${pfx}d0" type="date" value="${d0}"></div>
+  <div class="f" id="${pfx}tmw" ${prec==="exakt"?"":"hidden"}><label for="${pfx}tm">Uhrzeit</label><input id="${pfx}tm" type="time" value="${tm}"></div>
+  <div class="f" id="${pfx}d1w" ${prec==="zeitraum"?"":"hidden"}><label for="${pfx}d1">Bis</label><input id="${pfx}d1" type="date" value="${d1}"></div></div>
+  <div class="hint" id="${pfx}hint">${prec==="nacht"?"Für Schlüpfe über Nacht: das Datum des Abends wählen.":""}</div>`;
+}
+function wireTime(root, pfx){
+  root.querySelectorAll(`#${pfx}precseg [data-prec]`).forEach(b => b.addEventListener("click", () => {
+    const p = b.dataset.prec; root.querySelector(`#${pfx}prec`).value = p;
+    root.querySelectorAll(`#${pfx}precseg [data-prec]`).forEach(x => x.setAttribute("aria-pressed", x===b));
+    root.querySelector(`#${pfx}tmw`).hidden = p!=="exakt";
+    root.querySelector(`#${pfx}d1w`).hidden = p!=="zeitraum";
+    root.querySelector(`#${pfx}d0l`).textContent = p==="nacht"?"Abend":p==="zeitraum"?"Von":"Datum";
+    root.querySelector(`#${pfx}hint`).textContent = p==="nacht"?"Für Schlüpfe über Nacht: das Datum des Abends wählen.":"";
+  }));
+}
+function readTime(root, pfx){
+  const d0 = val(root,pfx+"d0"); if(!d0) return null;
+  return makeTime(val(root,pfx+"prec"), d0, val(root,pfx+"tm"), val(root,pfx+"d1"));
+}
+
+/* Inline-Bestätigung (confirm() ist im Viewer blockiert) */
+function confirmBlock(text, okLabel){
+  return `<div class="confirm" hidden id="cfm"><div>${text}</div><div class="btns"><button class="btn danger" id="cfmOk">${okLabel}</button><button class="btn" id="cfmNo">Abbrechen</button></div></div>`;
+}
+function wireConfirm(root, triggerSel, onOk){
+  const t = root.querySelector(triggerSel), box = root.querySelector("#cfm");
+  if(!t||!box) return;
+  t.addEventListener("click", () => { box.hidden = false; box.scrollIntoView({block:"nearest"}); });
+  root.querySelector("#cfmNo").addEventListener("click", () => box.hidden = true);
+  root.querySelector("#cfmOk").addEventListener("click", onOk);
+}
+
+/* gemeinsame Darstellungen */
+const sexBadge = s => `<span class="sex ${s||"u"}" title="${SEXL[s||"u"]}">${SEXS[s||"u"]}</span>`;
+function stagePill(ind){
+  const st = statusOf(ind);
+  if(st==="tot") return `<span class="pill crit">tot</span>`;
+  if(st==="praepariert") return `<span class="pill falter">präpariert</span>`;
+  if(st==="abgegeben") return `<span class="pill">abgegeben</span>`;
+  if(st==="freigelassen") return `<span class="pill falter">freigelassen</span>`;
+  const s = currentStage(ind);
+  return `<span class="pill ${s==="falter"?"falter":"stage"}">${stageLabel(s)}</span>`;
+}
+function indRow(ind, extra=""){
+  const sp = speciesOfInd(ind); const b = S.broods[ind.broodId];
+  return `<button class="row" data-go="animal:${ind.id}">${sexBadge(ind.sex)}<span class="main"><span class="t">${esc(ind.name)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
+}
+function photoGrid(list, addAct, addData=""){
+  return `<div class="photos">${list.map(p=>`<button class="ph" data-act="viewPhoto" data-id="${p.id}"><img src="${esc(photoSrc(p))}" alt="${esc(PVIEWS[p.view]||"Foto")}" loading="lazy"><span>${esc(PVIEWS[p.view]||"Foto")}</span></button>`).join("")}${addAct?`<button class="ph add" data-act="${addAct}" ${addData}>+ Foto</button>`:""}</div>`;
+}
+/* ============ Ansichten ============ */
+const VIEWS = {};
+
+function forecastRow(ind, f){
+  const span = Math.max(f.to - f.startMs, 1);
+  const L = x => Math.max(0, Math.min(100, (x - f.startMs) / (span*1.15) * 100));
+  const pill = f.state==="im" ? `<span class="pill warn">im Fenster</span>` : f.state==="ueber" ? `<span class="pill crit">länger als bisher</span>` : `<span class="pill">Tag ${f.elapsed}</span>`;
+  return `<button class="row" data-go="animal:${ind.id}" style="display:block">
+    <div class="fc"><span class="t" style="display:flex;gap:8px;align-items:center">${sexBadge(ind.sex)} <b>${esc(ind.name)}</b></span>${pill}
+    <span class="win muted">${dShort(dFromMs(f.from))}–${dDE(dFromMs(f.to))} · Median ${dShort(dFromMs(f.med))}</span><span class="small muted mono">n=${f.n}${f.bySex?" "+SEXS[ind.sex]:""}</span>
+    <div class="track" aria-hidden="true"><div class="w" style="left:${L(f.from)}%;width:${Math.max(1.5,L(f.to)-L(f.from))}%"></div><div class="today" style="left:${L(Date.now())}%"></div></div></div></button>`;
+}
+
+VIEWS.home = () => {
+  const inds = all("individuals"); const alive = inds.filter(isAlive);
+  const pupae = alive.filter(i => ["vorpuppe","puppe"].includes(currentStage(i)));
+  const unresolved = openImagos();
+  const broods = all("broods").filter(b=>!b.archived).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""));
+  const fcs = pupae.map(i=>[i,forecast(i)]).filter(([,f])=>f && !f.insufficient).sort((a,b)=>a[1].from-b[1].from);
+  const noData = pupae.filter(i=>{ const f=forecast(i); return f && f.insufficient; });
+  const recent = all("events").sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,6);
+  let h = "";
+  if(store.mode==="mem") h += `<div class="note warn">Der Gerätespeicher ist nicht verfügbar (privates Fenster?). Einträge gehen beim Schließen verloren.</div>`;
+  if(!broods.length){
+    h += `<section class="card sec"><h2 class="sp" style="font-size:22px">Willkommen im Raupenbuch</h2>
+    <p class="muted" style="margin:0">Leg zuerst einen <b>Zuchtansatz</b> an, also alles, was zusammen angefangen hat (z. B. „Atropos 2026 von Jana“). Danach kannst du deine Tiere mit Namen hinzufügen oder aus deinen Notizen einfügen.</p>
+    <div class="btns"><button class="btn primary" data-act="newBrood">Zuchtansatz anlegen</button></div></section>`;
+    return h;
+  }
+  h += backupCard();
+  h += `<div class="stats">
+    <div class="stat"><b>${alive.length}</b><span>Tiere aktiv</span></div>
+    <div class="stat"><b>${pupae.length}</b><span>Puppen</span></div>
+    <div class="stat"><b>${inds.filter(i=>firstEv(i,"falterschlupf")).length}</b><span>Falter</span></div>
+    <div class="stat"><b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></div></div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" data-act="multiEvent">Ereignis für mehrere</button></div>`;
+  if(unresolved.length) h += `<section class="uncertain"><b>${unresolved.length} Falter noch nicht zugeordnet</b><span class="small muted">Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.</span><div><button class="btn" data-tab="imagos">Zuordnen</button></div></section>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Schlupffenster</h2><span class="small muted">aus deinen bisherigen Puppenruhen</span></div>`;
+  if(fcs.length) h += `<div class="list">${fcs.map(([i,f])=>forecastRow(i,f)).join("")}</div>`;
+  else if(pupae.length) h += `<div class="list"><div class="empty">${pupae.length} Puppe${pupae.length>1?"n":""} liegen, aber es gibt noch zu wenige geschlüpfte Tiere derselben Art für eine Prognose. Ab <b>2 Schlüpfen</b> mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Zeitfenster.</div></div>`;
+  else h += `<div class="list"><div class="empty">Gerade liegen keine Puppen.</div></div>`;
+  if(fcs.length && noData.length) h += `<p class="small muted" style="margin:0">${noData.length} weitere Puppe(n) ohne genug Vergleichsdaten.</p>`;
+  h += `</section>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div><div class="list">${broods.map(broodRow).join("")}</div></section>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Zuletzt eingetragen</h2><button class="btn ghost link" data-go="stats">Auswertung</button></div><div class="list">${recent.length? recent.map(e=>{
+      const who = e.individualId? indName(e.individualId) : e.containerId? (S.containers[e.containerId]?.name||"Behälter") : (S.broods[e.broodId]?.name||"");
+      return `<button class="row" ${e.individualId?`data-go="animal:${e.individualId}"`:`data-act="editEvent" data-id="${e.id}"`}><span class="main"><span class="t">${esc(evTitle(e))}</span><span class="s">${esc(who)} · ${esc(fmtTime(e))}</span></span></button>`;
+    }).join("") : `<div class="empty">Noch keine Ereignisse.</div>`}</div></section>`;
+  return h;
+};
+
+function broodRow(b){
+  const inds = indsOf(b.id); const sp = S.species[b.speciesId];
+  const dist = {}; inds.forEach(i => { const k = isAlive(i) ? currentStage(i) : "x"; dist[k]=(dist[k]||0)+1; });
+  const parts = Object.entries(dist).sort((a,b)=>(SIDX[a[0]]??99)-(SIDX[b[0]]??99)).map(([k,n])=>`${n}× ${k==="x"?"tot/weg":stageLabel(k)}`).join(" · ");
+  return `<button class="row" data-go="brood:${b.id}"><span class="main"><span class="t">${esc(b.name)}</span><span class="s"><span class="sp">${esc(sp?.sci||"")}</span> · ${inds.length} Tiere${parts?" · "+parts:""}</span></span></button>`;
+}
+
+function evTitle(e){
+  const d = e.data||{};
+  switch(e.type){
+    case "haeutung": return `Häutung → ${d.to||"?"}`;
+    case "geschlecht": return `Geschlecht: ${SEXL[d.sex||"u"]}${d.at?` (an ${d.at==="puppe"?"Puppe":d.at==="falter"?"Falter":"Raupe"})`:""}`;
+    case "gewicht": return `Gewogen: ${fmtN(+d.g,2)} g`;
+    case "futter": return `Futter: ${d.plant||"–"}`;
+    case "umgesetzt": return `Umgesetzt → ${S.containers[d.containerId]?.name||"?"}`;
+    case "tod": return `Gestorben: ${CAUSES[d.cause]||"Unbekannt"}${d.certainty==="vermutet"?" (Verdacht)":""}`;
+    case "abgegeben": return `Abgegeben${d.to?` an ${d.to}`:""}`;
+    default: return ET[e.type]?.l || e.type;
+  }
+}
+
+/* ---- Tiere ---- */
+VIEWS.animals = () => {
+  const q = R.q.toLowerCase();
+  const f = R.animalFilter;
+  let inds = all("individuals").sort(byName);
+  if(f==="aktiv") inds = inds.filter(isAlive);
+  else if(f==="puppe") inds = inds.filter(i=>isAlive(i)&&["vorpuppe","puppe"].includes(currentStage(i)));
+  else if(f==="falter") inds = inds.filter(i=>firstEv(i,"falterschlupf"));
+  else if(f==="tot") inds = inds.filter(i=>statusOf(i)==="tot");
+  if(q) inds = inds.filter(i => (i.name+" "+(i.notes||"")+" "+(S.broods[i.broodId]?.name||"")).toLowerCase().includes(q));
+  const broods = all("broods").sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""));
+  const F = [["aktiv","Aktiv"],["puppe","Puppen"],["falter","Falter"],["tot","Tot"],["alle","Alle"]];
+  return `<div class="search">${svg("search").replace('<svg','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.8"')}<input id="aq" placeholder="Tier suchen (Name, Notiz, Ansatz)" value="${esc(R.q)}"></div>
+  <div class="seg" role="group" aria-label="Filter">${F.map(([k,l])=>`<button data-act="afilter" data-k="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}</div>
+  <section class="sec"><div class="sec-h"><h2>${inds.length} Tier${inds.length===1?"":"e"}</h2></div>
+  <div class="list">${inds.length? inds.map(i=>indRow(i)).join("") : `<div class="empty">${all("individuals").length? "Keine Tiere für diesen Filter." : "Noch keine Tiere. Öffne einen Zuchtansatz und füge dort Tiere hinzu."}</div>`}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div>
+  <div class="list">${broods.length? broods.map(broodRow).join("") : `<div class="empty">Noch kein Zuchtansatz.</div>`}</div></section>`;
+};
+document.addEventListener("input", e => { if(e.target.id==="aq"){ R.q = e.target.value; scheduleRender(); } });
+ACTS.afilter = d => { R.animalFilter = d.k; render(); };
+ACTS.noop = () => {};
+
+/* ---- Zuchtansatz ---- */
+VIEWS.brood = r => {
+  const b = S.broods[r.id]; if(!b) return `<div class="empty">Dieser Zuchtansatz existiert nicht mehr.</div>`;
+  const sp = S.species[b.speciesId]; const src = S.sources[b.sourceId];
+  const inds = indsOf(b.id);
+  const alive = inds.filter(isAlive);
+  const eclosed = inds.filter(i=>firstEv(i,"falterschlupf"));
+  const dead = inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf"));
+  let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}${sp?.de?` · ${esc(sp.de)}`:""}</span><h1>${esc(b.name)}</h1>
+    <div class="meta">${src?`<span class="pill">von ${esc(src.name)}</span>`:""}${b.generation?`<span class="pill">F${esc(b.generation)}</span>`:""}${b.startDate?`<span class="pill">seit ${dDE(b.startDate)}</span>`:""}<span class="pill stage">Start als ${stageLabel(b.startStage||"L1")}</span></div>
+    ${b.notes?`<p class="muted" style="margin:0">${esc(b.notes)}</p>`:""}</div>`;
+  h += `<div class="stats"><div class="stat"><b>${inds.length}</b><span>Tiere</span></div><div class="stat"><b>${alive.length}</b><span>aktiv</span></div><div class="stat"><b>${eclosed.length}</b><span>Falter</span></div><div class="stat"><b>${dead.length}</b><span>Verluste</span></div></div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="addInds" data-id="${b.id}">Tiere hinzufügen</button><button class="btn" data-act="multiEvent" data-brood="${b.id}">Ereignis für mehrere</button><button class="btn" data-act="eclosion" data-brood="${b.id}">Falterschlupf</button></div>`;
+  if(inds.length) h += funnelSection(inds, b);
+  const pd = pupalTable(inds); if(pd) h += pd;
+  h += `<section class="sec"><div class="sec-h"><h2>Tiere</h2><button class="btn ghost link" data-act="labels" data-brood="${b.id}">Etiketten</button></div><div class="list">${inds.length? inds.map(i=>indRow(i, indSubline(i))).join("") : `<div class="empty">Noch keine Tiere. Tippe auf <b>Tiere hinzufügen</b>. Du kannst dort auch deine Notizen zeilenweise einfügen.</div>`}</div></section>`;
+  const bev = (evIndex().brood[b.id]||[]);
+  if(bev.length) h += `<section class="sec"><div class="sec-h"><h2>Ereignisse am Ansatz</h2></div><div class="card">${timeline(bev)}</div></section>`;
+  h += `<div class="btns"><button class="btn" data-act="editBrood" data-id="${b.id}">Ansatz bearbeiten</button></div>`;
+  return h;
+};
+function indSubline(i){
+  const parts = [];
+  const eg = firstEv(i,"eingegraben"), ec = firstEv(i,"falterschlupf"), d = deathOf(i);
+  if(eg) parts.push(`eingegr. ${dShort(eg.t0)}`);
+  if(ec) parts.push(`geschl. ${dShort((ec.t1||ec.t0))}`);
+  if(d && !ec) parts.push(`† ${dShort(d.t0)}`);
+  const f = forecast(i); if(f && !f.insufficient) parts.push(`erwartet ${dShort(dFromMs(f.from))}–${dShort(dFromMs(f.to))}`);
+  return parts.join(" · ") || "noch keine Einträge";
+}
+
+function funnelSection(inds, b){
+  const start = SIDX[b?.startStage||"L1"] ?? 1;
+  const rows = [];
+  for(let s=start; s<STAGES.length; s++){
+    const reached = inds.filter(i=>maxStageIdx(i)>=s).length;
+    const lost = inds.filter(i=>maxStageIdx(i)<s && !isAlive(i)).length;
+    const pend = inds.filter(i=>maxStageIdx(i)<s && isAlive(i)).length;
+    rows.push({l:STAGES[s].l, reached, lost, pend});
+  }
+  const n = inds.length || 1;
+  return `<section class="sec"><div class="sec-h"><h2>Überleben je Stadium</h2></div><div class="card funnel">
+    ${rows.map(r=>`<div class="frow"><span class="lbl">${r.l}</span><div class="fbar" role="img" aria-label="${r.l}: ${r.reached} erreicht, ${r.pend} ausstehend, ${r.lost} verloren"><i class="r" style="width:${r.reached/n*100}%"></i><i class="p" style="width:${r.pend/n*100}%"></i><i class="l" style="width:${r.lost/n*100}%"></i></div><span class="v">${r.reached}/${inds.length}</span></div>`).join("")}
+    <div class="legend"><span><i style="background:var(--good)"></i>erreicht</span><span><i style="background:repeating-linear-gradient(135deg,var(--line) 0 3px,transparent 3px 6px);border:1px solid var(--line)"></i>noch unterwegs</span><span><i style="background:var(--crit)"></i>verloren</span></div></div></section>`;
+}
+
+function pupalTable(inds){
+  const rows = {f:[],m:[],u:[]}; let basisMix = new Set();
+  for(const i of inds){ const st = pupalStart(i), ec = firstEv(i,"falterschlupf"); if(st && ec){ rows[i.sex||"u"].push(daysBetween(st.ev,ec)); basisMix.add(st.basis); } }
+  const tot = [...rows.f,...rows.m,...rows.u]; if(!tot.length) return "";
+  const line = (l,a) => a.length? `<tr><td>${l}</td><td>${a.length}</td><td>${Math.min(...a)}</td><td>${fmtN(median(a),1)}</td><td>${Math.max(...a)}</td></tr>` : "";
+  const basis = basisMix.size>1 ? "gemischt (Verpuppung bzw. Eingraben)" : basisMix.has("verpuppt") ? "ab Verpuppung" : "ab Eingraben";
+  return `<section class="sec"><div class="sec-h"><h2>Puppenruhe in Tagen</h2><span class="small muted">${basis}</span></div><div class="card tw"><table class="t"><thead><tr><th></th><th>n</th><th>min</th><th>Median</th><th>max</th></tr></thead><tbody>
+  ${line("Weibchen",rows.f)}${line("Männchen",rows.m)}${line("unbekannt",rows.u)}${(rows.f.length&&rows.m.length)||rows.u.length?line("alle",tot):""}</tbody></table>
+  ${tot.length<5?`<p class="small muted" style="margin:8px 0 0">Wenige Werte: Unterschiede können Zufall sein.</p>`:""}</div></section>`;
+}
+
+/* ---- Einzeltier ---- */
+VIEWS.animal = r => {
+  const i = S.individuals[r.id]; if(!i) return `<div class="empty">Dieses Tier existiert nicht mehr.</div>`;
+  const b = S.broods[i.broodId]; const sp = speciesOfBrood(b); const cont = S.containers[i.containerId]; const loc = cont && S.locations[cont.locationId];
+  const st = currentStage(i); const alive = isAlive(i);
+  let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1>
+    <div class="meta">${sexBadge(i.sex)}<span class="small">${SEXL[i.sex||"u"]}</span>${stagePill(i)}<button class="pill" data-go="brood:${b?.id}" style="border:0;cursor:pointer">${esc(b?.name||"")}</button>${cont?`<span class="pill">${esc(cont.name)}${loc?" · "+esc(loc.name):""}</span>`:""}</div>
+    ${i.notes?`<p class="muted" style="margin:0">${esc(i.notes)}</p>`:""}</div>`;
+  if(alive){
+    const q = [];
+    const si = SIDX[st];
+    if(si>=1 && si<=4) q.push(["haeutung",`Häutung → L${si+1}`,`data-to="L${si+1}"`]);
+    if(si>=1 && si<=5) q.push(["eingegraben","Eingegraben"]);
+    if(si>=5 && si<=6) q.push(["verpuppt","Verpuppt"]);
+    if(si>=6 && si<=7) q.push(["eclosion1","Falter geschlüpft"]);
+    if(si===8) q.push(["freigelassen","Freigelassen"],["praepariert","Präpariert"]);
+    if(!i.sex || i.sex==="u") q.push(["geschlecht","Geschlecht"]);
+    q.push(["tod","Gestorben"],["notiz","Notiz"],["any","Anderes …"]);
+    h += `<div class="quick">${q.map(([t,l,x=""])=>`<button class="btn" data-act="${t==="eclosion1"?"eclosion":"quickEv"}" data-t="${t}" data-ind="${i.id}" ${x}>${l}</button>`).join("")}</div>`;
+  } else {
+    h += `<div class="btns"><button class="btn" data-act="quickEv" data-t="any" data-ind="${i.id}">Ereignis eintragen</button></div>`;
+  }
+  const f = forecast(i);
+  if(f && !f.insufficient) h += `<section class="sec"><div class="sec-h"><h2>Schlupfprognose</h2></div><div class="list">${forecastRow(i,f)}</div><p class="small muted" style="margin:0">Basis: ${f.n} bisherige Schlüpfe dieser Art${f.bySex?` (nur ${SEXL[i.sex]})`:""}, gezählt ${f.basis==="verpuppt"?"ab Verpuppung":"ab Eingraben"}. Heute ist Tag ${f.elapsed}.</p></section>`;
+  else if(f && f.insufficient) h += `<div class="note">Liegt seit Tag ${Math.floor((Date.now()-f.startMs)/864e5)} (${f.basis==="verpuppt"?"ab Verpuppung":"ab Eingraben"}). Für ein Schlupffenster fehlen noch Vergleichswerte: bisher ${f.n} Schlupf dieser Art.</div>`;
+  const cand = candidateImagosOfInd(i.id);
+  if(cand.length) h += `<section class="uncertain"><b>Noch nicht zugeordnet</b><span class="small muted">${esc(i.name)} ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen. Kandidat für:</span><div class="list">${cand.map(imagoRow).join("")}</div></section>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Fotos</h2></div>${photoGrid(photosOf("individual",i.id),"addPhoto",`data-type="individual" data-id="${i.id}"`)}</section>`;
+  const ev = evOf(i.id);
+  h += `<section class="sec"><div class="sec-h"><h2>Verlauf</h2><span class="small muted">antippen zum Bearbeiten</span></div><div class="card">${ev.length? timeline(ev) : `<div class="empty" style="padding:4px 0">Noch keine Ereignisse.</div>`}</div></section>`;
+  h += `<div class="btns"><button class="btn" data-act="editInd" data-id="${i.id}">Tier bearbeiten</button><button class="btn" data-act="labels" data-ind="${i.id}">Etikett</button></div>
+  <p class="small muted mono" style="margin:0">Etikett-Code RB:i:${esc(i.id)}</p>`;
+  return h;
+};
+
+function timeline(evs){
+  return `<div class="tl">${[...evs].sort((a,b)=>ms(b.t0)-ms(a.t0)).map(e=>{
+    const cls = e.type==="tod"?"death": e.type==="falterschlupf"?"falter": ET[e.type]?.stage?"stagechg":"";
+    return `<button class="ev ${cls}" data-act="editEvent" data-id="${e.id}"><span class="dot"></span><span class="body"><span class="w">${esc(fmtTime(e))}</span><br><span class="x">${esc(evTitle(e))}</span>${e.note?`<br><span class="n">${esc(e.note)}</span>`:""}</span></button>`;
+  }).join("")}</div>`;
+}
+
+function imagoRow(m){
+  const ind = m.individualId && S.individuals[m.individualId];
+  const ph = photosOf("imago",m.id)[0];
+  const sub = ind ? `ist ${esc(ind.name)}` : `Kandidaten: ${(m.candidates||[]).map(indName).map(esc).join(", ")||"keine"}`;
+  return `<button class="row" data-go="imago:${m.id}">${ph?`<img src="${esc(photoSrc(ph))}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none">`:sexBadge(m.sex)}<span class="main"><span class="t">${esc(m.label)}</span><span class="s">${sub}</span></span><span class="end">${ind?`<span class="pill good">zugeordnet</span>`:`<span class="pill warn">offen</span>`}</span></button>`;
+}
+/* ---- Falter ---- */
+VIEWS.imagos = () => {
+  const open = openImagos().sort((a,b)=>(b.eclosedAt||"").localeCompare(a.eclosedAt||"") || byName(a,b));
+  const batches = {}; open.forEach(m => { (batches[m.batchId||m.id] ||= []).push(m); });
+  let h = `<div class="pagehead"><h1>Zuordnen</h1><p class="muted" style="margin:0">Schlüpfen mehrere Falter im selben Zeitraum und du weißt nicht, wer aus welcher Puppe kam, landen sie hier als „Falter A, B, C …“. Fotografiere sie und ordne sie zu, sobald du es weißt. Danach gehören Fotos und Notizen zum jeweiligen Tier. Schlupfdatum und Puppenruhe zählen schon vorher.</p></div>
+  <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button></div>`;
+  if(!open.length) return h + `<div class="list"><div class="empty">Nichts offen. Alle Falter sind ihren Tieren zugeordnet.</div></div>`;
+  for(const [bid, ms_] of Object.entries(batches)){
+    h += `<div class="uncertain"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><b>${esc(ms_[0].batchLabel || "Schlupf")}</b>${ms_.length>1?`<button class="btn ghost" data-go="compare:${bid}">Vergleichen</button>`:""}</div><div class="list">${ms_.map(imagoRow).join("")}</div></div>`;
+  }
+  return h;
+};
+
+VIEWS.imago = r => {
+  const m = S.imagos[r.id]; if(!m || m.individualId) return `<div class="empty">Dieser Falter ist zugeordnet. Du findest ihn jetzt beim jeweiligen Tier.</div>`;
+  const sib = m.batchId ? openImagos().filter(x=>x.batchId===m.batchId) : [m];
+  const c = (m.candidates||[]).map(id=>S.individuals[id]).filter(Boolean);
+  let h = `<div class="pagehead"><span class="muted small mono">${esc(m.batchLabel||"")}</span><h1>${esc(m.label)}</h1><div class="meta">${sexBadge(m.sex)}<span class="small">${SEXL[m.sex||"u"]}</span><span class="pill warn">nicht zugeordnet</span></div>${m.notes?`<p class="muted" style="margin:0">${esc(m.notes)}</p>`:""}</div>`;
+  h += `<section class="uncertain"><b>Wer ist das?</b><span class="small muted">Tippe auf das Tier, wenn du sicher bist. Fotos und Notizen wandern dann zum Tier, und die übrigen Falter dieses Schlupfs werden eingegrenzt.</span>
+    <div class="chips">${c.map(i=>`<button class="chip" data-act="assign" data-id="${m.id}" data-ind="${i.id}">${SEXS[i.sex||"u"]} ${esc(i.name)}</button>`).join("") || `<span class="muted">Keine Kandidaten übrig.</span>`}</div>
+    ${sib.length>1?`<div><button class="btn" data-go="compare:${m.batchId}">Fotos nebeneinander vergleichen</button></div>`:""}</section>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Fotos</h2><span class="small muted">gleiche Ansicht = besser vergleichbar</span></div>${photoGrid(photosOf("imago",m.id),"addPhoto",`data-type="imago" data-id="${m.id}"`)}</section>`;
+  h += `<div class="btns"><button class="btn" data-act="editImago" data-id="${m.id}">Bearbeiten</button></div>`;
+  return h;
+};
+
+VIEWS.compare = r => {
+  const ims = openImagos().filter(m=>(m.batchId||m.id)===r.id).sort(byName);
+  if(!ims.length) return `<div class="empty">Nichts zu vergleichen.</div>`;
+  const views = new Set(); ims.forEach(m=>photosOf("imago",m.id).forEach(p=>views.add(p.view||"sonst")));
+  const v = R.cmpView && views.has(R.cmpView) ? R.cmpView : [...views][0];
+  let h = `<div class="pagehead"><span class="muted small mono">${esc(ims[0].batchLabel||"")}</span><h1>Vergleich</h1></div>`;
+  if(!views.size) return h + `<div class="note">Noch keine Fotos. Fotografiere jeden Falter am besten von oben auf den Thorax (die Totenkopf-Zeichnung) und die Vorderflügel, immer mit gleichem Abstand und Licht.</div><div class="list">${ims.map(imagoRow).join("")}</div>`;
+  h += `<div class="seg" role="group">${[...views].map(k=>`<button data-act="cmpView" data-k="${k}" aria-pressed="${k===v}">${PVIEWS[k]||k}</button>`).join("")}</div>`;
+  const cands = [...new Set(ims.flatMap(m=>m.candidates||[]))];
+  const pupaPh = cands.map(id=>[id, photosOf("individual",id).filter(p=>["puppe","raupe"].includes(p.view)).slice(-1)[0]]).filter(x=>x[1]);
+  h += `<div class="compare">${ims.map(m=>{ const p = photosOf("imago",m.id).filter(p=>(p.view||"sonst")===v).slice(-1)[0];
+    return `<div class="col"><h3>${esc(m.label)}</h3>${p?`<img src="${esc(photoSrc(p))}" alt="${esc(m.label)}" data-act="viewPhoto" data-id="${p.id}">`:`<div class="noimg">kein Foto „${esc(PVIEWS[v]||v)}“</div>`}<span class="small muted">${m.individualId?`ist ${esc(indName(m.individualId))}`:"offen"}</span><button class="btn" data-go="imago:${m.id}">Öffnen</button></div>`; }).join("")}</div>`;
+  if(pupaPh.length) h += `<section class="sec"><div class="sec-h"><h2>Puppenfotos der Kandidaten</h2></div><div class="compare">${pupaPh.map(([id,p])=>`<div class="col"><h3>${esc(indName(id))}</h3><img src="${esc(photoSrc(p))}" alt="" data-act="viewPhoto" data-id="${p.id}"></div>`).join("")}</div></section>`;
+  return h;
+};
+ACTS.cmpView = d => { R.cmpView = d.k; render(); };
+
+/* ---- Klima ---- */
+VIEWS.climate = () => {
+  const locs = all("locations").sort(byName);
+  let h = `<div class="pagehead"><h1>Klima</h1><p class="muted" style="margin:0">Temperatur und Luftfeuchte pro Standort. Alle Behälter an einem Standort teilen sich die Messwerte.</p></div>
+  <div class="btns"><button class="btn primary" data-act="newMeasure">Messwert eintragen</button><button class="btn" data-act="newLocation">+ Standort</button></div>`;
+  if(!locs.length) return h + `<div class="list"><div class="empty">Noch kein Standort. Lege z. B. „Puppenkasten Keller“ oder „Regal Wohnzimmer“ an.</div></div>`;
+  h += `<div class="list">${locs.map(l=>{ const ms_ = measOf(l.id); const last = ms_[ms_.length-1];
+    return `<button class="row" data-go="location:${l.id}"><span class="main"><span class="t">${esc(l.name)}</span><span class="s">${last?`zuletzt ${dDE(last.at)} ${last.at.slice(11,16)}`:"noch keine Messung"} · ${ms_.length} Werte${l.sensor?" · Sensor":""}</span></span><span class="end">${last?`<span class="pill mono">${last.temp!=null?fmtN(last.temp,1)+" °C":""}${last.temp!=null&&last.rh!=null?" · ":""}${last.rh!=null?fmtN(last.rh,0)+" %":""}</span>`:""}</span></button>`; }).join("")}</div>`;
+  h += `<div class="note">Öffne einen Standort, um einen Bluetooth-Sensor (Xiaomi LYWSD03MMC) zu koppeln und den aktuellen Wert abzurufen. Ältere Verläufe kannst du dort als CSV importieren.</div>`;
+  return h;
+};
+function measOf(locId){
+  const out=[];
+  for(const d of all("climate")){ if(d.locationId!==locId) continue; for(const p of (d.pts||[])) out.push({at:`${d.date}T${p[0]}`, temp:p[1], rh:p[2], src:p[3]||"m", key:`${d.id}|${p[0]}`}); }
+  return out.sort((a,b)=>a.at.localeCompare(b.at));
+}
+
+function lineChart(pts, key, unit, color){
+  let P = pts.filter(p=>p[key]!=null && Number.isFinite(+p[key]));
+  if(P.length>360){ const k=Math.ceil(P.length/360); const Q=[]; for(let i=0;i<P.length;i+=k){ const g=P.slice(i,i+k); Q.push({at:g[Math.floor(g.length/2)].at, [key]:g.reduce((a,x)=>a+(+x[key]),0)/g.length}); } P=Q; }
+  if(P.length<2) return `<p class="small muted">Für ein Diagramm braucht es mindestens 2 Werte.</p>`;
+  const W=340,H=150,l=30,rt=8,t=14,b=22;
+  const xs=P.map(p=>ms(p.at)), ys=P.map(p=>+p[key]);
+  let x0=Math.min(...xs), x1=Math.max(...xs); if(x1===x0) x1=x0+1;
+  let y0=Math.floor(Math.min(...ys)-1), y1=Math.ceil(Math.max(...ys)+1);
+  const X=v=>l+(v-x0)/(x1-x0)*(W-l-rt), Y=v=>t+(1-(v-y0)/(y1-y0))*(H-t-b);
+  const ticks=[]; const step=Math.max(1,Math.ceil((y1-y0)/4)); for(let v=y0; v<=y1; v+=step) ticks.push(v);
+  const d=P.map((p,i)=>`${i?"L":"M"}${X(xs[i]).toFixed(1)},${Y(ys[i]).toFixed(1)}`).join("");
+  const area=d+`L${X(xs[xs.length-1]).toFixed(1)},${H-b}L${X(xs[0]).toFixed(1)},${H-b}Z`;
+  const lx=X(xs[xs.length-1]), ly=Y(ys[ys.length-1]);
+  return `<div class="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${key==="temp"?"Temperaturverlauf":"Luftfeuchteverlauf"}">
+    ${ticks.map(v=>`<line x1="${l}" x2="${W-rt}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${l-6}" y="${Y(v)+3}" text-anchor="end">${v}</text>`).join("")}
+    <path d="${area}" fill="${color}" fill-opacity=".12"/><path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="${lx}" cy="${ly}" r="4" fill="${color}"/>
+    <text x="${l}" y="${H-8}">${dShort(P[0].at)}</text><text x="${W-rt}" y="${H-8}" text-anchor="end">${dShort(P[P.length-1].at)}</text>
+    <text x="${l}" y="${t-2}" text-anchor="start">${unit}</text></svg></div>`;
+}
+VIEWS.location = r => {
+  const l = S.locations[r.id]; if(!l) return `<div class="empty">Standort existiert nicht mehr.</div>`;
+  const M = measOf(l.id); const rng = R.locRange||"30";
+  const cut = rng==="alle" ? 0 : Date.now()-(+rng)*864e5;
+  const P = M.filter(m=>ms(m.at)>=cut);
+  const stat = k => { const v=P.map(p=>p[k]).filter(x=>x!=null).map(Number); return v.length? `${fmtN(Math.min(...v),1)} / ${fmtN(v.reduce((a,b)=>a+b,0)/v.length,1)} / ${fmtN(Math.max(...v),1)}` : "–"; };
+  const conts = all("containers").filter(c=>c.locationId===l.id);
+  let h = `<div class="pagehead"><h1>${esc(l.name)}</h1>${l.notes?`<p class="muted" style="margin:0">${esc(l.notes)}</p>`:""}</div>
+  <div class="btns"><button class="btn primary" data-act="newMeasure" data-loc="${l.id}">Messwert</button><button class="btn" data-act="importCsv" data-loc="${l.id}">CSV-Import</button><button class="btn" data-act="editLocation" data-id="${l.id}">Bearbeiten</button></div>
+  ${sensorCard(l)}
+  <div class="seg" role="group">${[["7","7 Tage"],["30","30 Tage"],["90","90 Tage"],["alle","Alle"]].map(([k,t])=>`<button data-act="locRange" data-k="${k}" aria-pressed="${k===rng}">${t}</button>`).join("")}</div>
+  <div class="card tw"><table class="t"><thead><tr><th></th><th>min / Ø / max</th><th>n</th></tr></thead><tbody><tr><td>Temperatur °C</td><td>${stat("temp")}</td><td>${P.filter(p=>p.temp!=null).length}</td></tr><tr><td>Luftfeuchte %</td><td>${stat("rh")}</td><td>${P.filter(p=>p.rh!=null).length}</td></tr></tbody></table></div>
+  <section class="sec"><div class="sec-h"><h2>Temperatur</h2></div><div class="card">${lineChart(P,"temp","°C","var(--crit)")}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Luftfeuchte</h2></div><div class="card">${lineChart(P,"rh","%","var(--accent)")}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Behälter hier</h2></div><div class="list">${conts.length? conts.map(c=>`<div class="row static"><span class="main"><span class="t">${esc(c.name)}</span><span class="s">${all("individuals").filter(i=>i.containerId===c.id).length} Tiere</span></span></div>`).join("") : `<div class="empty">Keine Behälter zugeordnet (unter Mehr → Behälter).</div>`}</div></section>
+  <section class="sec"><div class="sec-h"><h2>Letzte Werte</h2></div><div class="list">${[...M].reverse().slice(0,12).map(m=>`<button class="row" data-act="editMeasure" data-id="${esc(m.key)}"><span class="main"><span class="t mono">${dDE(m.at)} ${m.at.slice(11,16)}</span><span class="s">${m.src==="c"?"Import":m.src==="b"?"Sensor":"manuell"}</span></span><span class="end mono">${m.temp!=null?fmtN(m.temp,1)+" °C":""} ${m.rh!=null?fmtN(m.rh,0)+" %":""}</span></button>`).join("") || `<div class="empty">Noch keine Werte.</div>`}</div></section>`;
+  return h;
+};
+ACTS.locRange = d => { R.locRange = d.k; render(); };
+
+/* ---- Auswertung ---- */
+VIEWS.stats = () => {
+  const inds = all("individuals");
+  const deaths = inds.map(i=>[i,deathOf(i)]).filter(([i,d])=>d && !firstEv(i,"falterschlupf"));
+  let h = `<div class="pagehead"><h1>Auswertung</h1><p class="muted" style="margin:0">Über alle Zuchtansätze. Bei kleinen Zahlen sind Unterschiede oft Zufall: achte auf n.</p></div>`;
+  const byCause = {}; deaths.forEach(([i,d])=>{ const c=d.data?.cause||"unbekannt"; (byCause[c] ||= {s:0,v:0}); byCause[c][d.data?.certainty==="vermutet"?"v":"s"]++; });
+  const maxC = Math.max(1,...Object.values(byCause).map(x=>x.s+x.v));
+  h += `<section class="sec"><div class="sec-h"><h2>Verluste nach Ursache</h2><span class="small muted">n=${deaths.length}</span></div><div class="card">${deaths.length? `<div class="bars">${Object.entries(byCause).sort((a,b)=>(b[1].s+b[1].v)-(a[1].s+a[1].v)).map(([c,x])=>`<div class="bar"><span class="lbl" title="${esc(CAUSES[c]||c)}">${esc(CAUSES[c]||c)}</span><span class="track2"><i style="width:${x.s/maxC*100}%"></i><i class="v" style="width:${x.v/maxC*100}%"></i></span><span class="v">${x.s+x.v}</span></div>`).join("")}</div><div class="legend" style="margin-top:8px"><span><i style="background:var(--crit)"></i>sicher</span><span><i style="background:repeating-linear-gradient(135deg,var(--crit) 0 3px,var(--crit-soft) 3px 6px)"></i>Verdacht</span></div>` : `<div class="empty" style="padding:4px 0">Keine Verluste eingetragen.</div>`}</div></section>`;
+  const byStage = {}; deaths.forEach(([i,d])=>{ const s = d.data?.stage || currentStage(i); byStage[s]=(byStage[s]||0)+1; });
+  if(deaths.length){ const mx=Math.max(...Object.values(byStage));
+    h += `<section class="sec"><div class="sec-h"><h2>Verluste nach Stadium</h2></div><div class="card bars">${STAGES.filter(s=>byStage[s.k]).map(s=>`<div class="bar"><span class="lbl">${s.l}</span><span class="track2"><i style="width:${byStage[s.k]/mx*100}%"></i></span><span class="v">${byStage[s.k]}</span></div>`).join("")}</div></section>`; }
+  // Verluste je Behälter / Ansatz
+  const grp = (keyFn, nameFn) => { const g={}; inds.forEach(i=>{ const k=keyFn(i); if(!k) return; (g[k] ||= {n:0,l:0}); g[k].n++; if(statusOf(i)==="tot" && !firstEv(i,"falterschlupf")) g[k].l++; }); return Object.entries(g).map(([k,x])=>({name:nameFn(k),...x})); };
+  const bb = grp(i=>i.broodId, k=>S.broods[k]?.name||"?");
+  const bc = grp(i=>i.containerId, k=>S.containers[k]?.name||"?");
+  const tbl = (rows,title) => rows.length? `<section class="sec"><div class="sec-h"><h2>${title}</h2></div><div class="card tw"><table class="t"><thead><tr><th></th><th>Tiere</th><th>Verluste</th><th>Anteil</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.name)}</td><td>${r.n}</td><td>${r.l}</td><td>${fmtN(r.l/r.n*100,0)} %</td></tr>`).join("")}</tbody></table></div></section>` : "";
+  h += tbl(bb,"Verluste je Zuchtansatz") + tbl(bc,"Verluste je Behälter");
+  // Puppenruhe je Art
+  for(const sp of all("species")){
+    for(const basis of ["eingegraben","verpuppt"]){
+      const ds = pupalDurations(sp.id, basis); if(!ds.length) continue;
+      const g = s => ds.filter(x=>x.sex===s).map(x=>x.d);
+      const line = (l,a) => a.length? `<tr><td>${l}</td><td>${a.length}</td><td>${Math.min(...a)}</td><td>${fmtN(median(a),1)}</td><td>${Math.max(...a)}</td></tr>` : "";
+      h += `<section class="sec"><div class="sec-h"><h2>Puppenruhe <span class="sp" style="text-transform:none;letter-spacing:0">${esc(sp.sci)}</span></h2><span class="small muted">${basis==="verpuppt"?"ab Verpuppung":"ab Eingraben"}</span></div><div class="card tw"><table class="t"><thead><tr><th></th><th>n</th><th>min</th><th>Median</th><th>max</th></tr></thead><tbody>${line("Weibchen",g("f"))}${line("Männchen",g("m"))}${line("unbekannt",g("u"))}${line("alle",ds.map(x=>x.d))}</tbody></table></div></section>`;
+    }
+  }
+  return h;
+};
+
+/* ---- Suche ---- */
+VIEWS.search = () => {
+  const q = (R.gq||"").toLowerCase().trim();
+  let h = `<div class="search">${svg("search").replace('<svg','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.8"')}<input id="gq" placeholder="Name, Art, Notiz, Futterpflanze …" value="${esc(R.gq||"")}" autofocus></div>`;
+  if(!q) return h + `<p class="muted small">Durchsucht Tiere, Zuchtansätze, Arten, Falter und Notizen in Ereignissen.</p>`;
+  const has = s => (s||"").toLowerCase().includes(q);
+  const I = all("individuals").filter(i=>has(i.name)||has(i.notes)).sort(byName);
+  const B = all("broods").filter(b=>has(b.name)||has(b.notes)||has(S.species[b.speciesId]?.sci)||has(S.species[b.speciesId]?.de)||has(S.sources[b.sourceId]?.name));
+  const M = openImagos().filter(m=>has(m.label)||has(m.notes));
+  const E = all("events").filter(e=>has(e.note)||has(evTitle(e))).sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,40);
+  const sec = (t,arr,fn) => arr.length? `<section class="sec"><div class="sec-h"><h2>${t}</h2><span class="small muted">${arr.length}</span></div><div class="list">${arr.map(fn).join("")}</div></section>` : "";
+  h += sec("Tiere",I,i=>indRow(i)) + sec("Zuchtansätze",B,broodRow) + sec("Offene Falter",M,imagoRow)
+    + sec("Ereignisse",E,e=>`<button class="row" ${e.individualId?`data-go="animal:${e.individualId}"`:`data-act="editEvent" data-id="${e.id}"`}><span class="main"><span class="t">${esc(evTitle(e))}</span><span class="s">${esc(e.individualId?indName(e.individualId):"")} · ${esc(fmtTime(e))}${e.note?" · "+esc(e.note):""}</span></span></button>`);
+  if(!I.length&&!B.length&&!M.length&&!E.length) h += `<p class="muted">Nichts gefunden für „${esc(R.gq)}“.</p>`;
+  return h;
+};
+document.addEventListener("input", e => { if(e.target.id==="gq"){ R.gq = e.target.value; scheduleRender(); } });
+
+/* ---- Mehr ---- */
+VIEWS.more = () => `<div class="pagehead"><h1>Mehr</h1></div>
+  <div class="list">
+    <button class="row" data-go="stats"><span class="main"><span class="t">Auswertung</span><span class="s">Verluste, Puppenruhe je Art</span></span></button>
+    <button class="row" data-go="species"><span class="main"><span class="t">Arten</span><span class="s">${all("species").length} im Katalog</span></span></button>
+    <button class="row" data-go="sources"><span class="main"><span class="t">Herkünfte</span><span class="s">Züchter, Wildfunde, eigene Nachzucht</span></span></button>
+    <button class="row" data-go="containers"><span class="main"><span class="t">Behälter</span><span class="s">Boxen, Becher, Käfige mit Standort</span></span></button>
+    <button class="row" data-act="labels"><span class="main"><span class="t">Etiketten drucken</span><span class="s">QR-Codes als PDF oder direkt drucken</span></span></button>
+    <button class="row" data-go="data"><span class="main"><span class="t">Daten &amp; Sicherung</span><span class="s">Backup mit Fotos, CSV, Wiederherstellen</span></span></button>
+  </div>
+  ${_installEvt?`<div class="btns"><button class="btn primary" data-act="install">Als App installieren</button></div>`:""}
+  <p class="small muted">Speicher: ${store.mode==="idb"?"auf diesem Gerät (IndexedDB)":"nicht verfügbar"}${store.persisted===true?", dauerhaft geschützt":store.persisted===false?", nicht dauerhaft geschützt":""}. Mach regelmäßig ein Backup unter <b>Daten &amp; Sicherung</b>.</p>
+  <p class="small muted mono">Version ${APP_VERSION}</p>`;
+
+VIEWS.species = () => `<div class="pagehead"><h1>Arten</h1></div><div class="btns"><button class="btn primary" data-act="editSpecies">+ Art</button></div>
+  <div class="list">${all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>`<button class="row" data-act="editSpecies" data-id="${s.id}"><span class="main"><span class="t sp">${esc(s.sci)}</span><span class="s">${esc(s.de||"")}${s.family?" · "+esc(s.family):""}</span></span><span class="end small muted">${all("broods").filter(b=>b.speciesId===s.id).length} Ansätze</span></button>`).join("") || `<div class="empty">Keine Arten.</div>`}</div>`;
+VIEWS.sources = () => `<div class="pagehead"><h1>Herkünfte</h1></div><div class="btns"><button class="btn primary" data-act="editSource">+ Herkunft</button></div>
+  <div class="list">${all("sources").sort(byName).map(s=>`<button class="row" data-act="editSource" data-id="${s.id}"><span class="main"><span class="t">${esc(s.name)}</span><span class="s">${esc({zuechter:"Züchter",wild:"Wildfund",nachzucht:"Eigene Nachzucht",haendler:"Händler/Börse"}[s.type]||"")}${s.notes?" · "+esc(s.notes):""}</span></span></button>`).join("") || `<div class="empty">Noch keine Herkunft.</div>`}</div>`;
+VIEWS.containers = () => `<div class="pagehead"><h1>Behälter</h1><p class="muted" style="margin:0">Behälter bekommen ein eigenes QR-Etikett. Ein Standort verknüpft sie mit den Klimawerten.</p></div><div class="btns"><button class="btn primary" data-act="editContainer">+ Behälter</button></div>
+  <div class="list">${all("containers").sort(byName).map(c=>`<button class="row" data-act="editContainer" data-id="${c.id}"><span class="main"><span class="t">${esc(c.name)}</span><span class="s">${esc(S.locations[c.locationId]?.name||"ohne Standort")} · ${all("individuals").filter(i=>i.containerId===c.id).length} Tiere</span></span></button>`).join("") || `<div class="empty">Noch keine Behälter.</div>`}</div>`;
+
+VIEWS.data = () => {
+  const last = store.meta.lastBackup;
+  const nPh = all("photos").length;
+  const est = store.estimate;
+  return `<div class="pagehead"><h1>Daten &amp; Sicherung</h1><p class="muted" style="margin:0">Alles liegt nur auf diesem Gerät. Ein Backup ist deine einzige Kopie, falls das Handy kaputtgeht oder Chrome-Daten gelöscht werden.</p></div>
+  <section class="sec"><div class="sec-h"><h2>Backup</h2><span class="small muted">${last?`zuletzt ${dDE(last)} ${last.slice(11,16)}`:"noch nie"}</span></div><div class="card sec">
+  <p style="margin:0">Eine <b>JSON-Datei mit allem</b>, auch mit den ${nPh} Foto${nPh===1?"":"s"}. Leg sie z. B. in Google Drive ab. Mit „Backup einspielen“ holst du alles zurück, auch auf einem neuen Handy.</p>
+  <div class="btns"><button class="btn primary" data-act="exportJson">Backup speichern</button><button class="btn" data-act="exportCsv">Tiere als CSV</button></div><div id="exst" class="small muted">${esc(R.exMsg||"")}</div></div></section>
+  <section class="sec"><div class="sec-h"><h2>Backup einspielen</h2></div><div class="card sec">
+  <div class="seg" role="group" id="impMode"><button data-im="merge" aria-pressed="${R.impMode!=="replace"}">Zusammenführen</button><button data-im="replace" aria-pressed="${R.impMode==="replace"}">Alles ersetzen</button></div>
+  <p class="small muted" style="margin:0">${R.impMode==="replace"?"<b style=\"color:var(--crit)\">Alles auf diesem Gerät wird gelöscht</b> und durch das Backup ersetzt.":"Gleiche Einträge werden überschrieben, nichts wird gelöscht. Geht auch mit Sicherungen aus der alten Claude-Version."}</p>
+  <div class="btns"><label class="btn filebtn">Datei wählen<input type="file" id="fileJson" accept="application/json,.json" class="vh"></label></div><div id="imst" class="small muted">${esc(R.imMsg||"")}</div></div></section>
+  <section class="sec"><div class="sec-h"><h2>Speicher</h2></div><div class="card sec">
+  <p style="margin:0">${store.persisted===true?`<span class="pill good">dauerhaft</span> Chrome löscht die Daten nicht von selbst, auch wenn der Speicher knapp wird.`:`<span class="pill warn">nicht dauerhaft</span> Chrome könnte die Daten bei Speichermangel löschen. Installierst du das Raupenbuch als App (Chrome-Menü → „App installieren“), wird der Schutz meist erteilt.`}</p>
+  ${est&&est.usage!=null?`<p class="small muted mono" style="margin:0">belegt ${fmtN(est.usage/1048576,1)} MB${est.quota?` von ca. ${fmtN(est.quota/1073741824,1)} GB`:""}</p>`:""}
+  ${store.persisted!==true?`<div class="btns"><button class="btn" data-act="askPersist">Dauerhaften Speicher anfragen</button></div>`:""}</div></section>`;
+};
+document.addEventListener("click", e => { const b = e.target.closest("#impMode [data-im]"); if(b){ R.impMode = b.dataset.im; render(); } });
+ACTS.askPersist = async () => { await store.checkPersist(true); toast(store.persisted ? "Speicher ist jetzt dauerhaft" : "Chrome hat abgelehnt. Installieren hilft meist."); };
+
+function backupCard(){
+  const last = store.meta.lastBackup; const n = all("individuals").length + all("events").length;
+  if(!n) return "";
+  const age = last ? Math.floor((Date.now() - ms(last))/864e5) : null;
+  const due = age===null || age>=7;
+  return `<div class="card backup ${due?"due":""}"><span class="small">${age===null?"<b>Noch kein Backup.</b> Deine Daten liegen nur auf diesem Handy.":age===0?"Backup von heute":`Letztes Backup vor <b>${age} Tag${age===1?"":"en"}</b>`}</span><button class="btn ${due?"primary":""}" data-act="exportJson">Backup speichern</button></div>`;
+}
+
+let _installEvt = null;
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); _installEvt = e; scheduleRender(); });
+ACTS.install = async () => { if(!_installEvt) return; _installEvt.prompt(); try { await _installEvt.userChoice; } catch(e){} _installEvt = null; render(); };
+
+/* ============ Aktionen & Formulare ============ */
+const speciesOpts = () => all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>[s.id, `${s.sci}${s.de?" – "+s.de:""}`]);
+const sourceOpts = () => [["","– keine –"], ...all("sources").sort(byName).map(s=>[s.id,s.name])];
+const contOpts = () => [["","– kein Behälter –"], ...all("containers").sort(byName).map(c=>[c.id, c.name])];
+const locOpts = () => [["","– kein Standort –"], ...all("locations").sort(byName).map(l=>[l.id,l.name])];
+const stageOpts = () => STAGES.filter(s=>s.k!=="falter").map(s=>[s.k, s.l]);
+
+/* ---- Zuchtansatz ---- */
+ACTS.newBrood = () => broodSheet();
+ACTS.editBrood = d => broodSheet(S.broods[d.id]);
+function broodSheet(b){
+  const sp = speciesOpts();
+  const root = openSheet(`<h2>${b?"Zuchtansatz bearbeiten":"Neuer Zuchtansatz"}</h2>
+    ${fld.text("bName","Name",b?.name||"", "z. B. Atropos 2026")}
+    ${fld.sel("bSp","Art",sp,b?.speciesId||sp[0]?.[0])}
+    <div class="frow2">${fld.sel("bSrc","Herkunft",[...sourceOpts(),["__new","+ neue Herkunft …"]],b?.sourceId||"")}${fld.text("bGen","Generation",b?.generation||"","z. B. 1")}</div>
+    ${fld.text("bSrcNew","Name der neuen Herkunft","","z. B. Jana")}
+    <div class="frow2">${fld.date("bStart","Startdatum",b?.startDate||todayISO())}${fld.sel("bStage","Start als",stageOpts(),b?.startStage||"L1")}</div>
+    ${fld.area("bNotes","Notizen",b?.notes||"")}
+    <div class="btns"><button class="btn primary" id="ok">${b?"Speichern":"Anlegen"}</button>${b?`<button class="btn danger" id="del">Löschen</button>`:""}</div>
+    ${b?confirmBlock(`„${esc(b.name)}“ mit allen ${indsOf(b.id).length} Tieren und deren Einträgen löschen?`,"Endgültig löschen"):""}`);
+  const nw = root.querySelector("#bSrcNew").closest(".f"); nw.hidden = true;
+  root.querySelector("#bSrc").addEventListener("change", e => nw.hidden = e.target.value!=="__new");
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const name = val(root,"bName"); if(!name){ toast("Bitte einen Namen eingeben"); return; }
+    let sourceId = val(root,"bSrc");
+    if(sourceId==="__new"){ const sn = val(root,"bSrcNew"); sourceId = sn ? await store.put("sources",{name:sn,type:"zuechter"}) : ""; }
+    const id = await store.put("broods",{...(b||{}), name, speciesId:val(root,"bSp"), sourceId:sourceId||null, generation:val(root,"bGen"), startDate:val(root,"bStart"), startStage:val(root,"bStage"), notes:val(root,"bNotes")});
+    closeSheet(); if(!b) nav("brood",{id});
+  });
+  if(b) wireConfirm(root,"#del", async () => {
+    closeSheet(); const inds = indsOf(b.id);
+    for(const i of inds){ for(const e of evOf(i.id)) await store.del("events",e.id); await store.del("individuals",i.id); }
+    for(const e of (evIndex().brood[b.id]||[])) await store.del("events",e.id);
+    await store.del("broods",b.id); R.stack=[{v:"animals"}]; render(); toast("Zuchtansatz gelöscht");
+  });
+}
+
+/* ---- Tiere hinzufügen (inkl. Notizen-Import) ---- */
+ACTS.addInds = d => {
+  const b = S.broods[d.id];
+  const root = openSheet(`<h2>Tiere hinzufügen</h2>
+    <div class="seg" role="group"><button data-m="count" aria-pressed="true">Anzahl</button><button data-m="names" aria-pressed="false">Mit Namen</button><button data-m="notes" aria-pressed="false">Aus Notizen</button></div>
+    <div id="mCount">${fld.num("iCount","Wie viele Tiere?","","1")}<div class="hint">Die Tiere werden automatisch benannt, z. B. <span class="mono">${esc(nextAutoNames(b.speciesId,2).join(", "))} …</span> Umbenennen geht jederzeit.</div>
+      ${fld.sel("iSexC","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],"u")}</div>
+    <div id="mNames" hidden>${fld.area("iNames","Namen","", "Sirius, Polaris, Vega …")}<div class="hint">Durch Komma oder Zeilenumbruch trennen.</div>
+      ${fld.sel("iSex","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],"u")}</div>
+    <div id="mNotes" hidden>${fld.area("iNotes","Eine Zeile pro Tier","", "Sirius; m; 21.08.2026; 24.09.2026\nVega; w; 22.08.2026\nDeneb; w; 23.08.2026; Nacht 27.09.2026")}
+      <div class="hint">Format: <span class="mono">Name; Geschlecht; eingegraben; geschlüpft</span>. Geschlecht als m, w oder ?. Hinten darf etwas fehlen. Ohne Namen die Zeile mit <span class="mono">;</span> beginnen, z. B. <span class="mono">; w; 22.08.2026</span>. Vor ein Schlupfdatum kannst du „Nacht“ schreiben, wenn es über Nacht war (Datum des Abends).</div></div>
+    ${fld.sel("iCont","Behälter",contOpts(),"")}
+    <div id="prev" class="small muted"></div>
+    <div class="btns"><button class="btn primary" id="ok">Hinzufügen</button></div>`);
+  let mode = "count";
+  root.querySelectorAll("[data-m]").forEach(btn => btn.addEventListener("click", () => {
+    mode = btn.dataset.m; root.querySelectorAll("[data-m]").forEach(x=>x.setAttribute("aria-pressed", x===btn));
+    root.querySelector("#mCount").hidden = mode!=="count"; root.querySelector("#mNames").hidden = mode!=="names"; root.querySelector("#mNotes").hidden = mode!=="notes"; upd();
+  }));
+  const parse = () => {
+    if(mode==="count"){ const n=Math.min(parseInt(val(root,"iCount"))||0,300); return nextAutoNames(b.speciesId,n).map(name=>({name})); }
+    if(mode==="names"){
+      const raw = val(root,"iNames");
+      return raw.split(/[,\n;]+/).map(s=>s.trim()).filter(Boolean).map(name=>({name}));
+    }
+    const rows = val(root,"iNotes").split("\n").map(l=>l.trim()).filter(Boolean);
+    const autos = nextAutoNames(b.speciesId, rows.length); let ai = 0;
+    return rows.map(l=>{
+      const p = l.split(/[;\t|]/).map(s=>s.trim());
+      const sx = (p[1]||"").toLowerCase();
+      const sex = /^(m|männ|maenn|♂)/.test(sx)?"m":/^(w|f|weib|♀)/.test(sx)?"f":"u";
+      const night = /nacht/i.test(p[3]||"");
+      return {name:p[0]||autos[ai++], sex, burrow:parseDE((p[2]||"").replace(/[^\d.\-]/g,"")), eclose:parseDE((p[3]||"").replace(/[^\d.\-]/g,"")), night, bad:(p[2]&&!parseDE((p[2]||"").replace(/[^\d.\-]/g,"")))||(p[3]&&!parseDE((p[3]||"").replace(/[^\d.\-]/g,"")))};
+    }).filter(x=>x.name);
+  };
+  const upd = () => { const L = parse(); const bad = L.filter(x=>x.bad).length;
+    root.querySelector("#prev").innerHTML = L.length ? `${L.length} Tier(e): ${L.slice(0,6).map(x=>esc(x.name)).join(", ")}${L.length>6?" …":""}${mode==="notes"?` · ${L.filter(x=>x.burrow).length} mit Eingrabedatum, ${L.filter(x=>x.eclose).length} geschlüpft`:""}${bad?` · <b style="color:var(--crit)">${bad} Datum nicht erkannt</b>`:""}` : ""; };
+  root.addEventListener("input", upd);
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const L = parse(); if(!L.length){ toast("Keine Tiere erkannt"); return; }
+    const btn = root.querySelector("#ok"); btn.disabled = true; btn.textContent = "Speichere …";
+    const cont = val(root,"iCont")||null; const sexAll = mode==="names" ? val(root,"iSex") : mode==="count" ? val(root,"iSexC") : null;
+    for(const x of L){
+      const sex = sexAll || x.sex || "u";
+      const iid = await store.put("individuals",{name:x.name, broodId:b.id, sex, containerId:cont});
+      if(x.burrow) await store.put("events",{type:"eingegraben", individualId:iid, broodId:b.id, ...makeTime("tag",x.burrow), data:{}, note:"aus Notizen"});
+      if(sex!=="u" && mode==="notes") await store.put("events",{type:"geschlecht", individualId:iid, broodId:b.id, ...makeTime("tag", x.burrow||todayISO()), data:{sex, at:"puppe"}, note:"aus Notizen"});
+      if(x.eclose){
+        const t = makeTime(x.night?"nacht":"tag", x.eclose);
+        await store.put("events",{type:"falterschlupf", individualId:iid, broodId:b.id, ...t, data:{}, note:"aus Notizen"});
+      }
+    }
+    closeSheet(); toast(`${L.length} Tier(e) hinzugefügt`);
+  });
+};
+
+/* ---- Tier bearbeiten ---- */
+ACTS.editInd = d => {
+  const i = S.individuals[d.id];
+  const root = openSheet(`<h2>Tier bearbeiten</h2>${fld.text("nName","Name",i.name)}
+    <div class="frow2">${fld.sel("nSex","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],i.sex||"u")}${fld.sel("nCont","Behälter",contOpts(),i.containerId||"")}</div>
+    ${fld.sel("nBrood","Zuchtansatz",all("broods").map(b=>[b.id,b.name]),i.broodId)}
+    ${fld.area("nNotes","Notizen",i.notes||"")}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>
+    ${confirmBlock(`${esc(i.name)} mit allen Einträgen und Fotos löschen? Das lässt sich nicht rückgängig machen.`,"Endgültig löschen")}`);
+  root.querySelector("#ok").addEventListener("click", async () => {
+    await store.put("individuals",{...i, name:val(root,"nName")||nextAutoNames(S.broods[val(root,"nBrood")]?.speciesId,1)[0], sex:val(root,"nSex"), containerId:val(root,"nCont")||null, broodId:val(root,"nBrood"), notes:val(root,"nNotes")});
+    closeSheet();
+  });
+  wireConfirm(root,"#del", async () => {
+    closeSheet();
+    for(const e of evOf(i.id)) await store.del("events",e.id);
+    for(const p of photosOf("individual",i.id)){ await store.deletePhotoAsset(p); await store.del("photos",p.id); }
+    for(const m of openImagos()) if((m.candidates||[]).includes(i.id)) await store.put("imagos",{...m,candidates:m.candidates.filter(x=>x!==i.id)});
+    await store.del("individuals",i.id); back(); toast("Tier gelöscht");
+  });
+};
+
+/* ---- Ereignisse ---- */
+function evExtraFields(type, d={}){
+  switch(type){
+    case "haeutung": return fld.sel("xTo","Neues Stadium",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"]],d.to||"L2");
+    case "geschlecht": return `<div class="frow2">${fld.sel("xSex","Geschlecht",[["f","Weibchen"],["m","Männchen"]],d.sex||"f")}${fld.sel("xAt","bestimmt an",[["puppe","Puppe"],["falter","Falter"],["raupe","Raupe"]],d.at||"puppe")}</div>`;
+    case "gewicht": return fld.num("xG","Gewicht (g)",d.g??"","0.01");
+    case "futter": return fld.text("xPlant","Futterpflanze",d.plant||"","z. B. Liguster");
+    case "umgesetzt": return fld.sel("xCont","Neuer Behälter",contOpts(),d.containerId||"");
+    case "tod": return `${fld.sel("xCause","Ursache",Object.entries(CAUSES),d.cause||"unbekannt")}${fld.sel("xCert","Wie sicher?",[["sicher","sicher"],["vermutet","Verdacht"]],d.certainty||"vermutet")}`;
+    case "abgegeben": return fld.text("xTo2","An wen?",d.to||"");
+    default: return "";
+  }
+}
+function readExtra(root, type){
+  switch(type){
+    case "haeutung": return {to:val(root,"xTo")};
+    case "geschlecht": return {sex:val(root,"xSex"), at:val(root,"xAt")};
+    case "gewicht": return {g:parseFloat(val(root,"xG").replace(",","."))||null};
+    case "futter": return {plant:val(root,"xPlant")};
+    case "umgesetzt": return {containerId:val(root,"xCont")||null};
+    case "tod": return {cause:val(root,"xCause"), certainty:val(root,"xCert")};
+    case "abgegeben": return {to:val(root,"xTo2")};
+    default: return {};
+  }
+}
+async function applySideEffects(type, data, indId){
+  const i = S.individuals[indId]; if(!i) return;
+  if(type==="geschlecht" && data.sex) await store.put("individuals",{...i, sex:data.sex});
+  if(type==="umgesetzt") await store.put("individuals",{...i, containerId:data.containerId});
+}
+ACTS.quickEv = d => {
+  const preset = d.t==="any" ? null : d.t;
+  eventSheet({indIds:[d.ind], type:preset, data: d.to?{to:d.to}:{}});
+};
+ACTS.editEvent = d => eventSheet({ev:S.events[d.id]});
+function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, containerId=null, chooseInds=false}){
+  const editing = !!ev;
+  let t = ev?.type || type || "notiz";
+  const showType = editing || !type;
+  const who = ev ? (ev.individualId? indName(ev.individualId) : ev.containerId? S.containers[ev.containerId]?.name : S.broods[ev.broodId]?.name) : indIds.length===1 ? indName(indIds[0]) : "";
+  const pickList = chooseInds ? (broodId? indsOf(broodId) : all("individuals").sort(byName)).filter(i=>isAlive(i) || (containerId && i.containerId===containerId)) : [];
+  const typeOpts = Object.entries(ET).filter(([k])=>!(k==="falterschlupf" && !editing)).map(([k,v])=>[k,v.l]);
+  const root = openSheet(`<h2>${editing?"Eintrag bearbeiten":ET[t]&&!showType?ET[t].l:"Ereignis eintragen"}</h2>
+    ${who?`<p class="muted" style="margin:-8px 0 0">${esc(who)}</p>`:""}
+    ${showType?fld.sel("eType","Was ist passiert?",typeOpts,t):""}
+    ${chooseInds?`<div class="f"><span class="lab">Für welche Tiere? <button type="button" class="btn ghost" id="allBtn" style="min-height:0;padding:0 6px">alle</button></span><div class="checks">${pickList.map(i=>`<label><input type="checkbox" value="${i.id}" ${containerId&&i.containerId===containerId?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)} <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("")||`<div class="empty">Keine aktiven Tiere.</div>`}</div></div>`:""}
+    <div id="xf">${evExtraFields(t, ev?.data||data)}</div>
+    ${timeFields("e", ev)}
+    ${fld.area("eNote","Notiz",ev?.note||"")}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button>${editing?`<button class="btn danger" id="del">Löschen</button>`:""}</div>
+    ${editing?confirmBlock("Diesen Eintrag löschen?","Löschen"):""}`);
+  wireTime(root,"e");
+  const ts = root.querySelector("#eType");
+  if(ts) ts.addEventListener("change", () => { t = ts.value; root.querySelector("#xf").innerHTML = evExtraFields(t,{}); });
+  const ab = root.querySelector("#allBtn"); if(ab) ab.addEventListener("click", () => root.querySelectorAll(".checks input").forEach(c=>c.checked=true));
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const tm = readTime(root,"e"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
+    const extra = readExtra(root,t);
+    if(t==="haeutung" && !extra.to){ toast("Bitte Stadium wählen"); return; }
+    if(editing){
+      const e2 = {...ev, type:t, ...tm, data:extra, note:val(root,"eNote")};
+      if(t==="tod" && ev.individualId && !extra.stage) e2.data.stage = ev.data?.stage || null;
+      await store.put("events", e2);
+      if(ev.individualId) await applySideEffects(t, extra, ev.individualId);
+      closeSheet(); return;
+    }
+    const targets = chooseInds ? [...root.querySelectorAll(".checks input:checked")].map(c=>c.value) : indIds;
+    if(!targets.length){ toast("Bitte mindestens ein Tier wählen"); return; }
+    for(const id of targets){
+      const i = S.individuals[id]; const dx = {...extra};
+      if(t==="tod") dx.stage = currentStage(i);
+      await store.put("events",{type:t, individualId:id, broodId:i.broodId, ...tm, data:dx, note:val(root,"eNote")});
+      await applySideEffects(t, dx, id);
+    }
+    closeSheet(); toast(targets.length>1?`${targets.length} Einträge gespeichert`:"Gespeichert");
+  });
+  if(editing) wireConfirm(root,"#del", async () => { await store.del("events",ev.id); closeSheet(); toast("Eintrag gelöscht"); });
+}
+ACTS.multiEvent = d => {
+  const broods = all("broods");
+  if(!broods.length){ toast("Lege zuerst einen Zuchtansatz an"); return; }
+  eventSheet({chooseInds:true, broodId:d.brood||null, containerId:d.cont||null, type:null});
+};
+
+/* ---- Falterschlupf ---- */
+ACTS.eclosion = d => {
+  const preInd = d.ind ? S.individuals[d.ind] : null;
+  const broodId = preInd?.broodId || d.brood || null;
+  const cand = all("individuals").filter(i=>isAlive(i) && ["vorpuppe","puppe"].includes(currentStage(i)) && (!broodId || i.broodId===broodId)).sort(byName);
+  if(!cand.length && !preInd){ toast("Keine liegenden Puppen gefunden"); return; }
+  const yest = addDays(todayISO(),-1);
+  const root = openSheet(`<h2>Falterschlupf erfassen</h2>
+    <div class="f"><span class="lab">Welche Puppen sind leer?</span><div class="checks">${cand.map(i=>`<label><input type="checkbox" value="${i.id}" ${preInd&&preInd.id===i.id?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)}<span class="small muted" style="margin-left:auto">${esc(S.broods[i.broodId]?.name||"")}</span></label>`).join("")}</div>
+    <span class="hint">Wähle alle Puppen, die im selben Zeitraum geschlüpft sind. Jede bekommt einen Falter-Eintrag.</span></div>
+    <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="known" style="width:20px;height:20px;min-height:0"><span>Ich weiß sicher, welcher Falter aus welcher Puppe kam</span></label>
+    ${timeFields("s",{prec:"nacht", t0:yest+"T20:00", t1:todayISO()+"T08:00"})}
+    ${fld.area("sNote","Notiz","", "z. B. alle im Netzkäfig, wild umhergeflogen")}
+    <div id="sPrev" class="small muted"></div>
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  wireTime(root,"s");
+  const sel = () => [...root.querySelectorAll(".checks input:checked")].map(c=>c.value);
+  const upd = () => { const n = sel().length, k = root.querySelector("#known").checked;
+    root.querySelector("#sPrev").textContent = n<=1 ? (n? "Der Falter wird direkt diesem Tier zugeordnet." : "") : k ? `${n} Falter werden direkt ihren Puppen zugeordnet.` : `${n} Falter werden als „offen“ angelegt. Jeder hat ${n} mögliche Puppen, bis du sie zuordnest.`; };
+  root.addEventListener("change", upd); upd();
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const ids = sel(); if(!ids.length){ toast("Bitte mindestens eine Puppe wählen"); return; }
+    const tm = readTime(root,"s"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
+    const known = root.querySelector("#known").checked || ids.length===1;
+    const note = val(root,"sNote");
+    for(const id of ids){ const i=S.individuals[id]; await store.put("events",{type:"falterschlupf", individualId:id, broodId:i.broodId, ...tm, data:{}, note}); }
+    if(!known){
+      const batchId = uid(); const label = `Schlupf ${fmtTime(tm)} · ${ids.length} Falter`;
+      const sexes = new Set(ids.map(id=>S.individuals[id].sex||"u"));
+      const sx = sexes.size===1 ? [...sexes][0] : "u";
+      for(let k=0;k<ids.length;k++) await store.put("imagos",{label:`Falter ${String.fromCharCode(65+k)}`, individualId:null, candidates:[...ids], sex:sx, eclosedAt:tm.t0, batchId, batchLabel:label});
+    }
+    closeSheet(); toast(known?"Schlupf gespeichert":"Gespeichert. Ordne die Falter zu, sobald du es weißt."); if(!known) tab("imagos");
+  });
+};
+
+/* ---- Zuordnung: Falter-Eintrag geht im Tier auf ---- */
+async function dissolveImago(m, indId){
+  const ind = S.individuals[indId]; if(!ind){ await store.del("imagos", m.id); return; }
+  for(const p of photosOf("imago", m.id)) await store.put("photos",{...p, subjectType:"individual", subjectId:indId});
+  const patch = {};
+  if(m.notes) patch.notes = [ind.notes, `Falter (${m.label}): ${m.notes}`].filter(Boolean).join("\n");
+  if(m.sex && m.sex!=="u" && (!ind.sex || ind.sex==="u")) patch.sex = m.sex;
+  if(Object.keys(patch).length) await store.put("individuals",{...ind, ...patch});
+  const map = {"tot":"tod","präpariert":"praepariert","freigelassen":"freigelassen"};
+  const et = map[m.state];
+  if(et && !evOf(indId).some(e=>e.type===et)) await store.put("events",{type:et, individualId:indId, broodId:ind.broodId, ...makeTime("tag", todayISO()), data: et==="tod"?{cause:"unbekannt", certainty:"vermutet", stage:"falter"}:{}, note:"vom Falter-Eintrag übernommen"});
+  await store.del("imagos", m.id);
+}
+ACTS.assign = async d => {
+  const m = S.imagos[d.id]; if(!m) return;
+  const done = [`${m.label} = ${indName(d.ind)}`];
+  let pending = [[m, d.ind]];
+  while(pending.length){
+    const [x, indId] = pending.shift();
+    const batch = x.batchId;
+    await dissolveImago(x, indId);
+    if(!batch) continue;
+    for(const y of openImagos().filter(y=>y.batchId===batch && !pending.some(p=>p[0].id===y.id))){
+      const c = (y.candidates||[]).filter(id=>id!==indId && S.individuals[id]);
+      if(c.length===1){ pending.push([y, c[0]]); done.push(`${y.label} = ${indName(c[0])}`); }
+      else await store.put("imagos",{...y, candidates:c});
+    }
+  }
+  toast(done.length>1 ? `Zugeordnet: ${done.join(", ")}` : `Zugeordnet: ${done[0]}`);
+  tab(openImagos().length ? "imagos" : "home"); if(!openImagos().length) nav("animal",{id:d.ind});
+};
+ACTS.editImago = d => {
+  const m = S.imagos[d.id];
+  const root = openSheet(`<h2>Falter bearbeiten</h2>${fld.text("mLabel","Bezeichnung",m.label)}
+    ${fld.sel("mSex","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],m.sex||"u")}
+    ${fld.area("mNotes","Notizen",m.notes||"","z. B. Merkmale zum Wiedererkennen")}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>
+    ${confirmBlock("Diesen Falter-Eintrag samt Fotos löschen? Das Schlupfdatum an den Tieren bleibt erhalten.","Löschen")}`);
+  root.querySelector("#ok").addEventListener("click", async () => { await store.put("imagos",{...m, label:val(root,"mLabel")||m.label, sex:val(root,"mSex"), notes:val(root,"mNotes")}); closeSheet(); });
+  wireConfirm(root,"#del", async () => { closeSheet(); for(const p of photosOf("imago",m.id)){ await store.deletePhotoAsset(p); await store.del("photos",p.id); } await store.del("imagos",m.id); back(); });
+};
+
+/* Bestehende, bereits zugeordnete Falter-Einträge einmalig ins Tier überführen */
+let _migrated = false;
+async function migrateImagos(){
+  if(_migrated || !store.ready()) return; _migrated = true;
+  const old = all("imagos").filter(m=>m.individualId);
+  for(const m of old) await dissolveImago(m, m.individualId);
+}
+
+/* ---- Fotos ---- */
+ACTS.addPhoto = d => {
+  const def = d.type==="imago" ? "thorax" : (["vorpuppe","puppe"].includes(currentStage(S.individuals[d.id]||{}))?"puppe":"raupe");
+  const root = openSheet(`<h2>Foto hinzufügen</h2>
+    <div class="f"><span class="lab">Ansicht</span><div class="chips">${Object.entries(PVIEWS).map(([k,l])=>`<button type="button" class="chip ${k===def?"on":""}" data-v="${k}">${l}</button>`).join("")}</div>
+    <span class="hint">Für den Vergleich: gleiche Ansicht, gleicher Abstand, gleiches Licht.</span></div>
+    <label class="btn primary block filebtn" id="pick">Kamera oder Galerie<input type="file" id="pf" accept="image/*" multiple class="vh"></label><div id="pst" class="small muted"></div>`);
+  let view = def;
+  root.querySelectorAll("[data-v]").forEach(b=>b.addEventListener("click",()=>{ view=b.dataset.v; root.querySelectorAll("[data-v]").forEach(x=>x.classList.toggle("on",x===b)); }));
+  const pf = root.querySelector("#pf");
+  pf.addEventListener("change", async () => {
+    const files = [...pf.files]; if(!files.length) return;
+    const st = root.querySelector("#pst"); root.querySelector("#pick").classList.add("spin");
+    let ok = 0;
+    for(const [k,f] of files.entries()){
+      st.textContent = `Speichere Foto ${k+1} von ${files.length} …`;
+      try {
+        const blob = await shrinkImage(f);
+        const ref = await store.uploadPhoto(blob);
+        const taken = f.lastModified ? new Date(f.lastModified) : new Date();
+        await store.put("photos",{...ref, subjectType:d.type, subjectId:d.id, view, takenAt:`${dFromMs(taken.getTime())}T${pad(taken.getHours())}:${pad(taken.getMinutes())}`});
+        ok++;
+      } catch(e){ st.textContent = `Foto ${k+1} fehlgeschlagen: ${e && (e.code||e.message) || "Fehler"}`; }
+    }
+    if(ok===files.length){ closeSheet(); toast(ok>1?`${ok} Fotos gespeichert`:"Foto gespeichert"); } else root.querySelector("#pick").classList.remove("spin");
+  });
+};
+ACTS.viewPhoto = d => {
+  const p = S.photos[d.id]; if(!p) return;
+  closeSheet();
+  const v = document.createElement("div"); v.className = "viewer"; v.id = "viewer";
+  v.innerHTML = `<img src="${esc(photoSrc(p))}" alt=""><div class="bar2"><span class="small mono">${esc(PVIEWS[p.view]||"")} · ${dDE(p.takenAt)}</span>
+    <div class="btns"><select id="pvSel" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k===p.view?"selected":""}>${l}</option>`).join("")}</select><button class="btn" id="pvDel">Löschen</button><button class="btn" id="pvX">Schließen</button></div>
+    <div id="pvC" hidden class="btns" style="width:100%"><span>Foto endgültig löschen?</span><button class="btn" id="pvYes" style="border-color:#e8806d;color:#e8806d">Löschen</button><button class="btn" id="pvNo">Abbrechen</button></div></div>`;
+  document.body.appendChild(v);
+  const close = () => v.remove();
+  v.querySelector("#pvX").onclick = close;
+  v.querySelector("#pvSel").onchange = async e => { await store.put("photos",{...p, view:e.target.value}); toast("Ansicht geändert"); };
+  v.querySelector("#pvDel").onclick = () => v.querySelector("#pvC").hidden = false;
+  v.querySelector("#pvNo").onclick = () => v.querySelector("#pvC").hidden = true;
+  v.querySelector("#pvYes").onclick = async () => { close(); await store.deletePhotoAsset(p); await store.del("photos",p.id); toast("Foto gelöscht"); };
+};
+/* ---- Klima ---- */
+ACTS.newLocation = () => locationSheet();
+ACTS.editLocation = d => locationSheet(S.locations[d.id]);
+function locationSheet(l){
+  const root = openSheet(`<h2>${l?"Standort bearbeiten":"Neuer Standort"}</h2>${fld.text("lName","Name",l?.name||"","z. B. Puppenkasten Keller")}${fld.area("lNotes","Notizen",l?.notes||"","z. B. Sensor: Hygrometer 1")}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button>${l?`<button class="btn danger" id="del">Löschen</button>`:""}</div>${l?confirmBlock("Standort und alle Messwerte löschen?","Löschen"):""}`);
+  root.querySelector("#ok").addEventListener("click", async () => { const n=val(root,"lName"); if(!n){toast("Bitte Namen eingeben");return;} await store.put("locations",{...(l||{}), name:n, notes:val(root,"lNotes")}); closeSheet(); });
+  if(l) wireConfirm(root,"#del", async () => { closeSheet(); for(const d of all("climate").filter(c=>c.locationId===l.id)) await store.del("climate",d.id); await store.del("locations",l.id); back(); });
+}
+async function addPoints(locId, pts){ // pts: [{date, time, temp, rh, src}]
+  const byDay = {};
+  for(const p of pts) (byDay[p.date] ||= []).push(p);
+  for(const [date, arr] of Object.entries(byDay)){
+    const id = `${locId}_${date}`;
+    const ex = S.climate[id];
+    const map = new Map((ex?.pts||[]).map(p=>[p[0],p]));
+    for(const p of arr) map.set(p.time, [p.time, p.temp, p.rh, p.src||"m"]);
+    await store.put("climate",{...(ex||{}), id, locationId:locId, date, pts:[...map.values()].sort((a,b)=>a[0].localeCompare(b[0]))});
+  }
+}
+ACTS.newMeasure = d => {
+  const locs = all("locations"); if(!locs.length){ toast("Lege zuerst einen Standort an"); locationSheet(); return; }
+  const n = nowLocal();
+  const root = openSheet(`<h2>Messwert eintragen</h2>${fld.sel("mLoc","Standort",locs.sort(byName).map(l=>[l.id,l.name]),d.loc||locs[0].id)}
+    <div class="frow2">${fld.date("mD","Datum",n.slice(0,10))}<div class="f"><label for="mT">Uhrzeit</label><input id="mT" type="time" value="${n.slice(11,16)}"></div></div>
+    <div class="frow2">${fld.num("mTemp","Temperatur (°C)","","0.1")}${fld.num("mRh","Luftfeuchte (%)","","1")}</div>
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const t = parseFloat(val(root,"mTemp").replace(",",".")), h = parseFloat(val(root,"mRh").replace(",","."));
+    if(!Number.isFinite(t) && !Number.isFinite(h)){ toast("Bitte Temperatur oder Luftfeuchte eingeben"); return; }
+    await addPoints(val(root,"mLoc"), [{date:val(root,"mD"), time:val(root,"mT")||"12:00", temp:Number.isFinite(t)?t:null, rh:Number.isFinite(h)?h:null, src:"m"}]);
+    closeSheet(); toast("Messwert gespeichert");
+  });
+};
+ACTS.editMeasure = d => {
+  const [dayId, time] = d.id.split("|"); const day = S.climate[dayId]; if(!day) return;
+  const p = day.pts.find(x=>x[0]===time); if(!p) return;
+  const root = openSheet(`<h2>Messwert ${dDE(day.date)} ${time}</h2><div class="frow2">${fld.num("mTemp","Temperatur (°C)",p[1]??"","0.1")}${fld.num("mRh","Luftfeuchte (%)",p[2]??"","1")}</div>
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>`);
+  const save = async (rm) => {
+    const t = parseFloat(val(root,"mTemp").replace(",",".")), h = parseFloat(val(root,"mRh").replace(",","."));
+    const pts = day.pts.filter(x=>x[0]!==time); if(!rm) pts.push([time, Number.isFinite(t)?t:null, Number.isFinite(h)?h:null, p[3]]);
+    pts.sort((a,b)=>a[0].localeCompare(b[0]));
+    if(pts.length) await store.put("climate",{...day, pts}); else await store.del("climate",day.id);
+    closeSheet();
+  };
+  root.querySelector("#ok").addEventListener("click", ()=>save(false));
+  root.querySelector("#del").addEventListener("click", ()=>save(true));
+};
+function parseClimateCsv(text){
+  const lines = text.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length) return [];
+  const delim = [";","\t",","].map(c=>[c,(lines[0].match(new RegExp(c==="\t"?"\t":"\\"+c,"g"))||[]).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const out = [];
+  for(const l of lines){
+    const c = l.split(delim).map(s=>s.trim().replace(/^"|"$/g,""));
+    let m = c[0].match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{1,2}):(\d{2})/) || null, date, time;
+    if(m){ date=`${m[1]}-${m[2]}-${m[3]}`; time=`${pad(+m[4])}:${m[5]}`; }
+    else { m = c[0].match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})[ ,]+(\d{1,2}):(\d{2})/); if(m){ let y=+m[3]; if(y<100)y+=2000; date=`${y}-${pad(+m[2])}-${pad(+m[1])}`; time=`${pad(+m[4])}:${m[5]}`; } }
+    if(!date) continue;
+    let rest = c.slice(1);
+    if(rest.length && /^\d{1,2}:\d{2}/.test(rest[0])) rest = rest.slice(1);
+    const nums = rest.map(s=>parseFloat(s.replace(",","."))).filter(Number.isFinite);
+    if(!nums.length) continue;
+    out.push({date, time, temp:nums[0]??null, rh:nums[1]??null});
+  }
+  // auf 10-Minuten-Mittel verdichten
+  const b = new Map();
+  for(const p of out){ const t = `${p.time.slice(0,3)}${String(Math.floor(+p.time.slice(3)/10)*10).padStart(2,"0")}`; const k = p.date+" "+t;
+    const x = b.get(k) || {date:p.date, time:t, ts:0, tn:0, hs:0, hn:0}; if(p.temp!=null){x.ts+=p.temp;x.tn++;} if(p.rh!=null){x.hs+=p.rh;x.hn++;} b.set(k,x); }
+  return [...b.values()].map(x=>({date:x.date, time:x.time, temp:x.tn?Math.round(x.ts/x.tn*10)/10:null, rh:x.hn?Math.round(x.hs/x.hn):null, src:"c"}));
+}
+ACTS.importCsv = d => {
+  const root = openSheet(`<h2>Sensordaten einfügen</h2><p class="muted" style="margin:0">Exportiere die Daten in der App deines Hygrometers als CSV und füge den Inhalt hier ein, oder wähle die Datei.</p>
+    ${fld.area("cTxt","CSV-Inhalt","", "2026-09-28 22:00;24,1;68\n2026-09-28 22:10;24,0;69")}
+    <label class="btn filebtn">Datei wählen<input type="file" id="cf" accept=".csv,text/csv,text/plain" class="vh"></label>
+    <div class="hint">Erwartet pro Zeile: Datum + Uhrzeit, Temperatur, Luftfeuchte. Werte werden zu 10-Minuten-Mitteln zusammengefasst.</div>
+    <div id="cprev" class="small muted"></div><div class="btns"><button class="btn primary" id="ok">Importieren</button></div>`);
+  const upd = () => { const P = parseClimateCsv(val(root,"cTxt")); const days = new Set(P.map(p=>p.date));
+    root.querySelector("#cprev").textContent = P.length ? `${P.length} Werte an ${days.size} Tag(en) erkannt (${dDE(P[0].date)} bis ${dDE(P[P.length-1].date)})` : val(root,"cTxt") ? "Keine Werte erkannt. Prüfe das Format." : ""; };
+  root.querySelector("#cTxt").addEventListener("input", upd);
+  const cf = root.querySelector("#cf");
+  cf.onchange = async () => { const f = cf.files[0]; if(!f) return; root.querySelector("#cTxt").value = await f.text(); upd(); };
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const P = parseClimateCsv(val(root,"cTxt")); if(!P.length){ toast("Keine Werte erkannt"); return; }
+    const b = root.querySelector("#ok"); b.disabled = true; b.textContent = "Importiere …";
+    await addPoints(d.loc, P); closeSheet(); toast(`${P.length} Werte importiert`);
+  });
+};
+
+/* ---- Bluetooth-Sensor (Xiaomi LYWSD03MMC, Original-Firmware) ---- */
+const BT_SVC = "ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6", BT_CHR = "ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6";
+const withTimeout = (p, ms, msg="Zeitüberschreitung") => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg)), ms))]);
+function sensorCard(l){
+  if(!navigator.bluetooth) return `<div class="note">Bluetooth-Sensor: In diesem Browser nicht verfügbar. Öffne das Raupenbuch in Chrome auf Android.</div>`;
+  const sn = l.sensor;
+  if(!sn) return `<div class="card sensor"><b>Bluetooth-Sensor</b><span class="small muted">Koppel einen Xiaomi-Hygrometer (LYWSD03MMC) mit diesem Standort. Danach holst du den aktuellen Wert mit einem Tippen.</span><div class="btns"><button class="btn primary" data-act="sensorRead" data-loc="${l.id}" data-new="1">Sensor koppeln</button></div></div>`;
+  const batt = sn.mv ? `${fmtN(sn.mv/1000,2)} V` : "";
+  return `<div class="card sensor"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Sensor ${esc(sn.name||"")}</b>${batt?`<span class="pill ${sn.mv<2500?"warn":""}">Batterie ${batt}</span>`:""}</div>
+    ${sn.last?`<div class="vals"><span>${fmtN(sn.last.temp,1)} °C</span><span>${fmtN(sn.last.rh,0)} %</span></div><span class="small muted">abgerufen ${dDE(sn.last.at)} ${sn.last.at.slice(11,16)}</span>`:""}
+    <div class="btns"><button class="btn primary" data-act="sensorRead" data-loc="${l.id}">Messwert vom Sensor holen</button><button class="btn ghost" data-act="sensorMenu" data-loc="${l.id}">Sensor ändern</button></div></div>`;
+}
+async function btPick(){
+  return await navigator.bluetooth.requestDevice({filters:[{namePrefix:"LYWSD03"},{namePrefix:"ATC_"},{services:[BT_SVC]}], optionalServices:[BT_SVC]});
+}
+async function btKnown(id){
+  if(!id || !navigator.bluetooth.getDevices) return null;
+  try { const ds = await navigator.bluetooth.getDevices(); return ds.find(d=>d.id===id) || null; } catch(e){ return null; }
+}
+async function btWaitAdv(dev, ms){
+  if(!dev.watchAdvertisements) return;
+  const ac = new AbortController();
+  await new Promise(res => {
+    const t = setTimeout(res, ms);
+    dev.addEventListener("advertisementreceived", () => { clearTimeout(t); res(); }, {once:true});
+    dev.watchAdvertisements({signal:ac.signal}).catch(() => { clearTimeout(t); res(); });
+  });
+  ac.abort();
+}
+async function btRead(dev, say){
+  let srv = null, err = null;
+  for(let a=1; a<=3 && !srv; a++){
+    try { say(a===1?"Verbinde …":`Verbinde (Versuch ${a}) …`); srv = await withTimeout(dev.gatt.connect(), 15000, "Sensor antwortet nicht"); }
+    catch(e){ err = e; if(a===1){ say("Suche Sensor in der Nähe …"); await btWaitAdv(dev, 8000); } }
+  }
+  if(!srv) throw err || new Error("Keine Verbindung");
+  try {
+    const ch = await (await srv.getPrimaryService(BT_SVC)).getCharacteristic(BT_CHR);
+    say("Warte auf Messwert …");
+    const v = await withTimeout(new Promise((res, rej) => {
+      ch.addEventListener("characteristicvaluechanged", ev => res(ev.target.value), {once:true});
+      ch.startNotifications().catch(rej);
+    }), 25000, "Kein Messwert empfangen");
+    try { await ch.stopNotifications(); } catch(e){}
+    return {temp: Math.round(v.getInt16(0,true))/100, rh: v.getUint8(2), mv: v.byteLength>=5 ? v.getUint16(3,true) : null};
+  } finally { try { dev.gatt.disconnect(); } catch(e){} }
+}
+ACTS.sensorRead = async d => {
+  const l = S.locations[d.loc]; if(!l) return;
+  if(!navigator.bluetooth){ toast("Bluetooth ist in diesem Browser nicht verfügbar"); return; }
+  const root = openSheet(`<h2>${esc(l.name)}: Sensor</h2><div class="card sensor"><div class="vals" id="bv"><span>– °C</span><span>– %</span></div><div id="bst" class="small muted">Starte …</div></div><div class="btns"><button class="btn" id="bx">Schließen</button></div>`);
+  root.querySelector("#bx").onclick = closeSheet;
+  const say = t => { const e = root.querySelector("#bst"); if(e) e.textContent = t; };
+  let dev = null;
+  try {
+    if(!d.new && l.sensor) dev = await btKnown(l.sensor.id);
+    if(!dev){ say(l.sensor && !d.new ? "Gerät nicht gespeichert. Bitte den Sensor in der Liste wählen …" : "Wähle den Sensor in der Liste …"); dev = await btPick(); }
+    const r = await btRead(dev, say);
+    const now = nowLocal();
+    await addPoints(l.id, [{date:now.slice(0,10), time:now.slice(11,16), temp:r.temp, rh:r.rh, src:"b"}]);
+    await store.put("locations", {...S.locations[l.id], sensor:{id:dev.id, name:dev.name||"", mv:r.mv, last:{at:now, temp:r.temp, rh:r.rh}}});
+    const bv = root.querySelector("#bv"); if(bv) bv.innerHTML = `<span>${fmtN(r.temp,1)} °C</span><span>${fmtN(r.rh,0)} %</span>`;
+    say(`Gespeichert um ${now.slice(11,16)} Uhr${r.mv?` · Batterie ${fmtN(r.mv/1000,2)} V`:""}.`);
+    if(navigator.vibrate) navigator.vibrate(40);
+  } catch(e){
+    console.warn(e);
+    say(e && e.name==="NotFoundError" ? "Kein Sensor gewählt." : e && e.name==="SecurityError" ? "Bitte erneut tippen (Chrome verlangt dafür ein frisches Antippen)." : "Fehler: " + (e && e.message || e) + ". Sensor näher ans Handy halten und Xiaomi Home schließen.");
+  }
+};
+ACTS.sensorMenu = d => {
+  const l = S.locations[d.loc]; if(!l) return;
+  const root = openSheet(`<h2>Sensor ändern</h2><p class="muted" style="margin:0">${esc(l.sensor?.name||"Sensor")} ist mit „${esc(l.name)}“ gekoppelt.</p>
+    <div class="btns"><button class="btn primary" id="re">Anderen Sensor wählen</button><button class="btn danger" id="rm">Sensor entfernen</button></div>
+    <p class="small muted" style="margin:0">Die bisherigen Messwerte bleiben erhalten.</p>`);
+  root.querySelector("#re").onclick = () => { closeSheet(); ACTS.sensorRead({loc:l.id, new:"1"}); };
+  root.querySelector("#rm").onclick = async () => { const x = {...S.locations[l.id]}; delete x.sensor; await store.put("locations", x); closeSheet(); toast("Sensor entfernt"); };
+};
+
+/* ---- Stammdaten ---- */
+ACTS.editSpecies = d => {
+  const s = d.id && S.species[d.id];
+  const root = openSheet(`<h2>${s?"Art bearbeiten":"Neue Art"}</h2>${fld.text("sSci","Wissenschaftlicher Name",s?.sci||"","Gattung art")}${fld.text("sDe","Deutscher Name",s?.de||"")}
+    <div class="frow2">${fld.text("sFam","Familie",s?.family||"","z. B. Sphingidae")}${fld.num("sInst","Larvenstadien",s?.instars||5,"1")}</div>
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button>${s&&!all("broods").some(b=>b.speciesId===s.id)?`<button class="btn danger" id="del">Löschen</button>`:""}</div>`);
+  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), family:val(root,"sFam"), instars:+val(root,"sInst")||5}); closeSheet(); };
+  const del = root.querySelector("#del"); if(del) del.onclick = async () => { await store.del("species",s.id); closeSheet(); };
+};
+ACTS.editSource = d => {
+  const s = d.id && S.sources[d.id];
+  const root = openSheet(`<h2>${s?"Herkunft bearbeiten":"Neue Herkunft"}</h2>${fld.text("oName","Name",s?.name||"")}${fld.sel("oType","Art",[["zuechter","Züchter"],["haendler","Händler/Börse"],["wild","Wildfund"],["nachzucht","Eigene Nachzucht"]],s?.type||"zuechter")}${fld.area("oNotes","Notizen",s?.notes||"","z. B. Kontakt, Ort, Nachweise")}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  root.querySelector("#ok").onclick = async () => { const n=val(root,"oName"); if(!n){toast("Bitte Namen eingeben");return;} await store.put("sources",{...(s||{}), name:n, type:val(root,"oType"), notes:val(root,"oNotes")}); closeSheet(); };
+};
+ACTS.editContainer = d => {
+  const c = d.id && S.containers[d.id];
+  const n = c ? all("individuals").filter(i=>i.containerId===c.id) : [];
+  const root = openSheet(`<h2>${c?"Behälter bearbeiten":"Neuer Behälter"}</h2>${fld.text("cName","Name",c?.name||"","z. B. Box 2, Becher 7, Netzkäfig")}${fld.sel("cLoc","Standort",[...locOpts()],c?.locationId||"")}
+    ${c?`<p class="small muted" style="margin:0">${n.length} Tier(e): ${n.map(i=>esc(i.name)).join(", ")||"–"}</p>`:""}
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button>${c?`<button class="btn" id="ev">Ereignis für alle darin</button><button class="btn" id="lb">Etikett</button>`:""}</div>`);
+  root.querySelector("#ok").onclick = async () => { const nm=val(root,"cName"); if(!nm){toast("Bitte Namen eingeben");return;} await store.put("containers",{...(c||{}), name:nm, locationId:val(root,"cLoc")||null}); closeSheet(); };
+  if(c){ root.querySelector("#ev").onclick = () => eventSheet({chooseInds:true, containerId:c.id}); root.querySelector("#lb").onclick = () => labelSheet({conts:[c.id]}); }
+};
+
+/* ---- Etiketten (PDF) ---- */
+ACTS.labels = d => labelSheet({brood:d.brood, inds:d.ind?[d.ind]:null});
+function labelSheet({brood=null, inds=null, conts=null}={}){
+  const I = (brood? indsOf(brood) : all("individuals").sort(byName));
+  const C = all("containers").sort(byName);
+  const preI = new Set(inds || (conts? [] : I.filter(isAlive).map(i=>i.id)));
+  const preC = new Set(conts || []);
+  const root = openSheet(`<h2>Etiketten drucken</h2>
+    ${fld.sel("lFmt","Format (A4)",[["g","3 × 7 Etiketten, 70 × 42 mm"],["k","4 × 10 Etiketten, 52 × 30 mm"]],"g")}
+    <div class="f"><span class="lab">Tiere</span><div class="checks">${I.map(i=>`<label><input type="checkbox" data-k="i" value="${i.id}" ${preI.has(i.id)?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)} <span class="small muted" style="margin-left:auto">${esc(S.broods[i.broodId]?.name||"")}</span></label>`).join("")||`<div class="empty">Keine Tiere.</div>`}</div></div>
+    ${C.length?`<div class="f"><span class="lab">Behälter</span><div class="checks">${C.map(c=>`<label><input type="checkbox" data-k="c" value="${c.id}" ${preC.has(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")}</div></div>`:""}
+    <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.</div>
+    <div class="btns"><button class="btn primary" id="ok">PDF speichern</button><button class="btn" id="pr">Direkt drucken</button></div><div id="lst" class="small muted"></div>
+    <div class="hint">Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.</div>`);
+  const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:`RB:i:${x.value}`, ...labelText(S.individuals[x.value])} : {code:`RB:c:${x.value}`, title:S.containers[x.value].name, l2:"Behälter", l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
+  root.querySelector("#ok").onclick = async () => {
+    const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
+    const st = root.querySelector("#lst"); st.textContent = "Erstelle PDF …";
+    try {
+      await Promise.all([loadLib("jspdf"), loadLib("qrgen")]);
+      const blob = makeLabelPdf(it, val(root,"lFmt"));
+      const ok = await store.save(`raupenbuch-etiketten-${todayISO()}.pdf`, blob);
+      if(ok) closeSheet(); else st.textContent = "";
+    } catch(e){ st.textContent = "PDF konnte nicht erstellt werden: " + (e.message||e); }
+  };
+  root.querySelector("#pr").onclick = async () => {
+    const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
+    try { await loadLib("qrgen"); printLabels(it, val(root,"lFmt")); }
+    catch(e){ root.querySelector("#lst").textContent = "Drucken nicht möglich: " + (e.message||e); }
+  };
+}
+function qrSvg(code){
+  const qr = qrcode(0,"M"); qr.addData(code); qr.make();
+  const n = qr.getModuleCount(); let d = "";
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(qr.isDark(r,c)) d += `M${c} ${r}h1v1h-1z`;
+  return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="#000"/></svg>`;
+}
+function printLabels(items, fmt){
+  const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7, per = cols*rows;
+  const pd = fmt==="k"?2.5:3.5;
+  const fs = fmt==="k"?{t:10,s:6.5,c:5}:{t:13,s:8,c:6};
+  let html = "";
+  for(let p=0; p<items.length; p+=per){
+    html += `<div class="pp" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">`;
+    html += items.slice(p,p+per).map(it=>`<div class="lb" style="padding:${pd}mm">${qrSvg(it.code)}<div class="tx"><b style="font-size:${fs.t}pt">${esc(it.title)}</b>${it.l2?`<${it.it?"i":"span"} style="font-size:${fs.s}pt">${esc(it.l2)}</${it.it?"i":"span"}>`:""}${it.l3?`<span style="font-size:${fs.s}pt">${esc(it.l3)}</span>`:""}<code style="font-size:${fs.c}pt">${esc(it.code)}</code></div></div>`).join("");
+    html += `</div>`;
+  }
+  $("#printArea").innerHTML = html;
+  setTimeout(() => { window.print(); }, 50);
+}
+window.addEventListener("afterprint", () => { const pa = $("#printArea"); if(pa) pa.innerHTML = ""; });
+function labelText(i){
+  const b = S.broods[i.broodId]; const sp = speciesOfBrood(b);
+  return {title:i.name, l2:sp?.sci||"", l3:`${b?.name||""}${i.sex&&i.sex!=="u"?" · "+SEXL[i.sex]:""}`, it:true};
+}
+function makeLabelPdf(items, fmt){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({unit:"mm", format:"a4"});
+  const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7;
+  const W = 210/cols, H = 297/rows, per = cols*rows;
+  items.forEach((it, n) => {
+    if(n && n%per===0) doc.addPage();
+    const k = n%per, x = (k%cols)*W, y = Math.floor(k/cols)*H;
+    doc.setDrawColor(200); doc.setLineWidth(0.1); doc.setLineDashPattern([1,1.5],0); doc.rect(x, y, W, H); doc.setLineDashPattern([],0);
+    const pd = fmt==="k"?2.5:3.5, qs = H - 2*pd;
+    const qr = qrcode(0,"M"); qr.addData(it.code); qr.make();
+    const cnt = qr.getModuleCount(), m = qs/cnt;
+    doc.setFillColor(0,0,0);
+    for(let r=0;r<cnt;r++) for(let c=0;c<cnt;c++) if(qr.isDark(r,c)) doc.rect(x+pd+c*m, y+pd+r*m, m+0.02, m+0.02, "F");
+    const tx = x+pd+qs+2.5, tw = W-(qs+pd*2+2.5);
+    let ty = y+pd+ (fmt==="k"?3.6:4.6);
+    doc.setTextColor(0); doc.setFont("helvetica","bold"); doc.setFontSize(fmt==="k"?10:13);
+    doc.splitTextToSize(it.title, tw).slice(0,2).forEach(t=>{ doc.text(t, tx, ty); ty += fmt==="k"?4:5; });
+    doc.setFont("helvetica", it.it?"italic":"normal"); doc.setFontSize(fmt==="k"?6.5:8);
+    if(it.l2){ doc.splitTextToSize(it.l2, tw).slice(0,1).forEach(t=>{ doc.text(t, tx, ty); ty += 3.4; }); }
+    doc.setFont("helvetica","normal");
+    if(it.l3){ doc.splitTextToSize(it.l3, tw).slice(0,2).forEach(t=>{ doc.text(t, tx, ty); ty += 3.4; }); }
+    doc.setFont("courier","normal"); doc.setFontSize(fmt==="k"?5:6); doc.setTextColor(90);
+    doc.text(it.code, tx, y+H-pd);
+  });
+  return doc.output("blob");
+}
+
+/* ---- Scannen ---- */
+ACTS.scan = () => {
+  const canLive = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+  const root = openSheet(`<h2>Etikett scannen</h2>
+    ${canLive?`<div class="scanbox" id="sbox" hidden><video id="sv" playsinline muted></video><div class="aim"></div></div>
+    <button class="btn primary block" id="live">Kamera starten</button>`:""}
+    <div id="sst" class="small muted">${canLive?"Halte den QR-Code in den Rahmen. Das Tier oder der Behälter öffnet sich dann von selbst.":""}</div>
+    <label class="btn block filebtn">Stattdessen Foto vom Etikett<input type="file" id="sf" accept="image/*" capture="environment" class="vh"></label>
+    ${fld.text("sCode","Oder Code eintippen","","RB:i:…")}<div class="btns"><button class="btn" id="go">Öffnen</button></div>`);
+  const st = root.querySelector("#sst");
+  let stream = null, timer = null, busy = false, det = null, cnv = null;
+  const stop = () => { clearTimeout(timer); timer = null; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; } };
+  _sheetCleanup = stop;
+  const found = code => { if(openCode(code)) return true; st.textContent = `Code „${code}“ gehört zu keinem Eintrag.`; return false; };
+  async function tick(){
+    const v = root.querySelector("#sv"); if(!stream || !v) return;
+    if(!busy && v.readyState >= 2 && v.videoWidth){
+      busy = true;
+      try {
+        let code = null;
+        if(det){ try { const r = await det.detect(v); if(r[0]) code = r[0].rawValue; } catch(e){ det = null; } }
+        if(!code && !det){
+          await loadLib("jsqr");
+          const sc = Math.min(1, 720/Math.max(v.videoWidth, v.videoHeight));
+          cnv ||= document.createElement("canvas"); cnv.width = Math.round(v.videoWidth*sc); cnv.height = Math.round(v.videoHeight*sc);
+          const ctx = cnv.getContext("2d",{willReadFrequently:true}); ctx.drawImage(v,0,0,cnv.width,cnv.height);
+          const r = jsQR(ctx.getImageData(0,0,cnv.width,cnv.height).data, cnv.width, cnv.height, {inversionAttempts:"dontInvert"});
+          if(r) code = r.data;
+        }
+        if(code && /^RB:/.test(code)){ if(navigator.vibrate) navigator.vibrate(60); if(found(code)) { stop(); return; } }
+      } finally { busy = false; }
+    }
+    timer = setTimeout(tick, 200);
+  }
+  const lb = root.querySelector("#live");
+  if(lb) lb.onclick = async () => {
+    try {
+      st.textContent = "Starte Kamera …";
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:960}}, audio:false});
+      const v = root.querySelector("#sv"); v.srcObject = stream; await v.play();
+      root.querySelector("#sbox").hidden = false; lb.hidden = true;
+      st.textContent = "Halte den QR-Code in den Rahmen …";
+      if("BarcodeDetector" in window){ try { const f = await BarcodeDetector.getSupportedFormats(); if(f.includes("qr_code")) det = new BarcodeDetector({formats:["qr_code"]}); } catch(e){} }
+      tick();
+    } catch(e){
+      stop();
+      st.textContent = e && e.name==="NotAllowedError" ? "Kamera nicht erlaubt. Erlaube sie in den Website-Einstellungen oder nimm ein Foto." : "Kamera nicht verfügbar: " + (e.message||e.name||e);
+    }
+  };
+  const sf = root.querySelector("#sf");
+  sf.onchange = async () => {
+    const f = sf.files[0]; if(!f) return; stop(); st.textContent = "Suche QR-Code …";
+    try { const code = await decodeQr(f); if(!code){ st.textContent = "Kein QR-Code erkannt. Näher ran, scharf stellen und gerade halten."; return; } found(code); }
+    catch(e){ st.textContent = "Scannen fehlgeschlagen: " + (e.message||e); }
+    sf.value = "";
+  };
+  root.querySelector("#go").onclick = () => { const c = val(root,"sCode"); if(!openCode(c.startsWith("RB:")?c:`RB:i:${c}`)) toast("Kein Eintrag mit diesem Code"); };
+  if(lb) lb.click();
+};
+async function decodeQr(file){
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
+    for(const max of [1000, 1600, 600]){
+      const sc = Math.min(1, max/Math.max(img.naturalWidth,img.naturalHeight));
+      const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*sc); c.height = Math.round(img.naturalHeight*sc);
+      const ctx = c.getContext("2d",{willReadFrequently:true}); ctx.drawImage(img,0,0,c.width,c.height);
+      if("BarcodeDetector" in window){ try { const r = await new BarcodeDetector({formats:["qr_code"]}).detect(c); if(r[0]) return r[0].rawValue; } catch(e){} }
+      await loadLib("jsqr");
+      const id = ctx.getImageData(0,0,c.width,c.height);
+      const r = jsQR(id.data, c.width, c.height, {inversionAttempts:"attemptBoth"}); if(r) return r.data;
+    }
+    return null;
+  } finally { URL.revokeObjectURL(url); }
+}
+function openCode(code){
+  const m = String(code||"").trim().match(/^RB:([ic]):(.+)$/); if(!m) return false;
+  if(m[1]==="i" && S.individuals[m[2]]){ closeSheet(); nav("animal",{id:m[2]}); return true; }
+  if(m[1]==="c" && S.containers[m[2]]){ closeSheet(); ACTS.editContainer({id:m[2]}); return true; }
+  return false;
+}
+
+/* ---- Export / Import ---- */
+const blobToDataUrl = blob => new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => rej(fr.error); fr.readAsDataURL(blob); });
+async function dataUrlToBlob(u){ return await (await fetch(u)).blob(); }
+ACTS.exportJson = async () => {
+  const say = t => { R.exMsg = t; const st = $("#exst"); if(st) st.textContent = t; };
+  try {
+    say("Erstelle Backup …");
+    const parts = [`{"app":"raupenbuch","version":2,"appVersion":${JSON.stringify(APP_VERSION)},"exportedAt":${JSON.stringify(new Date().toISOString())},"data":`, JSON.stringify(S), `,"blobs":{`];
+    const ids = [...new Set(all("photos").map(p=>p.blobId).filter(Boolean))];
+    let first = true, k = 0;
+    for(const id of ids){
+      const b = await store.getBlob(id); k++; say(`Fotos ${k}/${ids.length} …`);
+      if(!b) continue;
+      parts.push((first?"":",") + JSON.stringify(id) + ":" + JSON.stringify(await blobToDataUrl(b))); first = false;
+    }
+    parts.push("}}");
+    const ok = await store.save(`raupenbuch-backup-${todayISO()}.json`, new Blob(parts, {type:"application/json"}));
+    if(ok){ await store.setMeta("lastBackup", nowLocal()); say(`Backup mit ${ids.length} Foto(s) gespeichert. Prüfe den Download-Ordner.`); render(); }
+  } catch(e){ console.error(e); say(""); toast("Backup fehlgeschlagen: " + (e.message||e)); }
+};
+ACTS.exportCsv = () => {
+  const q = s => `"${String(s??"").replace(/"/g,'""')}"`;
+  const head = ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Notizen"];
+  const rows = all("individuals").sort(byName).map(i=>{
+    const b=S.broods[i.broodId], sp=speciesOfBrood(b), eg=firstEv(i,"eingegraben"), vp=firstEv(i,"verpuppt"), ec=firstEv(i,"falterschlupf"), d=deathOf(i), st=pupalStart(i);
+    return [i.name,b?.name,sp?.sci,SEXL[i.sex||"u"],statusOf(i),stageLabel(currentStage(i)),eg&&fmtTime(eg),vp&&fmtTime(vp),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
+  });
+  store.save(`raupenbuch-tiere-${todayISO()}.csv`, "﻿"+[head.map(q).join(";"),...rows].join("\r\n"));
+};
+document.addEventListener("change", async e => {
+  if(e.target.id!=="fileJson") return;
+  const f = e.target.files[0]; if(!f) return; e.target.value="";
+  const say = t => { R.imMsg = t; const st = $("#imst"); if(st) st.textContent = t; };
+  let o; try { say("Lese Datei …"); o = JSON.parse(await f.text()); } catch(err){ say(""); toast("Datei ist kein gültiges JSON"); return; }
+  if(o.app!=="raupenbuch" || !o.data){ say(""); toast("Das ist keine Raupenbuch-Sicherung"); return; }
+  try { await importBackup(o, R.impMode==="replace", say); } catch(err){ console.error(err); toast("Import fehlgeschlagen: " + (err.message||err)); }
+});
+async function importBackup(o, replace, say=()=>{}){
+  if(replace){
+    say("Lösche bisherige Daten …");
+    for(const c of COLS){ for(const id of Object.keys(S[c])){ if(c==="photos") await store.deletePhotoAsset(S[c][id]); await store.del(c, id); } }
+  }
+  const blobs = o.blobs || {};
+  let k = 0; const bids = Object.keys(blobs);
+  for(const id of bids){ k++; if(k%5===0) say(`Fotos ${k}/${bids.length} …`); try { await store.putBlob(id, await dataUrlToBlob(blobs[id])); } catch(e){ console.warn("Foto", id, e); } }
+  let n = 0, missing = 0; const total = COLS.reduce((a,c)=>a+Object.keys(o.data[c]||{}).length,0);
+  for(const c of COLS) for(const [key, d0] of Object.entries(o.data[c]||{})){
+    const doc = {...d0, id: d0.id || key};
+    if(c==="photos"){
+      if(doc.dataUrl){ doc.blobId = "b"+uid(); await store.putBlob(doc.blobId, await dataUrlToBlob(doc.dataUrl)); delete doc.dataUrl; }
+      if(doc.assetId && !doc.blobId && store.urls.has(doc.assetId)) doc.blobId = doc.assetId;
+      if(!doc.blobId || !store.urls.has(doc.blobId)) missing++;
+      delete doc.assetId;
+    }
+    await store.putRaw(c, doc); n++;
+    if(n%25===0) say(`Importiere … ${n}/${total}`);
+  }
+  _evIdx = null; _migrated = false;
+  say(`${n} Einträge und ${bids.length} Foto(s) importiert.${missing?` ${missing} Foto(s) ohne Bilddatei.`:""}`);
+  toast(`${n} Einträge importiert`);
+  scheduleRender();
+}
+
+/* ---- Start ---- */
+ACTS.search = () => { nav("search"); setTimeout(()=>{ const g=$("#gq"); g&&g.focus(); }, 30); };
+render();
+store.init();
+
+/* Service Worker: offline-first, Update-Hinweis bei neuer Version */
+if("serviceWorker" in navigator && location.protocol !== "file:"){
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("sw.js", {updateViaCache:"none"});
+      const offer = w => {
+        if(!w || $(".update")) return;
+        const el = document.createElement("div"); el.className = "update"; el.setAttribute("role","status");
+        el.innerHTML = `<span class="small">Neue Version verfügbar</span><button class="btn">Aktualisieren</button>`;
+        el.querySelector("button").onclick = () => { w.postMessage("skipWaiting"); el.remove(); };
+        document.body.appendChild(el);
+      };
+      if(reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+      reg.addEventListener("updatefound", () => {
+        const w = reg.installing;
+        w && w.addEventListener("statechange", () => { if(w.state === "installed" && navigator.serviceWorker.controller) offer(w); });
+      });
+      let reloading = false;
+      navigator.serviceWorker.addEventListener("controllerchange", () => { if(reloading) return; reloading = true; location.reload(); });
+      document.addEventListener("visibilitychange", () => { if(document.visibilityState === "visible") reg.update().catch(()=>{}); });
+    } catch(e){ console.warn("SW", e); }
+  });
+}
+</script>
+</body>
+</html>
