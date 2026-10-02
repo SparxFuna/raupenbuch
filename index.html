@@ -277,7 +277,7 @@ table.t td:first-child{font-family:var(--f-body)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.2.0";
+const APP_VERSION = "5.3.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -928,6 +928,61 @@ function pupalTable(inds){
   ${tot.length<5?`<p class="small muted" style="margin:8px 0 0">Wenige Werte: Unterschiede können Zufall sein.</p>`:""}</div></section>`;
 }
 
+/* ---- Auswertung pro Tier ---- */
+const END_TYPES = ["tod","praepariert","freigelassen","abgegeben"];
+function stageSegments(ind){
+  const b = S.broods[ind.broodId]; const now = Date.now(); const pts = [];
+  const st0 = startStageOf(ind);
+  if(b?.startDate && st0!=="?") pts.push({k:st0, t:ms(b.startDate), est:false, src:"Start des Zuchtansatzes"});
+  for(const e of evOf(ind.id)){
+    const fn = ET[e.type]?.stage; const k = fn && fn(e.data||{}); if(!k) continue;
+    const t = evMid(e); if(t > now) continue;
+    pts.push({k, t, est:!!e.data?.est || e.type==="stadium" || e.prec==="zeitraum"});
+  }
+  pts.sort((a,b)=>a.t-b.t);
+  const P = []; for(const p of pts){ if(P.length && P[P.length-1].k===p.k) continue; P.push(p); }
+  const endEv = evOf(ind.id).find(e=>END_TYPES.includes(e.type));
+  const endT = endEv ? evMid(endEv) : null;
+  return P.map((p,i)=>{ const nx = P[i+1]; const to = nx ? nx.t : (endT ?? now);
+    return {k:p.k, from:p.t, to, days:Math.max(0,(to-p.t)/864e5), open:!nx && !endT, est:p.est || !!nx?.est}; });
+}
+function speciesStageDays(spId, k, exceptId){
+  const v = [];
+  for(const ind of all("individuals")){ if(ind.id===exceptId || speciesOfInd(ind)?.id!==spId) continue;
+    for(const sg of stageSegments(ind)) if(sg.k===k && !sg.open && !sg.est) v.push(sg.days); }
+  return v;
+}
+function animalStats(i){
+  const sp = speciesOfInd(i); const segs = stageSegments(i);
+  const rows = segs.map(sg=>{ const cmp = sp ? speciesStageDays(sp.id, sg.k, i.id) : [];
+    const dd = sg.days<1 && !sg.open ? "<1" : fmtN(Math.floor(sg.days),0);
+    return `<tr><td>${esc(stageLabel(sg.k))}</td><td>${dShort(dFromMs(sg.from))}</td><td>${sg.est?"≈":""}${dd}${sg.open?"+":""}</td><td>${cmp.length>=2?`${fmtN(median(cmp),1)} <span class="muted">n=${cmp.length}</span>`:`<span class="muted">–</span>`}</td></tr>`; }).join("");
+  const tiles = [];
+  const ec = firstEv(i,"falterschlupf"), ps = pupalStart(i);
+  if(ps && ec){
+    const d = daysBetween(ps.ev, ec);
+    const others = sp ? pupalDurations(sp.id, ps.basis).filter(x=>x.ind.id!==i.id).map(x=>x.d) : [];
+    tiles.push([`${d}`, `Tage Puppenruhe ${ps.basis==="verpuppt"?"ab Verpuppung":"ab Eingraben"}`, others.length>=2?`Art: Median ${fmtN(median(others),1)} (n=${others.length}), ${d<median(others)?"kürzer":d>median(others)?"länger":"gleich"}`:""]);
+  } else if(ps && isAlive(i)){
+    tiles.push([`${Math.floor((Date.now()-evMid(ps.ev))/864e5)}`, `Tage seit ${ps.basis==="verpuppt"?"Verpuppung":"Eingraben"}`, ""]);
+  }
+  if(segs.length && ec){
+    const first = segs[0]; const tot = Math.round((evMid(ec)-first.from)/864e5);
+    tiles.push([`${tot}`, `Tage von ${stageLabel(first.k)} bis Falter`, ""]);
+  }
+  const endEv = evOf(i.id).find(e=>END_TYPES.includes(e.type));
+  if(ec && endEv && ["tod","praepariert"].includes(endEv.type)) tiles.push([`${Math.max(0,Math.round((evMid(endEv)-evMid(ec))/864e5))}`, "Tage als Falter", ""]);
+  const W = evOf(i.id).filter(e=>e.type==="gewicht" && Number.isFinite(+e.data?.g)).map(e=>({at:e.t0, g:+e.data.g}));
+  if(W.length) tiles.push([`${fmtN(Math.max(...W.map(w=>w.g)),2)}`, "g höchstes Gewicht", W.length>1?`${W.length} Wägungen`:""]);
+  if(!rows && !tiles.length) return "";
+  let h = `<section class="sec"><div class="sec-h"><h2>Auswertung</h2><span class="small muted">≈ geschätzt · + läuft noch</span></div>`;
+  if(tiles.length) h += `<div class="stats">${tiles.map(([v,l,x])=>`<div class="stat"><b>${v}</b><span>${l}</span>${x?`<span class="small">${esc(x)}</span>`:""}</div>`).join("")}</div>`;
+  if(rows) h += `<div class="card tw"><table class="t"><thead><tr><th>Stadium</th><th>ab</th><th>Tage</th><th>Art Median</th></tr></thead><tbody>${rows}</tbody></table>
+    ${segs.length && !S.broods[i.broodId]?.startDate ? `<p class="small muted" style="margin:8px 0 0">Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.</p>`:""}</div>`;
+  if(W.length>=2) h += `<div class="card">${lineChart(W,"g","g","var(--accent)")}</div>`;
+  return h + `</section>`;
+}
+
 /* ---- Einzeltier ---- */
 VIEWS.animal = r => {
   const i = S.individuals[r.id]; if(!i) return `<div class="empty">Dieses Tier existiert nicht mehr.</div>`;
@@ -959,6 +1014,7 @@ VIEWS.animal = r => {
   const cand = candidateImagosOfInd(i.id);
   if(cand.length) h += `<section class="uncertain"><b>Noch nicht zugeordnet</b><span class="small muted">${esc(i.name)} ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen. Kandidat für:</span><div class="list">${cand.map(imagoRow).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Fotos</h2></div>${photoGrid(photosOf("individual",i.id),"addPhoto",`data-type="individual" data-id="${i.id}"`)}</section>`;
+  h += animalStats(i);
   const ev = evOf(i.id);
   h += `<section class="sec"><div class="sec-h"><h2>Verlauf</h2><span class="small muted">antippen zum Bearbeiten</span></div><div class="card">${ev.length? timeline(ev) : `<div class="empty" style="padding:4px 0">Noch keine Ereignisse.</div>`}</div></section>`;
   h += `<div class="btns"><button class="btn" data-act="editInd" data-id="${i.id}">Tier bearbeiten</button><button class="btn" data-act="labels" data-ind="${i.id}">Etikett</button></div>
@@ -1230,6 +1286,8 @@ ACTS.addInds = d => {
       ${evExtraFields("eingegraben",{_new:true, _spId:b.speciesId})}
       <div class="hint">Format: <span class="mono">Name; Geschlecht; eingegraben; geschlüpft</span>. Geschlecht als m, w oder ?. Hinten darf etwas fehlen. Ohne Namen die Zeile mit <span class="mono">;</span> beginnen, z. B. <span class="mono">; w; 22.08.2026</span>. Vor ein Schlupfdatum kannst du „Nacht“ schreiben, wenn es über Nacht war (Datum des Abends).</div></div>
     ${fld.sel("iCont","Behälter",contOpts(),"")}
+    <div class="frow2">${fld.sel("iStage","Aktuelles Stadium",[["",`wie Ansatz (${stageLabel(b.startStage||"L1")})`],["?","unbekannt"],...STAGES.map(s=>[s.k,s.l])],"")}<div class="f" id="iStageDW" hidden><label for="iStageD">erreicht am</label><input id="iStageD" type="date"></div></div>
+    <div class="hint" id="iStageH" hidden>Datum leer lassen, wenn du es nicht weißt. Dann wird nur das Stadium gesetzt und es zählt nicht in die Statistik.</div>
     <div id="prev" class="small muted"></div>
     <div class="btns"><button class="btn primary" id="ok">Hinzufügen</button></div>`);
   let mode = "count";
@@ -1256,15 +1314,22 @@ ACTS.addInds = d => {
   const upd = () => { const L = parse(); const bad = L.filter(x=>x.bad).length;
     root.querySelector("#prev").innerHTML = L.length ? `${L.length} Tier(e): ${L.slice(0,6).map(x=>esc(x.name)).join(", ")}${L.length>6?" …":""}${mode==="notes"?` · ${L.filter(x=>x.burrow).length} mit Eingrabedatum, ${L.filter(x=>x.eclose).length} geschlüpft`:""}${bad?` · <b style="color:var(--crit)">${bad} Datum nicht erkannt</b>`:""}` : ""; };
   root.addEventListener("input", upd);
+  root.querySelector("#iStage").addEventListener("change", e => { const v = e.target.value; root.querySelector("#iStageDW").hidden = root.querySelector("#iStageH").hidden = !v || v==="?"; });
   root.querySelector("#ok").addEventListener("click", async () => {
     const L = parse(); if(!L.length){ toast("Keine Tiere erkannt"); return; }
     const ex = mode==="notes" ? readExtra(root,"eingegraben") : {};
     if(ex._est && L.some(x=>x.burrow) && !(ex._estD>=0 && ex._estD<=365)){ toast("Bitte die Tage bis zur Verpuppung eintragen"); return; }
     const btn = root.querySelector("#ok"); btn.disabled = true; btn.textContent = "Speichere …";
     const cont = val(root,"iCont")||null; const sexAll = mode==="names" ? val(root,"iSex") : mode==="count" ? val(root,"iSexC") : null;
+    const stK = val(root,"iStage"), stD = val(root,"iStageD");
     for(const x of L){
       const sex = sexAll || x.sex || "u";
-      const iid = await store.put("individuals",{name:x.name, broodId:b.id, sex, containerId:cont});
+      const iid = await store.put("individuals",{name:x.name, broodId:b.id, sex, containerId:cont, ...(stK==="?"?{startStage:"?"}:{})});
+      if(stK && stK!=="?" && !x.burrow && !x.eclose){
+        const real = stD ? ({vorpuppe:"eingegraben", puppe:"verpuppt", falter:"falterschlupf"})[stK] : (stK==="falter" ? "falterschlupf" : null);
+        if(real) await store.put("events",{type:real, individualId:iid, broodId:b.id, ...makeTime("tag", stD||todayISO()), data:{}, note:stD?"beim Anlegen":"beim Anlegen, Datum unbekannt"});
+        else await store.put("events",{type:"stadium", individualId:iid, broodId:b.id, ...makeTime("tag", stD||todayISO()), data:{to:stK}, note:stD?"beim Anlegen":"beim Anlegen, Datum unbekannt"});
+      }
       if(x.burrow){ const bid = await store.put("events",{type:"eingegraben", individualId:iid, broodId:b.id, ...makeTime("tag",x.burrow), data:{}, note:"aus Notizen"}); if(ex._est) await addEstimatedPupation(S.individuals[iid], S.events[bid], ex._estD); }
       if(sex!=="u" && mode==="notes") await store.put("events",{type:"geschlecht", individualId:iid, broodId:b.id, ...makeTime("tag", x.burrow||todayISO()), data:{sex, at:"puppe"}, note:"aus Notizen"});
       if(x.eclose){
