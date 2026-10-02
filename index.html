@@ -153,6 +153,8 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 .tl .dot::after{content:"";position:absolute;left:3px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}
 .tl .ev.stagechg .dot::after{background:var(--accent)}
 .tl .ev.death .dot::after{border-color:var(--crit);background:var(--crit)}
+.tl .ev.est .dot::after{border-style:dashed;background:var(--surface)}
+.tl .ev.est .x{font-style:italic;color:var(--muted)}
 .tl .ev.falter .dot::after{border-color:var(--ochre);background:var(--ochre)}
 .tl .body{padding:5px 0 12px;min-width:0}
 .tl .body .w{font-family:var(--f-data);font-size:12px;color:var(--muted)}
@@ -275,7 +277,7 @@ table.t td:first-child{font-family:var(--f-body)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.1.0";
+const APP_VERSION = "5.2.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -381,7 +383,7 @@ function evIndex(){
   return _evIdx;
 }
 const evOf = indId => evIndex().ind[indId] || [];
-function stageEventsOf(ind){ return evOf(ind.id).filter(e=>ET[e.type]?.stage && ET[e.type].stage(e.data||{})); }
+function stageEventsOf(ind){ const now = Date.now(); return evOf(ind.id).filter(e=>ET[e.type]?.stage && ET[e.type].stage(e.data||{}) && ms(e.t0) <= now); }
 function currentStage(ind){
   const se = stageEventsOf(ind);
   if(se.length){ const e=se[se.length-1]; return ET[e.type].stage(e.data||{}); }
@@ -404,9 +406,30 @@ const deathOf = ind => evOf(ind.id).find(e=>e.type==="tod");
 const isAlive = ind => statusOf(ind)==="aktiv";
 const firstEv = (ind,type) => evOf(ind.id).find(e=>e.type===type);
 
-/* Puppenruhe & Prognose */
+/* Puppenruhe & Prognose
+   Geschätzte Verpuppungen (data.est) zählen nie in Statistik oder Prognose: dort wird dann ab Eingraben gerechnet. */
+const realPupation = ind => evOf(ind.id).find(e=>e.type==="verpuppt" && !e.data?.est);
+const estPupations = ind => evOf(ind.id).filter(e=>e.type==="verpuppt" && e.data?.est);
+function prepupaDurations(spId){
+  const v=[];
+  for(const ind of all("individuals")){ if(speciesOfInd(ind)?.id!==spId) continue; const b=firstEv(ind,"eingegraben"), pu=realPupation(ind); if(b&&pu) v.push(daysBetween(b,pu)); }
+  return v;
+}
+function estDefault(spId){
+  const v = prepupaDurations(spId);
+  if(v.length>=2) return {days:Math.round(median(v)), src:`Median aus ${v.length} deiner Tiere mit sicherem Verpuppungsdatum`};
+  const sp = S.species[spId];
+  if(sp?.prepupaDays) return {days:sp.prepupaDays, src:`Richtwert der Art${v.length?` (erst ${v.length} eigener Wert)`:""}`};
+  return {days:"", src:""};
+}
+async function addEstimatedPupation(ind, burrowEv, days){
+  for(const e of estPupations(ind)) await store.del("events", e.id);
+  if(realPupation(ind)) return;
+  const base = dFromMs(evMid(burrowEv));
+  await store.put("events",{type:"verpuppt", individualId:ind.id, broodId:ind.broodId, ...makeTime("tag", addDays(base, days)), data:{est:true, days, fromEv:burrowEv.id}, note:`geschätzt: Eingraben + ${days} Tage`});
+}
 function pupalStart(ind){
-  const p=firstEv(ind,"verpuppt"); if(p) return {ev:p, basis:"verpuppt"};
+  const p=realPupation(ind); if(p) return {ev:p, basis:"verpuppt"};
   const b=firstEv(ind,"eingegraben"); if(b) return {ev:b, basis:"eingegraben"};
   return null;
 }
@@ -414,7 +437,7 @@ function pupalDurations(speciesId, basis){
   const out=[];
   for(const ind of all("individuals")){
     if(speciesOfInd(ind)?.id!==speciesId) continue;
-    const st = basis==="verpuppt" ? firstEv(ind,"verpuppt") : firstEv(ind,"eingegraben");
+    const st = basis==="verpuppt" ? realPupation(ind) : firstEv(ind,"eingegraben");
     const ec = firstEv(ind,"falterschlupf");
     if(st && ec) out.push({ind, d:daysBetween(st,ec), sex:ind.sex||"u"});
   }
@@ -813,6 +836,7 @@ function evTitle(e){
   const d = e.data||{};
   switch(e.type){
     case "haeutung": return `Häutung → ${d.to||"?"}`;
+    case "verpuppt": return d.est ? "Verpuppt (geschätzt)" : "Verpuppt";
     case "stadium": return `Stadium: ${stageLabel(d.to)}`;
     case "geschlecht": return `Geschlecht: ${SEXL[d.sex||"u"]}${d.at?` (an ${d.at==="puppe"?"Puppe":d.at==="falter"?"Falter":"Raupe"})`:""}`;
     case "gewicht": return `Gewogen: ${fmtN(+d.g,2)} g`;
@@ -944,7 +968,7 @@ VIEWS.animal = r => {
 
 function timeline(evs){
   return `<div class="tl">${[...evs].sort((a,b)=>ms(b.t0)-ms(a.t0) || (b.createdAt||"").localeCompare(a.createdAt||"")).map(e=>{
-    const cls = e.type==="tod"?"death": e.type==="falterschlupf"?"falter": ET[e.type]?.stage?"stagechg":"";
+    const cls = (e.type==="tod"?"death": e.type==="falterschlupf"?"falter": ET[e.type]?.stage?"stagechg":"") + (e.data?.est?" est":"");
     return `<button class="ev ${cls}" data-act="editEvent" data-id="${e.id}"><span class="dot"></span><span class="body"><span class="w">${esc(fmtTime(e))}</span><br><span class="x">${esc(evTitle(e))}</span>${e.note?`<br><span class="n">${esc(e.note)}</span>`:""}</span></button>`;
   }).join("")}</div>`;
 }
@@ -1203,6 +1227,7 @@ ACTS.addInds = d => {
     <div id="mNames" hidden>${fld.area("iNames","Namen","", "Sirius, Polaris, Vega …")}<div class="hint">Durch Komma oder Zeilenumbruch trennen.</div>
       ${fld.sel("iSex","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],"u")}</div>
     <div id="mNotes" hidden>${fld.area("iNotes","Eine Zeile pro Tier","", "Sirius; m; 21.08.2026; 24.09.2026\nVega; w; 22.08.2026\nDeneb; w; 23.08.2026; Nacht 27.09.2026")}
+      ${evExtraFields("eingegraben",{_new:true, _spId:b.speciesId})}
       <div class="hint">Format: <span class="mono">Name; Geschlecht; eingegraben; geschlüpft</span>. Geschlecht als m, w oder ?. Hinten darf etwas fehlen. Ohne Namen die Zeile mit <span class="mono">;</span> beginnen, z. B. <span class="mono">; w; 22.08.2026</span>. Vor ein Schlupfdatum kannst du „Nacht“ schreiben, wenn es über Nacht war (Datum des Abends).</div></div>
     ${fld.sel("iCont","Behälter",contOpts(),"")}
     <div id="prev" class="small muted"></div>
@@ -1233,18 +1258,21 @@ ACTS.addInds = d => {
   root.addEventListener("input", upd);
   root.querySelector("#ok").addEventListener("click", async () => {
     const L = parse(); if(!L.length){ toast("Keine Tiere erkannt"); return; }
+    const ex = mode==="notes" ? readExtra(root,"eingegraben") : {};
+    if(ex._est && L.some(x=>x.burrow) && !(ex._estD>=0 && ex._estD<=365)){ toast("Bitte die Tage bis zur Verpuppung eintragen"); return; }
     const btn = root.querySelector("#ok"); btn.disabled = true; btn.textContent = "Speichere …";
     const cont = val(root,"iCont")||null; const sexAll = mode==="names" ? val(root,"iSex") : mode==="count" ? val(root,"iSexC") : null;
     for(const x of L){
       const sex = sexAll || x.sex || "u";
       const iid = await store.put("individuals",{name:x.name, broodId:b.id, sex, containerId:cont});
-      if(x.burrow) await store.put("events",{type:"eingegraben", individualId:iid, broodId:b.id, ...makeTime("tag",x.burrow), data:{}, note:"aus Notizen"});
+      if(x.burrow){ const bid = await store.put("events",{type:"eingegraben", individualId:iid, broodId:b.id, ...makeTime("tag",x.burrow), data:{}, note:"aus Notizen"}); if(ex._est) await addEstimatedPupation(S.individuals[iid], S.events[bid], ex._estD); }
       if(sex!=="u" && mode==="notes") await store.put("events",{type:"geschlecht", individualId:iid, broodId:b.id, ...makeTime("tag", x.burrow||todayISO()), data:{sex, at:"puppe"}, note:"aus Notizen"});
       if(x.eclose){
         const t = makeTime(x.night?"nacht":"tag", x.eclose);
         await store.put("events",{type:"falterschlupf", individualId:iid, broodId:b.id, ...t, data:{}, note:"aus Notizen"});
       }
     }
+    if(mode==="notes" && L.some(x=>x.burrow) && S.species[b.speciesId]){ const sp = S.species[b.speciesId]; await store.put("species",{...sp, autoPupa:!!ex._est, ...(ex._est && prepupaDurations(sp.id).length<2 ? {prepupaDays:ex._estD} : {})}); }
     closeSheet(); toast(`${L.length} Tier(e) hinzugefügt`);
   });
 };
@@ -1278,6 +1306,14 @@ function evExtraFields(type, d={}){
   switch(type){
     case "haeutung": return fld.sel("xTo","Neues Stadium",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"]],d.to||"L2");
     case "stadium": return fld.sel("xSt","Aktuelles Stadium",STAGES.map(s=>[s.k,s.l]),d.to||"L2")+fld.hint("Zum Korrigieren oder Nachtragen, wenn du nicht weißt, wann sich das Tier gehäutet hat.");
+    case "eingegraben": {
+      if(!d._new) return "";
+      const df = estDefault(d._spId); const sp = S.species[d._spId];
+      return `<label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="xEst" ${sp?.autoPupa===false?"":"checked"} style="width:20px;height:20px;min-height:0;flex:none"><span>Verpuppungsdatum automatisch schätzen</span></label>
+      ${fld.num("xEstD","Tage vom Eingraben bis zur Verpuppung",df.days,"1")}
+      <div class="hint">${df.src?esc(df.src)+". ":"Für diese Art gibt es noch keinen Wert: Trag deinen Richtwert ein, er wird für die Art gemerkt. "}Die Schätzung erscheint als „Verpuppt (geschätzt)“, zählt nicht in Puppenruhe und Prognose und lässt sich jederzeit korrigieren.</div>`;
+    }
+    case "verpuppt": return d.est ? `<label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="xIsEst" checked style="width:20px;height:20px;min-height:0;flex:none"><span>Datum ist nur geschätzt</span></label><div class="hint">Haken entfernen, sobald du das Datum sicher weißt. Dann zählt es auch in die Statistik.</div>` : "";
     case "geschlecht": return `<div class="frow2">${fld.sel("xSex","Geschlecht",[["f","Weibchen"],["m","Männchen"]],d.sex||"f")}${fld.sel("xAt","bestimmt an",[["puppe","Puppe"],["falter","Falter"],["raupe","Raupe"]],d.at||"puppe")}</div>`;
     case "gewicht": return fld.num("xG","Gewicht (g)",d.g??"","0.01");
     case "futter": return fld.text("xPlant","Futterpflanze",d.plant||"","z. B. Liguster");
@@ -1290,6 +1326,7 @@ function evExtraFields(type, d={}){
 function readExtra(root, type){
   switch(type){
     case "haeutung": return {to:val(root,"xTo")};
+    case "eingegraben": { const c = root.querySelector("#xEst"); return c ? {_est:c.checked, _estD:parseInt(val(root,"xEstD"),10)} : {}; }
     case "stadium": return {to:val(root,"xSt")};
     case "geschlecht": return {sex:val(root,"xSex"), at:val(root,"xAt")};
     case "gewicht": return {g:parseFloat(val(root,"xG").replace(",","."))||null};
@@ -1317,27 +1354,34 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
   const who = ev ? (ev.individualId? indName(ev.individualId) : ev.containerId? S.containers[ev.containerId]?.name : S.broods[ev.broodId]?.name) : indIds.length===1 ? indName(indIds[0]) : "";
   const pickList = chooseInds ? (broodId? indsOf(broodId) : all("individuals").sort(byName)).filter(i=>isAlive(i) || (containerId && i.containerId===containerId)) : [];
   const typeOpts = Object.entries(ET).filter(([k])=>!(k==="falterschlupf" && !editing)).map(([k,v])=>[k,v.l]);
+  const firstInd = S.individuals[indIds[0]] || pickList[0];
+  const spId = (firstInd && speciesOfInd(firstInd)?.id) || (broodId && S.broods[broodId]?.speciesId) || null;
+  const xd = d => ({...d, _new:!editing, _spId:spId});
   const root = openSheet(`<h2>${editing?"Eintrag bearbeiten":ET[t]&&!showType?ET[t].l:"Ereignis eintragen"}</h2>
     ${who?`<p class="muted" style="margin:-8px 0 0">${esc(who)}</p>`:""}
     ${showType?fld.sel("eType","Was ist passiert?",typeOpts,t):""}
     ${chooseInds?`<div class="f"><span class="lab">Für welche Tiere? <button type="button" class="btn ghost" id="allBtn" style="min-height:0;padding:0 6px">alle</button></span><div class="checks">${pickList.map(i=>`<label><input type="checkbox" value="${i.id}" ${containerId&&i.containerId===containerId?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)} <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("")||`<div class="empty">Keine aktiven Tiere.</div>`}</div></div>`:""}
-    <div id="xf">${evExtraFields(t, ev?.data||data)}</div>
+    <div id="xf">${evExtraFields(t, xd(ev?.data||data))}</div>
     ${timeFields("e", ev)}
     ${fld.area("eNote","Notiz",ev?.note||"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${editing?`<button class="btn danger" id="del">Löschen</button>`:""}</div>
     ${editing?confirmBlock("Diesen Eintrag löschen?","Löschen"):""}`);
   wireTime(root,"e");
   const ts = root.querySelector("#eType");
-  if(ts) ts.addEventListener("change", () => { t = ts.value; root.querySelector("#xf").innerHTML = evExtraFields(t,{}); });
+  if(ts) ts.addEventListener("change", () => { t = ts.value; root.querySelector("#xf").innerHTML = evExtraFields(t,xd({})); });
   const ab = root.querySelector("#allBtn"); if(ab) ab.addEventListener("click", () => root.querySelectorAll(".checks input").forEach(c=>c.checked=true));
   root.querySelector("#ok").addEventListener("click", async () => {
     const tm = readTime(root,"e"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     const extra = readExtra(root,t);
     if((t==="haeutung"||t==="stadium") && !extra.to){ toast("Bitte Stadium wählen"); return; }
+    const est = !!extra._est, estD = extra._estD; delete extra._est; delete extra._estD;
+    if(est && !(estD>=0 && estD<=365)){ toast("Bitte die Tage bis zur Verpuppung eintragen"); return; }
     if(editing){
       const e2 = {...ev, type:t, ...tm, data:extra, note:val(root,"eNote")};
       if(t==="tod" && ev.individualId && !extra.stage) e2.data.stage = ev.data?.stage || null;
+      if(t==="verpuppt" && ev.data?.est){ const c = root.querySelector("#xIsEst"); if(c && c.checked) e2.data = {...ev.data}; else if(e2.note?.startsWith("geschätzt:")) e2.note = ""; }
       await store.put("events", e2);
+      if(t==="eingegraben"){ for(const pe of all("events").filter(x=>x.type==="verpuppt" && x.data?.est && x.data.fromEv===ev.id)) await store.put("events",{...pe, ...makeTime("tag", addDays(dFromMs(evMid(e2)), pe.data.days||0))}); }
       if(ev.individualId) await applySideEffects(t, extra, ev.individualId);
       closeSheet(); return;
     }
@@ -1346,9 +1390,12 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
     for(const id of targets){
       const i = S.individuals[id]; const dx = {...extra};
       if(t==="tod") dx.stage = currentStage(i);
-      await store.put("events",{type:t, individualId:id, broodId:i.broodId, ...tm, data:dx, note:val(root,"eNote")});
+      if(t==="verpuppt") for(const pe of estPupations(i)) await store.del("events", pe.id);
+      const evId = await store.put("events",{type:t, individualId:id, broodId:i.broodId, ...tm, data:dx, note:val(root,"eNote")});
       await applySideEffects(t, dx, id);
+      if(t==="eingegraben" && est) await addEstimatedPupation(i, S.events[evId], estD);
     }
+    if(t==="eingegraben" && spId && S.species[spId]){ const sp = S.species[spId]; const patch = {autoPupa: est}; if(est && prepupaDurations(spId).length<2) patch.prepupaDays = estD; if(sp.autoPupa!==patch.autoPupa || (patch.prepupaDays!=null && sp.prepupaDays!==patch.prepupaDays)) await store.put("species",{...sp, ...patch}); }
     closeSheet(); toast(targets.length>1?`${targets.length} Einträge gespeichert`:"Gespeichert");
   });
   if(editing) wireConfirm(root,"#del", async () => { await store.del("events",ev.id); closeSheet(); toast("Eintrag gelöscht"); });
@@ -1660,8 +1707,10 @@ ACTS.editSpecies = d => {
   const s = d.id && S.species[d.id];
   const root = openSheet(`<h2>${s?"Art bearbeiten":"Neue Art"}</h2>${fld.text("sSci","Wissenschaftlicher Name",s?.sci||"","Gattung art")}${fld.text("sDe","Deutscher Name",s?.de||"")}
     <div class="frow2">${fld.text("sFam","Familie",s?.family||"","z. B. Sphingidae")}${fld.num("sInst","Larvenstadien",s?.instars||5,"1")}</div>
+    ${fld.num("sPre","Richtwert: Tage vom Eingraben bis zur Verpuppung",s?.prepupaDays??"","1")}
+    ${fld.hint(s?(()=>{ const v=prepupaDurations(s.id); return v.length?`Deine Tiere: ${v.length} Wert(e), Median ${fmtN(median(v),1)} Tage${v.length>=2?" – dieser Median wird statt des Richtwerts verwendet":""}.`:"Noch keine eigenen Werte mit sicherem Verpuppungsdatum."; })():"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${s&&!all("broods").some(b=>b.speciesId===s.id)?`<button class="btn danger" id="del">Löschen</button>`:""}</div>`);
-  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), family:val(root,"sFam"), instars:+val(root,"sInst")||5}); closeSheet(); };
+  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), family:val(root,"sFam"), instars:+val(root,"sInst")||5, prepupaDays: val(root,"sPre")!=="" ? Math.max(0,parseInt(val(root,"sPre"),10)||0) : undefined}); closeSheet(); };
   const del = root.querySelector("#del"); if(del) del.onclick = async () => { await store.del("species",s.id); closeSheet(); };
 };
 ACTS.editSource = d => {
@@ -1869,8 +1918,8 @@ ACTS.exportCsv = () => {
   const q = s => `"${String(s??"").replace(/"/g,'""')}"`;
   const head = ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Notizen"];
   const rows = all("individuals").sort(byName).map(i=>{
-    const b=S.broods[i.broodId], sp=speciesOfBrood(b), eg=firstEv(i,"eingegraben"), vp=firstEv(i,"verpuppt"), ec=firstEv(i,"falterschlupf"), d=deathOf(i), st=pupalStart(i);
-    return [i.name,b?.name,sp?.sci,SEXL[i.sex||"u"],statusOf(i),stageLabel(currentStage(i)),eg&&fmtTime(eg),vp&&fmtTime(vp),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
+    const b=S.broods[i.broodId], sp=speciesOfBrood(b), eg=firstEv(i,"eingegraben"), vp=realPupation(i)||firstEv(i,"verpuppt"), ec=firstEv(i,"falterschlupf"), d=deathOf(i), st=pupalStart(i);
+    return [i.name,b?.name,sp?.sci,SEXL[i.sex||"u"],statusOf(i),stageLabel(currentStage(i)),eg&&fmtTime(eg),vp&&(fmtTime(vp)+(vp.data?.est?" (geschätzt)":"")),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
   });
   store.save(`raupenbuch-tiere-${todayISO()}.csv`, "﻿"+[head.map(q).join(";"),...rows].join("\r\n"));
 };
