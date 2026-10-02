@@ -275,7 +275,7 @@ table.t td:first-child{font-family:var(--f-body)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.0.0";
+const APP_VERSION = "5.1.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -284,11 +284,13 @@ const STAGES = [
   {k:"vorpuppe", l:"Eingegraben"}, {k:"puppe", l:"Puppe"}, {k:"falter", l:"Falter"}
 ];
 const SIDX = Object.fromEntries(STAGES.map((s,i)=>[s.k,i]));
-const stageLabel = k => (STAGES[SIDX[k]]||{l:k||"–"}).l;
+const stageLabel = k => k==="?" ? "unbekannt" : (STAGES[SIDX[k]]||{l:k||"–"}).l;
+const startStageOf = ind => ind.startStage || S.broods[ind.broodId]?.startStage || "L1";
 
 const ET = {
   schlupf_ei:   {l:"Aus dem Ei geschlüpft", stage:()=>"L1"},
   haeutung:     {l:"Häutung", stage:d=>d.to||null},
+  stadium:      {l:"Stadium festgelegt", stage:d=>d.to||null},
   eingegraben:  {l:"Eingegraben", stage:()=>"vorpuppe"},
   verpuppt:     {l:"Verpuppt", stage:()=>"puppe"},
   falterschlupf:{l:"Falter geschlüpft", stage:()=>"falter"},
@@ -375,7 +377,7 @@ function evIndex(){
     const k = e.individualId? ["ind",e.individualId] : e.containerId? ["cont",e.containerId] : ["brood",e.broodId];
     (_evIdx[k[0]][k[1]] ||= []).push(e);
   }
-  for(const m of Object.values(_evIdx)) for(const k in m) m[k].sort((a,b)=>ms(a.t0)-ms(b.t0));
+  for(const m of Object.values(_evIdx)) for(const k in m) m[k].sort((a,b)=>ms(a.t0)-ms(b.t0) || (a.createdAt||"").localeCompare(b.createdAt||""));
   return _evIdx;
 }
 const evOf = indId => evIndex().ind[indId] || [];
@@ -383,10 +385,10 @@ function stageEventsOf(ind){ return evOf(ind.id).filter(e=>ET[e.type]?.stage && 
 function currentStage(ind){
   const se = stageEventsOf(ind);
   if(se.length){ const e=se[se.length-1]; return ET[e.type].stage(e.data||{}); }
-  return S.broods[ind.broodId]?.startStage || "L1";
+  return startStageOf(ind);
 }
 function maxStageIdx(ind){
-  let m = SIDX[S.broods[ind.broodId]?.startStage || "L1"] ?? 1;
+  let m = SIDX[startStageOf(ind)] ?? 1;
   for(const e of stageEventsOf(ind)) m = Math.max(m, SIDX[ET[e.type].stage(e.data||{})] ?? 0);
   return m;
 }
@@ -739,6 +741,7 @@ function stagePill(ind){
   if(st==="abgegeben") return `<span class="pill">abgegeben</span>`;
   if(st==="freigelassen") return `<span class="pill falter">freigelassen</span>`;
   const s = currentStage(ind);
+  if(s==="?") return `<span class="pill">Stadium ?</span>`;
   return `<span class="pill ${s==="falter"?"falter":"stage"}">${stageLabel(s)}</span>`;
 }
 function indRow(ind, extra=""){
@@ -810,6 +813,7 @@ function evTitle(e){
   const d = e.data||{};
   switch(e.type){
     case "haeutung": return `Häutung → ${d.to||"?"}`;
+    case "stadium": return `Stadium: ${stageLabel(d.to)}`;
     case "geschlecht": return `Geschlecht: ${SEXL[d.sex||"u"]}${d.at?` (an ${d.at==="puppe"?"Puppe":d.at==="falter"?"Falter":"Raupe"})`:""}`;
     case "gewicht": return `Gewogen: ${fmtN(+d.g,2)} g`;
     case "futter": return `Futter: ${d.plant||"–"}`;
@@ -911,13 +915,16 @@ VIEWS.animal = r => {
   if(alive){
     const q = [];
     const si = SIDX[st];
+    if(si===undefined) q.push(["stadium","Stadium festlegen"],["eingegraben","Eingegraben"],["verpuppt","Verpuppt"],["eclosion1","Falter geschlüpft"]);
     if(si>=1 && si<=4) q.push(["haeutung",`Häutung → L${si+1}`,`data-to="L${si+1}"`]);
     if(si>=1 && si<=5) q.push(["eingegraben","Eingegraben"]);
     if(si>=5 && si<=6) q.push(["verpuppt","Verpuppt"]);
     if(si>=6 && si<=7) q.push(["eclosion1","Falter geschlüpft"]);
     if(si===8) q.push(["freigelassen","Freigelassen"],["praepariert","Präpariert"]);
     if(!i.sex || i.sex==="u") q.push(["geschlecht","Geschlecht"]);
-    q.push(["tod","Gestorben"],["notiz","Notiz"],["any","Anderes …"]);
+    q.push(["tod","Gestorben"],["notiz","Notiz"]);
+    if(si!==undefined) q.push(["stadium","Stadium korrigieren"]);
+    q.push(["any","Anderes …"]);
     h += `<div class="quick">${q.map(([t,l,x=""])=>`<button class="btn" data-act="${t==="eclosion1"?"eclosion":"quickEv"}" data-t="${t}" data-ind="${i.id}" ${x}>${l}</button>`).join("")}</div>`;
   } else {
     h += `<div class="btns"><button class="btn" data-act="quickEv" data-t="any" data-ind="${i.id}">Ereignis eintragen</button></div>`;
@@ -936,7 +943,7 @@ VIEWS.animal = r => {
 };
 
 function timeline(evs){
-  return `<div class="tl">${[...evs].sort((a,b)=>ms(b.t0)-ms(a.t0)).map(e=>{
+  return `<div class="tl">${[...evs].sort((a,b)=>ms(b.t0)-ms(a.t0) || (b.createdAt||"").localeCompare(a.createdAt||"")).map(e=>{
     const cls = e.type==="tod"?"death": e.type==="falterschlupf"?"falter": ET[e.type]?.stage?"stagechg":"";
     return `<button class="ev ${cls}" data-act="editEvent" data-id="${e.id}"><span class="dot"></span><span class="body"><span class="w">${esc(fmtTime(e))}</span><br><span class="x">${esc(evTitle(e))}</span>${e.note?`<br><span class="n">${esc(e.note)}</span>`:""}</span></button>`;
   }).join("")}</div>`;
@@ -1153,7 +1160,7 @@ const speciesOpts = () => all("species").sort((a,b)=>a.sci.localeCompare(b.sci))
 const sourceOpts = () => [["","– keine –"], ...all("sources").sort(byName).map(s=>[s.id,s.name])];
 const contOpts = () => [["","– kein Behälter –"], ...all("containers").sort(byName).map(c=>[c.id, c.name])];
 const locOpts = () => [["","– kein Standort –"], ...all("locations").sort(byName).map(l=>[l.id,l.name])];
-const stageOpts = () => STAGES.filter(s=>s.k!=="falter").map(s=>[s.k, s.l]);
+const stageOpts = () => [["?","unbekannt"], ...STAGES.filter(s=>s.k!=="falter").map(s=>[s.k, s.l])];
 
 /* ---- Zuchtansatz ---- */
 ACTS.newBrood = () => broodSheet();
@@ -1248,11 +1255,13 @@ ACTS.editInd = d => {
   const root = openSheet(`<h2>Tier bearbeiten</h2>${fld.text("nName","Name",i.name)}
     <div class="frow2">${fld.sel("nSex","Geschlecht",[["u","unbekannt"],["f","Weibchen"],["m","Männchen"]],i.sex||"u")}${fld.sel("nCont","Behälter",contOpts(),i.containerId||"")}</div>
     ${fld.sel("nBrood","Zuchtansatz",all("broods").map(b=>[b.id,b.name]),i.broodId)}
+    ${fld.sel("nStart","Startstadium",[["",`wie Zuchtansatz (${stageLabel(S.broods[i.broodId]?.startStage||"L1")})`], ...stageOpts()],i.startStage||"")}
+    ${fld.hint("Gilt, solange noch keine Häutung oder kein Stadium eingetragen ist.")}
     ${fld.area("nNotes","Notizen",i.notes||"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>
     ${confirmBlock(`${esc(i.name)} mit allen Einträgen und Fotos löschen? Das lässt sich nicht rückgängig machen.`,"Endgültig löschen")}`);
   root.querySelector("#ok").addEventListener("click", async () => {
-    await store.put("individuals",{...i, name:val(root,"nName")||nextAutoNames(S.broods[val(root,"nBrood")]?.speciesId,1)[0], sex:val(root,"nSex"), containerId:val(root,"nCont")||null, broodId:val(root,"nBrood"), notes:val(root,"nNotes")});
+    await store.put("individuals",{...i, name:val(root,"nName")||nextAutoNames(S.broods[val(root,"nBrood")]?.speciesId,1)[0], sex:val(root,"nSex"), containerId:val(root,"nCont")||null, broodId:val(root,"nBrood"), startStage:val(root,"nStart")||undefined, notes:val(root,"nNotes")});
     closeSheet();
   });
   wireConfirm(root,"#del", async () => {
@@ -1268,6 +1277,7 @@ ACTS.editInd = d => {
 function evExtraFields(type, d={}){
   switch(type){
     case "haeutung": return fld.sel("xTo","Neues Stadium",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"]],d.to||"L2");
+    case "stadium": return fld.sel("xSt","Aktuelles Stadium",STAGES.map(s=>[s.k,s.l]),d.to||"L2")+fld.hint("Zum Korrigieren oder Nachtragen, wenn du nicht weißt, wann sich das Tier gehäutet hat.");
     case "geschlecht": return `<div class="frow2">${fld.sel("xSex","Geschlecht",[["f","Weibchen"],["m","Männchen"]],d.sex||"f")}${fld.sel("xAt","bestimmt an",[["puppe","Puppe"],["falter","Falter"],["raupe","Raupe"]],d.at||"puppe")}</div>`;
     case "gewicht": return fld.num("xG","Gewicht (g)",d.g??"","0.01");
     case "futter": return fld.text("xPlant","Futterpflanze",d.plant||"","z. B. Liguster");
@@ -1280,6 +1290,7 @@ function evExtraFields(type, d={}){
 function readExtra(root, type){
   switch(type){
     case "haeutung": return {to:val(root,"xTo")};
+    case "stadium": return {to:val(root,"xSt")};
     case "geschlecht": return {sex:val(root,"xSex"), at:val(root,"xAt")};
     case "gewicht": return {g:parseFloat(val(root,"xG").replace(",","."))||null};
     case "futter": return {plant:val(root,"xPlant")};
@@ -1322,7 +1333,7 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
   root.querySelector("#ok").addEventListener("click", async () => {
     const tm = readTime(root,"e"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     const extra = readExtra(root,t);
-    if(t==="haeutung" && !extra.to){ toast("Bitte Stadium wählen"); return; }
+    if((t==="haeutung"||t==="stadium") && !extra.to){ toast("Bitte Stadium wählen"); return; }
     if(editing){
       const e2 = {...ev, type:t, ...tm, data:extra, note:val(root,"eNote")};
       if(t==="tod" && ev.individualId && !extra.stage) e2.data.stage = ev.data?.stage || null;
