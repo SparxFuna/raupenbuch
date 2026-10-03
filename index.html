@@ -277,7 +277,7 @@ table.t td:first-child{font-family:var(--f-body)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.3.0";
+const APP_VERSION = "5.4.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -336,8 +336,249 @@ const dShort = iso => { if(!iso) return "–"; const [,m,d]=iso.slice(0,10).spli
 const dFromMs = t => { const d=new Date(t); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 const parseDE = s => { s=(s||"").trim(); let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/); if(m){ let y=+m[3]; if(y<100) y+=2000; return `${y}-${pad(+m[2])}-${pad(+m[1])}`;} m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m? m[0] : null; };
 const median = a => { const s=[...a].sort((x,y)=>x-y); const n=s.length; return n? (n%2? s[(n-1)/2] : (s[n/2-1]+s[n/2])/2) : NaN; };
-const fmtN = (n,dec=0) => Number.isFinite(n) ? n.toLocaleString("de-DE",{maximumFractionDigits:dec,minimumFractionDigits:0}) : "–";
+const fmtN = (n,dec=0) => Number.isFinite(n) ? n.toLocaleString(LANG==="en"?"en-GB":"de-DE",{maximumFractionDigits:dec,minimumFractionDigits:0}) : "–";
 const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"","de",{numeric:true});
+
+/* ============ Sprache (Deutsch / English) ============
+   Die Oberfläche wird auf Deutsch erzeugt. Ist Englisch gewählt, übersetzt ein MutationObserver
+   jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
+let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
+const I18N_EN = {
+  // Navigation & allgemein
+  "Übersicht":"Overview","Tiere":"Animals","Zuordnen":"Assign","Klima":"Climate","Mehr":"More","Zurück":"Back","Suchen":"Search",
+  "QR-Etikett scannen":"Scan QR label","Hauptnavigation":"Main navigation","Lade dein Raupenbuch …":"Loading your Raupenbuch …","ohne Speicher":"no storage",
+  "Speichern":"Save","Löschen":"Delete","Abbrechen":"Cancel","Schließen":"Close","Bearbeiten":"Edit","Anlegen":"Create","Hinzufügen":"Add","Öffnen":"Open",
+  "Endgültig löschen":"Delete permanently","Importieren":"Import","Import":"Import","Filter":"Filter","alle":"all","Alle":"All","Aktiv":"Active","aktiv":"active",
+  "Neue Version verfügbar":"New version available","Aktualisieren":"Update","Als App installieren":"Install as app","antippen zum Bearbeiten":"tap to edit",
+  "Name":"Name","Notiz":"Note","Notizen":"Notes","Datum":"Date","Uhrzeit":"Time","Von":"From","Bis":"To","Abend":"Evening","Wann?":"When?",
+  "Uhrzeit bekannt":"Time known","Tag bekannt":"Day known","In der Nacht":"Overnight","Zeitraum":"Period",
+  "Für Schlüpfe über Nacht: das Datum des Abends wählen.":"For overnight eclosions: pick the date of the evening.",
+  "–":"–","?":"?","%":"%","°C":"°C","g":"g","n":"n","min":"min","max":"max","Median":"Median","min / Ø / max":"min / avg / max","ab":"from","Tage":"Days",
+  // Stadien, Ereignisse, Ursachen, Ansichten
+  "Ei":"Egg","Eingegraben":"Burrowed","Puppe":"Pupa","Falter":"Moth","Puppen":"Pupae","Tot":"Dead","tot":"dead","unbekannt":"unknown","Unbekannt":"Unknown",
+  "präpariert":"mounted","praepariert":"mounted","abgegeben":"given away","freigelassen":"released","Stadium ?":"Stage ?",
+  "Aus dem Ei geschlüpft":"Hatched from egg","Häutung":"Moult","Stadium festgelegt":"Stage set","Verpuppt":"Pupated","Verpuppt (geschätzt)":"Pupated (estimated)",
+  "Falter geschlüpft":"Moth eclosed","Falterschlupf":"Eclosion",
+  "Sirius; m; 21.08.2026; 24.09.2026\nVega; w; 22.08.2026\nDeneb; w; 23.08.2026; Nacht 27.09.2026":"Sirius; m; 21.08.2026; 24.09.2026\nVega; f; 22.08.2026\nDeneb; f; 23.08.2026; Night 27.09.2026","Geschlecht bestimmt":"Sex determined","Gewogen":"Weighed","Futter":"Food","Umgesetzt":"Moved","Gestorben":"Died",
+  "Präpariert":"Mounted","Abgegeben":"Given away","Freigelassen":"Released",
+  "Parasitoid: Raupenfliege (Tachinidae)":"Parasitoid: tachinid fly (Tachinidae)","Parasitoid: Schlupfwespe":"Parasitoid: parasitic wasp",
+  "Krankheit (Virus, Bakterien, Pilz)":"Disease (virus, bacteria, fungus)","Häutungsproblem":"Moulting problem","Verpuppung missglückt":"Failed pupation",
+  "Schlupf missglückt / Flügel nicht entfaltet":"Failed eclosion / wings not expanded","Austrocknung":"Desiccation","Nässe / Schimmel":"Wet / mould","Verletzung":"Injury",
+  "Thorax oben":"Thorax (top)","Vorderflügel":"Forewing","Hinterflügel":"Hindwing","Unterseite":"Underside","Ganzes Tier":"Whole animal","Raupe":"Caterpillar","Sonstiges":"Other",
+  "Weibchen":"Female","Männchen":"Male","Geschlecht":"Sex","sicher":"certain","Verdacht":"suspected",
+  "Züchter":"Breeder","Händler/Börse":"Dealer / fair","Wildfund":"Wild find","Eigene Nachzucht":"Own breeding",
+  // Übersicht
+  "Willkommen im Raupenbuch":"Welcome to Raupenbuch","Leg zuerst einen":"First create a",
+  "an, also alles, was zusammen angefangen hat (z. B. „Atropos 2026 von Jana“). Danach kannst du deine Tiere mit Namen hinzufügen oder aus deinen Notizen einfügen.":"– everything that started together (e.g. “Atropos 2026 from Jana”). Then add your animals by name or paste them from your notes.",
+  "Zuchtansatz anlegen":"Create brood","Tiere aktiv":"Active animals","Verluste":"Losses","Falterschlupf erfassen":"Record eclosion","Ereignis für mehrere":"Event for several",
+  "Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.":"When several eclose in one night, it is unclear who is who. Assign them once you know.",
+  "Schlupffenster":"Eclosion window","aus deinen bisherigen Puppenruhen":"from your previous pupal periods","Gerade liegen keine Puppen.":"No pupae at the moment.",
+  "2 Schlüpfen":"2 eclosions","mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Zeitfenster.":"with a known burrowing or pupation date, a time window appears here.",
+  "Zuchtansätze":"Broods","+ Neu":"+ New","Zuletzt eingetragen":"Recent entries","Auswertung":"Statistics","Noch keine Ereignisse.":"No events yet.",
+  "im Fenster":"in window","länger als bisher":"longer than before","Noch kein Backup.":"No backup yet.","Deine Daten liegen nur auf diesem Handy.":"Your data exists only on this phone.",
+  "Backup von heute":"Backup from today","Letztes Backup vor":"Last backup","1 Tag":"1 day ago","Backup speichern":"Save backup",
+  "Der Gerätespeicher ist nicht verfügbar (privates Fenster?). Einträge gehen beim Schließen verloren.":"Device storage is unavailable (private window?). Entries will be lost when closing.",
+  // Tiere / Ansatz
+  "Tier suchen (Name, Notiz, Ansatz)":"Search animal (name, note, brood)","Keine Tiere für diesen Filter.":"No animals for this filter.",
+  "Noch keine Tiere. Öffne einen Zuchtansatz und füge dort Tiere hinzu.":"No animals yet. Open a brood and add animals there.","Noch kein Zuchtansatz.":"No brood yet.",
+  "Tiere hinzufügen":"Add animals","Etiketten":"Labels","Ansatz bearbeiten":"Edit brood","Überleben je Stadium":"Survival per stage","erreicht":"reached","noch unterwegs":"still on the way","verloren":"lost",
+  "Puppenruhe in Tagen":"Pupal period in days","Wenige Werte: Unterschiede können Zufall sein.":"Few values: differences may be chance.","Ereignisse am Ansatz":"Brood events",
+  "Noch keine Tiere. Tippe auf":"No animals yet. Tap",". Du kannst dort auch deine Notizen zeilenweise einfügen.":". You can also paste your notes line by line there.",
+  "noch keine Einträge":"no entries yet","Dieser Zuchtansatz existiert nicht mehr.":"This brood no longer exists.","Dieses Tier existiert nicht mehr.":"This animal no longer exists.",
+  "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
+  "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
+  "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth",
+  "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
+  // Zuordnen
+  "Schlüpfen mehrere Falter im selben Zeitraum und du weißt nicht, wer aus welcher Puppe kam, landen sie hier als „Falter A, B, C …“. Fotografiere sie und ordne sie zu, sobald du es weißt. Danach gehören Fotos und Notizen zum jeweiligen Tier. Schlupfdatum und Puppenruhe zählen schon vorher.":"If several moths eclose in the same period and you don't know who came from which pupa, they appear here as “Falter A, B, C …”. Photograph them and assign them once you know. Photos and notes then belong to the animal. Eclosion date and pupal period count right away.",
+  "Nichts offen. Alle Falter sind ihren Tieren zugeordnet.":"Nothing open. All moths are assigned to their animals.","Vergleichen":"Compare","zugeordnet":"assigned","offen":"open",
+  "Dieser Falter ist zugeordnet. Du findest ihn jetzt beim jeweiligen Tier.":"This moth is assigned. You will find it with its animal now.","nicht zugeordnet":"not assigned","Wer ist das?":"Who is this?",
+  "Tippe auf das Tier, wenn du sicher bist. Fotos und Notizen wandern dann zum Tier, und die übrigen Falter dieses Schlupfs werden eingegrenzt.":"Tap the animal when you are sure. Photos and notes move to the animal, and the other moths of this eclosion are narrowed down.",
+  "Keine Kandidaten übrig.":"No candidates left.","Fotos nebeneinander vergleichen":"Compare photos side by side","gleiche Ansicht = besser vergleichbar":"same view = easier to compare",
+  "Vergleich":"Comparison","Nichts zu vergleichen.":"Nothing to compare.","Puppenfotos der Kandidaten":"Pupa photos of candidates",
+  "Noch keine Fotos. Fotografiere jeden Falter am besten von oben auf den Thorax (die Totenkopf-Zeichnung) und die Vorderflügel, immer mit gleichem Abstand und Licht.":"No photos yet. Photograph each moth from above on the thorax (the skull pattern) and the forewings, always at the same distance and light.",
+  "Falter bearbeiten":"Edit moth","Bezeichnung":"Label","z. B. Merkmale zum Wiedererkennen":"e.g. features to recognise it",
+  "Diesen Falter-Eintrag samt Fotos löschen? Das Schlupfdatum an den Tieren bleibt erhalten.":"Delete this moth entry including photos? The eclosion date on the animals is kept.",
+  // Klima
+  "Temperatur und Luftfeuchte pro Standort. Alle Behälter an einem Standort teilen sich die Messwerte.":"Temperature and humidity per location. All containers at a location share the readings.",
+  "Messwert eintragen":"Add reading","+ Standort":"+ Location","Messwert":"Reading","CSV-Import":"CSV import","Temperatur":"Temperature","Luftfeuchte":"Humidity",
+  "Temperatur °C":"Temperature °C","Luftfeuchte %":"Humidity %","Temperatur (°C)":"Temperature (°C)","Luftfeuchte (%)":"Humidity (%)","Temperaturverlauf":"Temperature history","Luftfeuchteverlauf":"Humidity history",
+  "Für ein Diagramm braucht es mindestens 2 Werte.":"A chart needs at least 2 values.","Behälter hier":"Containers here","Letzte Werte":"Latest readings","Noch keine Werte.":"No readings yet.",
+  "Keine Behälter zugeordnet (unter Mehr → Behälter).":"No containers assigned (More → Containers).","manuell":"manual","Sensor":"Sensor","noch keine Messung":"no reading yet",
+  "7 Tage":"7 days","30 Tage":"30 days","90 Tage":"90 days","Standort existiert nicht mehr.":"Location no longer exists.",
+  "Noch kein Standort. Lege z. B. „Puppenkasten Keller“ oder „Regal Wohnzimmer“ an.":"No location yet. Create e.g. “Pupa box basement” or “Living room shelf”.",
+  "Öffne einen Standort, um einen Bluetooth-Sensor (Xiaomi LYWSD03MMC) zu koppeln und den aktuellen Wert abzurufen. Ältere Verläufe kannst du dort als CSV importieren.":"Open a location to pair a Bluetooth sensor (Xiaomi LYWSD03MMC) and read the current value. Older history can be imported there as CSV.",
+  "Bluetooth-Sensor":"Bluetooth sensor","Koppel einen Xiaomi-Hygrometer (LYWSD03MMC) mit diesem Standort. Danach holst du den aktuellen Wert mit einem Tippen.":"Pair a Xiaomi hygrometer (LYWSD03MMC) with this location. Then fetch the current value with one tap.",
+  "Sensor koppeln":"Pair sensor","Messwert vom Sensor holen":"Read sensor now","Sensor ändern":"Change sensor","Anderen Sensor wählen":"Choose another sensor","Sensor entfernen":"Remove sensor",
+  "Die bisherigen Messwerte bleiben erhalten.":"Existing readings are kept.",
+  "Bluetooth-Sensor: In diesem Browser nicht verfügbar. Öffne das Raupenbuch in Chrome auf Android.":"Bluetooth sensor: not available in this browser. Open Raupenbuch in Chrome on Android.",
+  "Starte …":"Starting …","Verbinde …":"Connecting …","Suche Sensor in der Nähe …":"Looking for the sensor nearby …","Warte auf Messwert …":"Waiting for a reading …",
+  "Wähle den Sensor in der Liste …":"Pick the sensor in the list …","Gerät nicht gespeichert. Bitte den Sensor in der Liste wählen …":"Device not remembered. Please pick the sensor in the list …",
+  "Kein Sensor gewählt.":"No sensor selected.","Bitte erneut tippen (Chrome verlangt dafür ein frisches Antippen).":"Please tap again (Chrome needs a fresh tap for this).",
+  "Neuer Standort":"New location","Standort bearbeiten":"Edit location","z. B. Puppenkasten Keller":"e.g. Pupa box basement","z. B. Sensor: Hygrometer 1":"e.g. Sensor: hygrometer 1",
+  "Standort und alle Messwerte löschen?":"Delete location and all readings?","Standort":"Location",
+  "Sensordaten einfügen":"Paste sensor data","Exportiere die Daten in der App deines Hygrometers als CSV und füge den Inhalt hier ein, oder wähle die Datei.":"Export the data as CSV in your hygrometer's app and paste it here, or choose the file.",
+  "CSV-Inhalt":"CSV content","Datei wählen":"Choose file","Erwartet pro Zeile: Datum + Uhrzeit, Temperatur, Luftfeuchte. Werte werden zu 10-Minuten-Mitteln zusammengefasst.":"Expected per line: date + time, temperature, humidity. Values are averaged into 10-minute means.",
+  "Keine Werte erkannt. Prüfe das Format.":"No values recognised. Check the format.",
+  // Auswertung
+  "Über alle Zuchtansätze. Bei kleinen Zahlen sind Unterschiede oft Zufall: achte auf n.":"Across all broods. With small numbers, differences are often chance: watch n.",
+  "Verluste nach Ursache":"Losses by cause","Keine Verluste eingetragen.":"No losses recorded.","Verluste nach Stadium":"Losses by stage","Verluste je Zuchtansatz":"Losses per brood",
+  "Verluste je Behälter":"Losses per container","Anteil":"Share","Puppenruhe":"Pupal period","ab Verpuppung":"from pupation","ab Eingraben":"from burrowing",
+  "gemischt (Verpuppung bzw. Eingraben)":"mixed (pupation or burrowing)",
+  // Suche
+  "Name, Art, Notiz, Futterpflanze …":"Name, species, note, food plant …","Durchsucht Tiere, Zuchtansätze, Arten, Falter und Notizen in Ereignissen.":"Searches animals, broods, species, moths and event notes.",
+  "Ereignisse":"Events","Offene Falter":"Open moths",
+  // Mehr
+  "Verluste, Puppenruhe je Art":"Losses, pupal period per species","Arten":"Species","Herkünfte":"Sources","Züchter, Wildfunde, eigene Nachzucht":"Breeders, wild finds, own breeding",
+  "Behälter":"Containers","Boxen, Becher, Käfige mit Standort":"Boxes, cups, cages with location","Etiketten drucken":"Print labels","QR-Codes als PDF oder direkt drucken":"QR codes as PDF or direct print",
+  "Daten & Sicherung":"Data & backup","Backup mit Fotos, CSV, Wiederherstellen":"Backup with photos, CSV, restore","Sprache":"Language",
+  "Speicher: auf diesem Gerät (IndexedDB), dauerhaft geschützt. Mach regelmäßig ein Backup unter":"Storage: on this device (IndexedDB), persistent. Make regular backups under",
+  "Speicher: auf diesem Gerät (IndexedDB), nicht dauerhaft geschützt. Mach regelmäßig ein Backup unter":"Storage: on this device (IndexedDB), not persistent. Make regular backups under",
+  "Speicher: auf diesem Gerät (IndexedDB). Mach regelmäßig ein Backup unter":"Storage: on this device (IndexedDB). Make regular backups under",
+  "+ Art":"+ Species","Keine Arten.":"No species.","+ Herkunft":"+ Source","Noch keine Herkunft.":"No source yet.","+ Behälter":"+ Container","Noch keine Behälter.":"No containers yet.",
+  "Behälter bekommen ein eigenes QR-Etikett. Ein Standort verknüpft sie mit den Klimawerten.":"Containers get their own QR label. A location links them to the climate readings.",
+  // Daten
+  "Alles liegt nur auf diesem Gerät. Ein Backup ist deine einzige Kopie, falls das Handy kaputtgeht oder Chrome-Daten gelöscht werden.":"Everything lives only on this device. A backup is your only copy if the phone breaks or Chrome data is cleared.",
+  "Backup":"Backup","noch nie":"never","Eine":"A","JSON-Datei mit allem":"JSON file with everything","Tiere als CSV":"Animals as CSV","Backup einspielen":"Restore backup",
+  "Zusammenführen":"Merge","Alles ersetzen":"Replace all","Alles auf diesem Gerät wird gelöscht":"Everything on this device will be deleted","und durch das Backup ersetzt.":"and replaced by the backup.",
+  "Gleiche Einträge werden überschrieben, nichts wird gelöscht. Geht auch mit Sicherungen aus der alten Claude-Version.":"Matching entries are overwritten, nothing is deleted. Also works with backups from the old Claude version.",
+  "Speicher":"Storage","dauerhaft":"persistent","nicht dauerhaft":"not persistent",
+  "Chrome löscht die Daten nicht von selbst, auch wenn der Speicher knapp wird.":"Chrome won't delete the data by itself, even when storage runs low.",
+  "Chrome könnte die Daten bei Speichermangel löschen. Installierst du das Raupenbuch als App (Chrome-Menü → „App installieren“), wird der Schutz meist erteilt.":"Chrome might delete the data when storage runs low. Installing Raupenbuch as an app (Chrome menu → “Install app”) usually grants protection.",
+  "Dauerhaften Speicher anfragen":"Request persistent storage","Erstelle Backup …":"Creating backup …","Lese Datei …":"Reading file …","Lösche bisherige Daten …":"Deleting existing data …",
+  // Formulare
+  "Neuer Zuchtansatz":"New brood","Zuchtansatz bearbeiten":"Edit brood","z. B. Atropos 2026":"e.g. Atropos 2026","Art":"Species","Herkunft":"Source","Generation":"Generation","z. B. 1":"e.g. 1",
+  "+ neue Herkunft …":"+ new source …","– keine –":"– none –","Name der neuen Herkunft":"Name of the new source","z. B. Jana":"e.g. Jana","Startdatum":"Start date","Start als":"Starts as",
+  "Anzahl":"Count","Mit Namen":"By name","Aus Notizen":"From notes","Wie viele Tiere?":"How many animals?","Die Tiere werden automatisch benannt, z. B.":"Animals are named automatically, e.g.",
+  "Umbenennen geht jederzeit.":"You can rename them any time.","Namen":"Names","Sirius, Polaris, Vega …":"Sirius, Polaris, Vega …","Durch Komma oder Zeilenumbruch trennen.":"Separate with commas or line breaks.",
+  "Eine Zeile pro Tier":"One line per animal","Format:":"Format:","Name; Geschlecht; eingegraben; geschlüpft":"name; sex; burrowed; eclosed",
+  ". Geschlecht als m, w oder ?. Hinten darf etwas fehlen. Ohne Namen die Zeile mit":". Sex as m, f (or w) or ?. Trailing fields may be missing. Without a name, start the line with",
+  "beginnen, z. B.":", e.g.",". Vor ein Schlupfdatum kannst du „Nacht“ schreiben, wenn es über Nacht war (Datum des Abends).":". Put “Night” before an eclosion date if it happened overnight (date of the evening).",
+  "– kein Behälter –":"– no container –","– kein Standort –":"– no location –","Aktuelles Stadium":"Current stage","erreicht am":"reached on",
+  "Datum leer lassen, wenn du es nicht weißt. Dann wird nur das Stadium gesetzt und es zählt nicht in die Statistik.":"Leave the date empty if you don't know it. Then only the stage is set and it doesn't count in the statistics.",
+  "Zuchtansatz":"Brood","Startstadium":"Starting stage","Gilt, solange noch keine Häutung oder kein Stadium eingetragen ist.":"Applies until a moult or stage is recorded.",
+  "Was ist passiert?":"What happened?","Für welche Tiere?":"Which animals?","Keine aktiven Tiere.":"No active animals.","Neues Stadium":"New stage",
+  "Zum Korrigieren oder Nachtragen, wenn du nicht weißt, wann sich das Tier gehäutet hat.":"To correct or catch up when you don't know when the animal moulted.",
+  "bestimmt an":"determined on","Gewicht (g)":"Weight (g)","Futterpflanze":"Food plant","z. B. Liguster":"e.g. privet","Neuer Behälter":"New container","Ursache":"Cause","Wie sicher?":"How certain?","An wen?":"To whom?",
+  "Eintrag bearbeiten":"Edit entry","Diesen Eintrag löschen?":"Delete this entry?",
+  "Verpuppungsdatum automatisch schätzen":"Estimate pupation date automatically","Tage vom Eingraben bis zur Verpuppung":"Days from burrowing to pupation",
+  "Datum ist nur geschätzt":"Date is only estimated","Haken entfernen, sobald du das Datum sicher weißt. Dann zählt es auch in die Statistik.":"Untick once you know the date for sure. Then it counts in the statistics too.",
+  "Welche Puppen sind leer?":"Which pupae are empty?","Wähle alle Puppen, die im selben Zeitraum geschlüpft sind. Jede bekommt einen Falter-Eintrag.":"Select all pupae that eclosed in the same period. Each gets a moth entry.",
+  "Ich weiß sicher, welcher Falter aus welcher Puppe kam":"I know for sure which moth came from which pupa","z. B. alle im Netzkäfig, wild umhergeflogen":"e.g. all in the net cage, flying around",
+  "Der Falter wird direkt diesem Tier zugeordnet.":"The moth is assigned directly to this animal.",
+  "Foto hinzufügen":"Add photo","Ansicht":"View","Für den Vergleich: gleiche Ansicht, gleicher Abstand, gleiches Licht.":"For comparison: same view, same distance, same light.","Kamera oder Galerie":"Camera or gallery",
+  "Foto endgültig löschen?":"Delete photo permanently?",
+  "Neue Art":"New species","Art bearbeiten":"Edit species","Wissenschaftlicher Name":"Scientific name","Gattung art":"Genus species","Deutscher Name":"German name","Englischer Name":"English name",
+  "Familie":"Family","z. B. Sphingidae":"e.g. Sphingidae","Larvenstadien":"Larval instars","Richtwert: Tage vom Eingraben bis zur Verpuppung":"Guide value: days from burrowing to pupation",
+  "Noch keine eigenen Werte mit sicherem Verpuppungsdatum.":"No own values with a certain pupation date yet.",
+  "Neue Herkunft":"New source","Herkunft bearbeiten":"Edit source","z. B. Kontakt, Ort, Nachweise":"e.g. contact, place, records",
+  "Behälter bearbeiten":"Edit container","z. B. Box 2, Becher 7, Netzkäfig":"e.g. Box 2, Cup 7, net cage","Ereignis für alle darin":"Event for all inside",
+  "Format (A4)":"Format (A4)","3 × 7 Etiketten, 70 × 42 mm":"3 × 7 labels, 70 × 42 mm","4 × 10 Etiketten, 52 × 30 mm":"4 × 10 labels, 52 × 30 mm","Keine Tiere.":"No animals.",
+  "Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.":"Print the PDF on sticky labels or plain paper (with cut lines). Scan the label later via the QR icon at the top.",
+  "PDF speichern":"Save PDF","Direkt drucken":"Print directly","Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.":"When printing choose “Margins: none” and “Scale: 100 %” so the labels fit.","Erstelle PDF …":"Creating PDF …",
+  "Etikett scannen":"Scan label","Kamera starten":"Start camera","Halte den QR-Code in den Rahmen. Das Tier oder der Behälter öffnet sich dann von selbst.":"Hold the QR code inside the frame. The animal or container then opens by itself.",
+  "Halte den QR-Code in den Rahmen …":"Hold the QR code inside the frame …","Stattdessen Foto vom Etikett":"Photo of the label instead","Oder Code eintippen":"Or type the code","Starte Kamera …":"Starting camera …",
+  "Suche QR-Code …":"Looking for QR code …","Kein QR-Code erkannt. Näher ran, scharf stellen und gerade halten.":"No QR code found. Move closer, focus and hold straight.",
+  "Kamera nicht erlaubt. Erlaube sie in den Website-Einstellungen oder nimm ein Foto.":"Camera not allowed. Allow it in the site settings or take a photo.",
+  "Speichere …":"Saving …","Importiere …":"Importing …",
+  // Notizen (gespeicherte Standardtexte)
+  "aus Notizen":"from notes","beim Anlegen":"when created","beim Anlegen, Datum unbekannt":"when created, date unknown","vom Falter-Eintrag übernommen":"taken from moth entry",
+  // Toasts
+  "Ansicht geändert":"View changed","Bitte Namen eingeben":"Please enter a name","Bitte einen Namen eingeben":"Please enter a name","Bitte Stadium wählen":"Please choose a stage",
+  "Bitte Temperatur oder Luftfeuchte eingeben":"Please enter temperature or humidity","Bitte andere Raupenbuch-Tabs schließen":"Please close other Raupenbuch tabs",
+  "Bitte die Tage bis zur Verpuppung eintragen":"Please enter the days until pupation","Bitte ein Datum wählen":"Please choose a date","Bitte etwas auswählen":"Please select something",
+  "Bitte mindestens ein Tier wählen":"Please select at least one animal","Bitte mindestens eine Puppe wählen":"Please select at least one pupa",
+  "Bluetooth ist in diesem Browser nicht verfügbar":"Bluetooth is not available in this browser","Das ist keine Raupenbuch-Sicherung":"This is not a Raupenbuch backup",
+  "Datei ist kein gültiges JSON":"File is not valid JSON","Download fehlgeschlagen":"Download failed","Download gestartet":"Download started","Eintrag gelöscht":"Entry deleted",
+  "Foto gelöscht":"Photo deleted","Kein Eintrag mit diesem Code":"No entry with this code","Keine Tiere erkannt":"No animals recognised","Keine Werte erkannt":"No values recognised",
+  "Keine liegenden Puppen gefunden":"No pupae found","Lege zuerst einen Standort an":"Create a location first","Lege zuerst einen Zuchtansatz an":"Create a brood first",
+  "Löschen fehlgeschlagen":"Delete failed","Messwert gespeichert":"Reading saved","Sensor entfernt":"Sensor removed","Speicher nicht verfügbar: Daten gehen beim Schließen verloren":"Storage unavailable: data will be lost when closing",
+  "Tier gelöscht":"Animal deleted","Zuchtansatz gelöscht":"Brood deleted","Speicher voll: bitte Fotos löschen oder Backup machen":"Storage full: delete photos or make a backup",
+  "Schlupf gespeichert":"Eclosion saved","Gespeichert. Ordne die Falter zu, sobald du es weißt.":"Saved. Assign the moths once you know.","Foto gespeichert":"Photo saved",
+  "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
+};
+const I18N_RX = [
+  [/^(\d+) Tiere$/, "$1 animals"], [/^Falter ([A-Z])$/, "Moth $1"], [/^1 Tier$/, "1 animal"], [/^(\d+) Ansätze$/, "$1 broods"], [/^(\d+) im Katalog$/, "$1 in catalogue"],
+  [/^(\d+) Falter noch nicht zugeordnet$/, "$1 moths not yet assigned"], [/^(\d+) Wägungen$/, "$1 weighings"], [/^(\d+) Tagen$/, "$1 days ago"],
+  [/^(\d+) Tier\(e\): (.*)$/, "$1 animal(s): $2"], [/^Tag (\d+)$/, "Day $1"], [/^Zuordnen \((\d+)\)$/, "Assign ($1)"], [/^Version (.+)$/, "Version $1"],
+  [/^Art: Median (.+) \(n=(\d+)\), (kürzer|länger|gleich)$/, (m,a,b,c)=>`Species: median ${a} (n=${b}), ${({kürzer:"shorter",länger:"longer",gleich:"equal"})[c]}`],
+  [/^Basis: (\d+) bisherige Schlüpfe dieser Art( \(nur (Weibchen|Männchen)\))?, gezählt ab (Eingraben|Verpuppung)\. Heute ist Tag (\d+)\.$/, (m,n,_,sx,b,d)=>`Based on ${n} previous eclosions of this species${sx?` (${tr(sx).toLowerCase()}s only)`:""}, counted from ${b==="Eingraben"?"burrowing":"pupation"}. Today is day ${d}.`],
+  [/^Liegt seit Tag (\d+) \(ab (Eingraben|Verpuppung)\)\. Für ein Schlupffenster fehlen noch Vergleichswerte: bisher (\d+) Schlupf dieser Art\.$/, (m,d,b,n)=>`Day ${d} (from ${b==="Eingraben"?"burrowing":"pupation"}). Not enough reference values for a window yet: ${n} eclosion(s) of this species so far.`],
+  [/^(\d+) Puppen? liegen?, aber es gibt noch zu wenige geschlüpfte Tiere derselben Art für eine Prognose\. Ab$/, "$1 pupa(e) waiting, but too few eclosed animals of the same species for a forecast. From"],
+  [/^(\d+) weitere Puppe\(n\) ohne genug Vergleichsdaten\.$/, "$1 more pupa(e) without enough reference data."],
+  [/^Batterie (.+) V$/, "Battery $1 V"], [/^Etikett-Code (.+)$/, "Label code $1"],
+  [/^Deine Tiere: (\d+) Wert\(e\), Median (.+) Tage( – dieser Median wird statt des Richtwerts verwendet)?\.$/, (m,n,md,x)=>`Your animals: ${n} value(s), median ${md} days${x?" – this median is used instead of the guide value":""}.`],
+  [/^Gespeichert um (\S+) Uhr( · Batterie (.+) V)?\.$/, (m,t,_,v)=>`Saved at ${t}${v?` · battery ${v} V`:""}.`],
+  [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
+  [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
+  [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
+  [/^(.+) ist mit „(.+)“ gekoppelt\.$/, "$1 is paired with “$2”."], [/^Messwert (.+)$/, "Reading $1"], [/^Nichts gefunden für „(.*)“\.$/, "Nothing found for “$1”."],
+  [/^(.+) ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen\. Kandidat für:$/, "$1 has eclosed from this pupa, but which moth it is remains open. Candidate for:"],
+  [/^(.+) mit allen Einträgen und Fotos löschen\? Das lässt sich nicht rückgängig machen\.$/, "Delete $1 with all entries and photos? This cannot be undone."],
+  [/^„(.+)“ mit allen (\d+) Tieren und deren Einträgen löschen\?$/, "Delete “$1” with all $2 animals and their entries?"],
+  [/^(.+): Sensor$/, "$1: sensor"], [/^Start als (.+)$/, (m,s)=>`Starts as ${tr(s)}`], [/^Tage seit (Eingraben|Verpuppung)$/, (m,b)=>`days since ${b==="Eingraben"?"burrowing":"pupation"}`],
+  [/^Tage von (.+) bis Falter$/, (m,s)=>`days from ${tr(s).replace(/^[A-Z][a-z]/,x=>x.toLowerCase())} to moth`], [/^abgerufen (.+)$/, "read $1"], [/^belegt (.+) MB von ca\. (.+) GB$/, "using $1 MB of approx. $2 GB"],
+  [/^geschätzt: Eingraben \+ (\d+) Tage$/, "estimated: burrowing + $1 days"], [/^seit (.+)$/, "since $1"], [/^von (.+)$/, "from $1"],
+  [/^wie (Zuchtansatz|Ansatz) \((.+)\)$/, (m,_,s)=>`as brood (${tr(s)})`], [/^ist (.+)$/, "is $1"], [/^Nacht (.+)$/, "Night $1"],
+  [/^Schlupf (.+) · (\d+) Falter$/, (m,t,n)=>`Eclosion ${tr(t)} · ${n} moths`], [/^zuletzt (.+)$/, "last $1"], [/^(\d+) Werte$/, "$1 readings"],
+  [/^eingegr\. (.+)$/, "burrowed $1"], [/^geschl\. (.+)$/, "eclosed $1"], [/^erwartet (.+)$/, "expected $1"], [/^(\d+)× (.+)$/, (m,n,s)=>`${n}× ${tr(s)}`], [/^tot\/weg$/, "dead/gone"],
+  [/^(.+): (\d+) erreicht, (\d+) ausstehend, (\d+) verloren$/, (m,s,a,b,c)=>`${tr(s)}: ${a} reached, ${b} pending, ${c} lost`],
+  [/^, auch mit den (\d+) Fotos?\. Leg sie z\. B\. in Google Drive ab\. Mit „Backup einspielen“ holst du alles zurück, auch auf einem neuen Handy\.$/, ", including the $1 photo(s). Store it e.g. in Google Drive. “Restore backup” brings everything back, even on a new phone."],
+  [/^Median aus (\d+) deiner Tiere mit sicherem Verpuppungsdatum\. (.*)$/, (m,n,r)=>`Median of ${n} of your animals with a certain pupation date. ${tr(r)}`],
+  [/^Richtwert der Art( \(erst (\d+) eigener Wert\))?\. (.*)$/, (m,_,n,r)=>`Species guide value${n?` (only ${n} own value)`:""}. ${tr(r)}`],
+  [/^Für diese Art gibt es noch keinen Wert: Trag deinen Richtwert ein, er wird für die Art gemerkt\. (.*)$/, (m,r)=>`No value for this species yet: enter your guide value, it will be remembered for the species. ${tr(r)}`],
+  [/^Die Schätzung erscheint als „Verpuppt \(geschätzt\)“, zählt nicht in Puppenruhe und Prognose und lässt sich jederzeit korrigieren\.$/, "The estimate appears as “Pupated (estimated)”, is excluded from pupal period and forecast, and can be corrected any time."],
+  // Toasts / Status mit Werten
+  [/^(\d+) Tier\(e\) hinzugefügt$/, "$1 animal(s) added"], [/^(\d+) Werte importiert$/, "$1 readings imported"], [/^(\d+) Einträge importiert$/, "$1 entries imported"],
+  [/^(\d+) Einträge gespeichert$/, "$1 entries saved"], [/^(\d+) Fotos gespeichert$/, "$1 photos saved"], [/^Zugeordnet: (.*)$/, "Assigned: $1"],
+  [/^Konnte nicht speichern \((.*)\)$/, "Could not save ($1)"], [/^Backup fehlgeschlagen: (.*)$/, "Backup failed: $1"], [/^Import fehlgeschlagen: (.*)$/, "Import failed: $1"],
+  [/^(\d+) Einträge und (\d+) Foto\(s\) importiert\.( (\d+) Foto\(s\) ohne Bilddatei\.)?$/, (m,a,b,_,c)=>`${a} entries and ${b} photo(s) imported.${c?` ${c} photo(s) without image file.`:""}`],
+  [/^Backup mit (\d+) Foto\(s\) gespeichert\. Prüfe den Download-Ordner\.$/, "Backup with $1 photo(s) saved. Check your downloads folder."],
+  [/^Fotos (\d+)\/(\d+) …$/, "Photos $1/$2 …"], [/^Importiere … (\d+)\/(\d+)$/, "Importing … $1/$2"], [/^Verbinde \(Versuch (\d+)\) …$/, "Connecting (attempt $1) …"],
+  [/^Fehler: (.*)\. Sensor näher ans Handy halten und Xiaomi Home schließen\.$/, "Error: $1. Hold the sensor closer to the phone and close Xiaomi Home."],
+  [/^Drucken nicht möglich: (.*)$/, "Printing not possible: $1"], [/^PDF konnte nicht erstellt werden: (.*)$/, "Could not create PDF: $1"], [/^Scannen fehlgeschlagen: (.*)$/, "Scan failed: $1"],
+  [/^(\d+) Werte an (\d+) Tag\(en\) erkannt \((.+) bis (.+)\)$/, "$1 readings on $2 day(s) recognised ($3 to $4)"], [/^Code „(.*)“ gehört zu keinem Eintrag\.$/, "Code “$1” does not belong to any entry."],
+  [/^Foto (\d+) fehlgeschlagen: (.*)$/, "Photo $1 failed: $2"], [/^Speichere Foto (\d+) von (\d+) …$/, "Saving photo $1 of $2 …"],
+  [/^(\d+) Falter werden direkt ihren Puppen zugeordnet\.$/, "$1 moths are assigned directly to their pupae."],
+  [/^(\d+) Falter werden als „offen“ angelegt\. Jeder hat (\d+) mögliche Puppen, bis du sie zuordnest\.$/, "$1 moths are created as “open”. Each has $2 possible pupae until you assign them."]
+];
+function tr(s){
+  if(LANG==="de" || s==null) return s;
+  const t = String(s).trim(); if(!t) return s;
+  if(Object.prototype.hasOwnProperty.call(I18N_EN, t)) return String(s).replace(t, I18N_EN[t]);
+  if(!/[A-Za-zÄÖÜäöüß]/.test(t)) return s;
+  for(const [rx, rep] of I18N_RX){ if(rx.test(t)) return String(s).replace(t, t.replace(rx, rep)); }
+  if(t.startsWith("· ")){ const r = tr(t.slice(2)); if(r!==t.slice(2)) return String(s).replace(t, "· "+r); }
+  if(t.includes(" · ")){ const parts = t.split(" · "); const out = parts.map(p=>tr(p)); if(out.some((x,i)=>x!==parts[i])) return String(s).replace(t, out.join(" · ")); }
+  return s;
+}
+const I18N_ATTRS = ["placeholder","aria-label","title","alt"];
+function translateNode(node){
+  if(LANG==="de") return;
+  if(node.nodeType===3){ const p = node.parentElement; if(p && p.closest("script,style")) return; const v = tr(node.data); if(v!==node.data) node.data = v; return; }
+  if(node.nodeType!==1 || node.matches("script,style")) return;
+  const els = [node, ...node.querySelectorAll("*")];
+  for(const el of els) for(const a of I18N_ATTRS){ const v = el.getAttribute(a); if(v){ const t = tr(v); if(t!==v) el.setAttribute(a, t); } }
+  const w = document.createTreeWalker(node, NodeFilter.SHOW_TEXT); let n;
+  while((n = w.nextNode())){ if(n.parentElement?.closest("script,style")) continue; const v = tr(n.data); if(v!==n.data) n.data = v; }
+}
+new MutationObserver(ms => { if(LANG==="de") return; for(const m of ms) for(const n of m.addedNodes) translateNode(n); })
+  .observe(document.documentElement, {childList:true, subtree:true});
+const SP_EN = {"Acherontia atropos":"Death's-head hawkmoth","Agrius convolvuli":"Convolvulus hawk-moth","Sphinx ligustri":"Privet hawk-moth","Smerinthus ocellata":"Eyed hawk-moth",
+  "Laothoe populi":"Poplar hawk-moth","Mimas tiliae":"Lime hawk-moth","Deilephila elpenor":"Elephant hawk-moth","Hyles euphorbiae":"Spurge hawk-moth","Daphnis nerii":"Oleander hawk-moth","Macroglossum stellatarum":"Hummingbird hawk-moth"};
+const spCommon = sp => !sp ? "" : LANG==="en" ? (sp.en || SP_EN[sp.sci] || sp.de || "") : (sp.de || "");
+function setLang(l){
+  LANG = l === "en" ? "en" : "de";
+  try { localStorage.setItem("rb-lang", LANG); } catch(e){}
+  document.documentElement.lang = LANG;
+  closeSheet(); render();
+  const nv = document.getElementById("tabs"); if(nv) nv.setAttribute("aria-label", LANG==="en" ? "Main navigation" : "Hauptnavigation");
+}
+document.documentElement.lang = LANG;
+document.addEventListener("DOMContentLoaded", () => translateNode(document.body));
+
 
 /* Zeitangaben: t0 [t1] prec */
 function makeTime(prec, date, time, dateTo){
@@ -870,6 +1111,7 @@ VIEWS.animals = () => {
 document.addEventListener("input", e => { if(e.target.id==="aq"){ R.q = e.target.value; scheduleRender(); } });
 ACTS.afilter = d => { R.animalFilter = d.k; render(); };
 ACTS.noop = () => {};
+ACTS.lang = d => setLang(d.k);
 
 /* ---- Zuchtansatz ---- */
 VIEWS.brood = r => {
@@ -879,7 +1121,7 @@ VIEWS.brood = r => {
   const alive = inds.filter(isAlive);
   const eclosed = inds.filter(i=>firstEv(i,"falterschlupf"));
   const dead = inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf"));
-  let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}${sp?.de?` · ${esc(sp.de)}`:""}</span><h1>${esc(b.name)}</h1>
+  let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}${spCommon(sp)?` · ${esc(spCommon(sp))}`:""}</span><h1>${esc(b.name)}</h1>
     <div class="meta">${src?`<span class="pill">von ${esc(src.name)}</span>`:""}${b.generation?`<span class="pill">F${esc(b.generation)}</span>`:""}${b.startDate?`<span class="pill">seit ${dDE(b.startDate)}</span>`:""}<span class="pill stage">Start als ${stageLabel(b.startStage||"L1")}</span></div>
     ${b.notes?`<p class="muted" style="margin:0">${esc(b.notes)}</p>`:""}</div>`;
   h += `<div class="stats"><div class="stat"><b>${inds.length}</b><span>Tiere</span></div><div class="stat"><b>${alive.length}</b><span>aktiv</span></div><div class="stat"><b>${eclosed.length}</b><span>Falter</span></div><div class="stat"><b>${dead.length}</b><span>Verluste</span></div></div>`;
@@ -1171,7 +1413,7 @@ VIEWS.search = () => {
   if(!q) return h + `<p class="muted small">Durchsucht Tiere, Zuchtansätze, Arten, Falter und Notizen in Ereignissen.</p>`;
   const has = s => (s||"").toLowerCase().includes(q);
   const I = all("individuals").filter(i=>has(i.name)||has(i.notes)).sort(byName);
-  const B = all("broods").filter(b=>has(b.name)||has(b.notes)||has(S.species[b.speciesId]?.sci)||has(S.species[b.speciesId]?.de)||has(S.sources[b.sourceId]?.name));
+  const B = all("broods").filter(b=>has(b.name)||has(b.notes)||has(S.species[b.speciesId]?.sci)||has(S.species[b.speciesId]?.de)||has(spCommon(S.species[b.speciesId]))||has(S.sources[b.sourceId]?.name));
   const M = openImagos().filter(m=>has(m.label)||has(m.notes));
   const E = all("events").filter(e=>has(e.note)||has(evTitle(e))).sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,40);
   const sec = (t,arr,fn) => arr.length? `<section class="sec"><div class="sec-h"><h2>${t}</h2><span class="small muted">${arr.length}</span></div><div class="list">${arr.map(fn).join("")}</div></section>` : "";
@@ -1192,12 +1434,13 @@ VIEWS.more = () => `<div class="pagehead"><h1>Mehr</h1></div>
     <button class="row" data-act="labels"><span class="main"><span class="t">Etiketten drucken</span><span class="s">QR-Codes als PDF oder direkt drucken</span></span></button>
     <button class="row" data-go="data"><span class="main"><span class="t">Daten &amp; Sicherung</span><span class="s">Backup mit Fotos, CSV, Wiederherstellen</span></span></button>
   </div>
+  <section class="sec"><div class="sec-h"><h2>Sprache</h2></div><div class="seg" role="group" aria-label="Sprache"><button data-act="lang" data-k="de" aria-pressed="${LANG==="de"}">Deutsch</button><button data-act="lang" data-k="en" aria-pressed="${LANG==="en"}">English</button></div></section>
   ${_installEvt?`<div class="btns"><button class="btn primary" data-act="install">Als App installieren</button></div>`:""}
   <p class="small muted">Speicher: ${store.mode==="idb"?"auf diesem Gerät (IndexedDB)":"nicht verfügbar"}${store.persisted===true?", dauerhaft geschützt":store.persisted===false?", nicht dauerhaft geschützt":""}. Mach regelmäßig ein Backup unter <b>Daten &amp; Sicherung</b>.</p>
   <p class="small muted mono">Version ${APP_VERSION}</p>`;
 
 VIEWS.species = () => `<div class="pagehead"><h1>Arten</h1></div><div class="btns"><button class="btn primary" data-act="editSpecies">+ Art</button></div>
-  <div class="list">${all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>`<button class="row" data-act="editSpecies" data-id="${s.id}"><span class="main"><span class="t sp">${esc(s.sci)}</span><span class="s">${esc(s.de||"")}${s.family?" · "+esc(s.family):""}</span></span><span class="end small muted">${all("broods").filter(b=>b.speciesId===s.id).length} Ansätze</span></button>`).join("") || `<div class="empty">Keine Arten.</div>`}</div>`;
+  <div class="list">${all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>`<button class="row" data-act="editSpecies" data-id="${s.id}"><span class="main"><span class="t sp">${esc(s.sci)}</span><span class="s">${esc(spCommon(s))}${s.family?" · "+esc(s.family):""}</span></span><span class="end small muted">${all("broods").filter(b=>b.speciesId===s.id).length} Ansätze</span></button>`).join("") || `<div class="empty">Keine Arten.</div>`}</div>`;
 VIEWS.sources = () => `<div class="pagehead"><h1>Herkünfte</h1></div><div class="btns"><button class="btn primary" data-act="editSource">+ Herkunft</button></div>
   <div class="list">${all("sources").sort(byName).map(s=>`<button class="row" data-act="editSource" data-id="${s.id}"><span class="main"><span class="t">${esc(s.name)}</span><span class="s">${esc({zuechter:"Züchter",wild:"Wildfund",nachzucht:"Eigene Nachzucht",haendler:"Händler/Börse"}[s.type]||"")}${s.notes?" · "+esc(s.notes):""}</span></span></button>`).join("") || `<div class="empty">Noch keine Herkunft.</div>`}</div>`;
 VIEWS.containers = () => `<div class="pagehead"><h1>Behälter</h1><p class="muted" style="margin:0">Behälter bekommen ein eigenes QR-Etikett. Ein Standort verknüpft sie mit den Klimawerten.</p></div><div class="btns"><button class="btn primary" data-act="editContainer">+ Behälter</button></div>
@@ -1236,7 +1479,7 @@ window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); _insta
 ACTS.install = async () => { if(!_installEvt) return; _installEvt.prompt(); try { await _installEvt.userChoice; } catch(e){} _installEvt = null; render(); };
 
 /* ============ Aktionen & Formulare ============ */
-const speciesOpts = () => all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>[s.id, `${s.sci}${s.de?" – "+s.de:""}`]);
+const speciesOpts = () => all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>[s.id, `${s.sci}${spCommon(s)?" – "+spCommon(s):""}`]);
 const sourceOpts = () => [["","– keine –"], ...all("sources").sort(byName).map(s=>[s.id,s.name])];
 const contOpts = () => [["","– kein Behälter –"], ...all("containers").sort(byName).map(c=>[c.id, c.name])];
 const locOpts = () => [["","– kein Standort –"], ...all("locations").sort(byName).map(l=>[l.id,l.name])];
@@ -1307,7 +1550,7 @@ ACTS.addInds = d => {
       const p = l.split(/[;\t|]/).map(s=>s.trim());
       const sx = (p[1]||"").toLowerCase();
       const sex = /^(m|männ|maenn|♂)/.test(sx)?"m":/^(w|f|weib|♀)/.test(sx)?"f":"u";
-      const night = /nacht/i.test(p[3]||"");
+      const night = /nacht|night/i.test(p[3]||"");
       return {name:p[0]||autos[ai++], sex, burrow:parseDE((p[2]||"").replace(/[^\d.\-]/g,"")), eclose:parseDE((p[3]||"").replace(/[^\d.\-]/g,"")), night, bad:(p[2]&&!parseDE((p[2]||"").replace(/[^\d.\-]/g,"")))||(p[3]&&!parseDE((p[3]||"").replace(/[^\d.\-]/g,"")))};
     }).filter(x=>x.name);
   };
@@ -1770,12 +2013,12 @@ ACTS.sensorMenu = d => {
 /* ---- Stammdaten ---- */
 ACTS.editSpecies = d => {
   const s = d.id && S.species[d.id];
-  const root = openSheet(`<h2>${s?"Art bearbeiten":"Neue Art"}</h2>${fld.text("sSci","Wissenschaftlicher Name",s?.sci||"","Gattung art")}${fld.text("sDe","Deutscher Name",s?.de||"")}
+  const root = openSheet(`<h2>${s?"Art bearbeiten":"Neue Art"}</h2>${fld.text("sSci","Wissenschaftlicher Name",s?.sci||"","Gattung art")}${fld.text("sDe","Deutscher Name",s?.de||"")}${fld.text("sEn","Englischer Name",s?.en||SP_EN[s?.sci]||"")}
     <div class="frow2">${fld.text("sFam","Familie",s?.family||"","z. B. Sphingidae")}${fld.num("sInst","Larvenstadien",s?.instars||5,"1")}</div>
     ${fld.num("sPre","Richtwert: Tage vom Eingraben bis zur Verpuppung",s?.prepupaDays??"","1")}
     ${fld.hint(s?(()=>{ const v=prepupaDurations(s.id); return v.length?`Deine Tiere: ${v.length} Wert(e), Median ${fmtN(median(v),1)} Tage${v.length>=2?" – dieser Median wird statt des Richtwerts verwendet":""}.`:"Noch keine eigenen Werte mit sicherem Verpuppungsdatum."; })():"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${s&&!all("broods").some(b=>b.speciesId===s.id)?`<button class="btn danger" id="del">Löschen</button>`:""}</div>`);
-  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), family:val(root,"sFam"), instars:+val(root,"sInst")||5, prepupaDays: val(root,"sPre")!=="" ? Math.max(0,parseInt(val(root,"sPre"),10)||0) : undefined}); closeSheet(); };
+  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), en:val(root,"sEn")||undefined, family:val(root,"sFam"), instars:+val(root,"sInst")||5, prepupaDays: val(root,"sPre")!=="" ? Math.max(0,parseInt(val(root,"sPre"),10)||0) : undefined}); closeSheet(); };
   const del = root.querySelector("#del"); if(del) del.onclick = async () => { await store.del("species",s.id); closeSheet(); };
 };
 ACTS.editSource = d => {
@@ -1808,7 +2051,7 @@ function labelSheet({brood=null, inds=null, conts=null}={}){
     <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.</div>
     <div class="btns"><button class="btn primary" id="ok">PDF speichern</button><button class="btn" id="pr">Direkt drucken</button></div><div id="lst" class="small muted"></div>
     <div class="hint">Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.</div>`);
-  const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:`RB:i:${x.value}`, ...labelText(S.individuals[x.value])} : {code:`RB:c:${x.value}`, title:S.containers[x.value].name, l2:"Behälter", l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
+  const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:`RB:i:${x.value}`, ...labelText(S.individuals[x.value])} : {code:`RB:c:${x.value}`, title:S.containers[x.value].name, l2:tr("Behälter"), l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
   root.querySelector("#ok").onclick = async () => {
     const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
     const st = root.querySelector("#lst"); st.textContent = "Erstelle PDF …";
@@ -1847,7 +2090,7 @@ function printLabels(items, fmt){
 window.addEventListener("afterprint", () => { const pa = $("#printArea"); if(pa) pa.innerHTML = ""; });
 function labelText(i){
   const b = S.broods[i.broodId]; const sp = speciesOfBrood(b);
-  return {title:i.name, l2:sp?.sci||"", l3:`${b?.name||""}${i.sex&&i.sex!=="u"?" · "+SEXL[i.sex]:""}`, it:true};
+  return {title:i.name, l2:sp?.sci||"", l3:`${b?.name||""}${i.sex&&i.sex!=="u"?" · "+tr(SEXL[i.sex]):""}`, it:true};
 }
 function makeLabelPdf(items, fmt){
   const { jsPDF } = window.jspdf;
@@ -1981,10 +2224,11 @@ ACTS.exportJson = async () => {
 };
 ACTS.exportCsv = () => {
   const q = s => `"${String(s??"").replace(/"/g,'""')}"`;
-  const head = ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Notizen"];
+  const head = LANG==="en" ? ["Name","Brood","Species","Sex","Status","Stage","Burrowed","Pupated","Eclosed","Pupal period (days)","Died","Cause","Notes"]
+    : ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Notizen"];
   const rows = all("individuals").sort(byName).map(i=>{
     const b=S.broods[i.broodId], sp=speciesOfBrood(b), eg=firstEv(i,"eingegraben"), vp=realPupation(i)||firstEv(i,"verpuppt"), ec=firstEv(i,"falterschlupf"), d=deathOf(i), st=pupalStart(i);
-    return [i.name,b?.name,sp?.sci,SEXL[i.sex||"u"],statusOf(i),stageLabel(currentStage(i)),eg&&fmtTime(eg),vp&&(fmtTime(vp)+(vp.data?.est?" (geschätzt)":"")),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
+    return [i.name,b?.name,sp?.sci,tr(SEXL[i.sex||"u"]),tr(statusOf(i)),tr(stageLabel(currentStage(i))),eg&&fmtTime(eg),vp&&(fmtTime(vp)+(vp.data?.est?(LANG==="en"?" (estimated)":" (geschätzt)"):"")),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&tr(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
   });
   store.save(`raupenbuch-tiere-${todayISO()}.csv`, "﻿"+[head.map(q).join(";"),...rows].join("\r\n"));
 };
