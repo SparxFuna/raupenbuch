@@ -374,6 +374,29 @@ button.pill.tag{cursor:pointer}
 .pill.tag{border-color:var(--ochre)}
 .photos .ph{border-radius:12px}
 .chart svg path[fill-opacity]{fill-opacity:.18}
+
+/* Ausschnitt-Werkzeug */
+.crop{position:fixed;inset:0;z-index:56;background:#0d0d0b;display:flex;flex-direction:column;color:#fff}
+.crop-h{padding:calc(12px + env(safe-area-inset-top,0px)) 16px 8px;display:flex;flex-direction:column;gap:2px}
+.crop-h b{font-family:var(--f-name);font-size:20px}
+.crop-h span{color:#bdb8ad;font-size:13px}
+.crop-stage{flex:1;min-height:0;position:relative;touch-action:none;margin:0 8px;overflow:hidden}
+.crop-stage img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.crop-r{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.58);cursor:move;touch-action:none;box-sizing:border-box}
+.crop-r::before,.crop-r::after{content:"";position:absolute;background:rgba(255,255,255,.35)}
+.crop-r::before{left:33.3%;right:33.3%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35);background:none}
+.crop-r::after{top:33.3%;bottom:33.3%;left:0;right:0;border-top:1px solid rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.35);background:none}
+.crop-r i{position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.45);z-index:1}
+.crop-r i::after{content:"";position:absolute;inset:-12px}
+.crop-r i[data-h="nw"]{left:-13px;top:-13px} .crop-r i[data-h="ne"]{right:-13px;top:-13px} .crop-r i[data-h="sw"]{left:-13px;bottom:-13px} .crop-r i[data-h="se"]{right:-13px;bottom:-13px}
+.crop-b{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.crop-b .row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.crop .btn{background:#26251f;color:#fff;box-shadow:none}
+.crop .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.crop .seg{background:#26251f}
+.crop .seg button{color:#bdb8ad}
+.crop .seg button[aria-pressed="true"]{background:#47453c;color:#fff}
+.crop-msg{font-size:13px;color:#e3b55a;min-height:18px}
 </style>
 </head>
 <body>
@@ -384,7 +407,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.7.0";
+const APP_VERSION = "5.8.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -495,7 +518,8 @@ const I18N_EN = {
   "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
   "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
   "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
-  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Als Vorschaubild":"Set as cover","★ Vorschaubild":"★ Cover","★ Vorschaubild · zurücksetzen":"★ Cover · reset","Vorschaubild gesetzt":"Cover photo set","Vorschaubild wieder automatisch":"Cover photo automatic again","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Ausschnitt":"Crop","Ausschnitt erstellen":"Create crop","Rahmen verschieben, an den Ecken die Größe ändern. Gespeichert wird ein neues Foto, das Original bleibt.":"Drag the frame, resize it at the corners. A new photo is saved, the original stays.",
+  "Quadrat":"Square","Frei":"Free","Vorschlag":"Suggest","Ausschnitt gespeichert":"Crop saved","Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und auf den Thorax ziehen.":"Suggestion placed (assumes head up): check it and drag it onto the thorax.","Kein Falter erkannt. Rahmen bitte selbst setzen.":"No moth detected. Please place the frame yourself.","Als Vorschaubild":"Set as cover","★ Vorschaubild":"★ Cover","★ Vorschaubild · zurücksetzen":"★ Cover · reset","Vorschaubild gesetzt":"Cover photo set","Vorschaubild wieder automatisch":"Cover photo automatic again","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
   "z. B. mini, dunkel, Zuchttier":"e.g. mini, dark, breeder","Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.":"Separate several with commas. Tags show on the animal and in the list, where you can filter by them.",
   "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
   // Zuordnen
@@ -646,7 +670,7 @@ const I18N_RX = [
   [/^Backup mit (\d+) Foto\(s\) gespeichert\. Prüfe den Download-Ordner\.$/, "Backup with $1 photo(s) saved. Check your downloads folder."],
   [/^Fotos (\d+)\/(\d+) …$/, "Photos $1/$2 …"], [/^Importiere … (\d+)\/(\d+)$/, "Importing … $1/$2"], [/^Verbinde \(Versuch (\d+)\) …$/, "Connecting (attempt $1) …"],
   [/^Fehler: (.*)\. Sensor näher ans Handy halten und Xiaomi Home schließen\.$/, "Error: $1. Hold the sensor closer to the phone and close Xiaomi Home."],
-  [/^Drucken nicht möglich: (.*)$/, "Printing not possible: $1"], [/^PDF konnte nicht erstellt werden: (.*)$/, "Could not create PDF: $1"], [/^Scannen fehlgeschlagen: (.*)$/, "Scan failed: $1"],
+  [/^Drucken nicht möglich: (.*)$/, "Printing not possible: $1"], [/^PDF konnte nicht erstellt werden: (.*)$/, "Could not create PDF: $1"], [/^Scannen fehlgeschlagen: (.*)$/, "Scan failed: $1"], [/^Speichern fehlgeschlagen: (.*)$/, "Saving failed: $1"],
   [/^(\d+) Werte an (\d+) Tag\(en\) erkannt \((.+) bis (.+)\)$/, "$1 readings on $2 day(s) recognised ($3 to $4)"], [/^Code „(.*)“ gehört zu keinem Eintrag\.$/, "Code “$1” does not belong to any entry."],
   [/^Foto (\d+) fehlgeschlagen: (.*)$/, "Photo $1 failed: $2"], [/^Speichere Foto (\d+) von (\d+) …$/, "Saving photo $1 of $2 …"],
   [/^(\d+) Falter werden direkt ihren Puppen zugeordnet\.$/, "$1 moths are assigned directly to their pupae."],
@@ -2014,11 +2038,12 @@ ACTS.viewPhoto = d => {
   closeSheet();
   const v = document.createElement("div"); v.className = "viewer"; v.id = "viewer";
   v.innerHTML = `<img src="${esc(photoSrc(p))}" alt=""><div class="bar2"><span class="small mono">${esc(PVIEWS[p.view]||"")} · ${dDE(p.takenAt)}</span>
-    <div class="btns"><select id="pvSel" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k===p.view?"selected":""}>${l}</option>`).join("")}</select>${p.subjectType==="individual"&&S.individuals[p.subjectId]?(coverPhoto(S.individuals[p.subjectId])?.id===p.id&&S.individuals[p.subjectId].coverPhotoId===p.id?`<button class="btn" id="pvCov">★ Vorschaubild · zurücksetzen</button>`:coverPhoto(S.individuals[p.subjectId])?.id===p.id?`<button class="btn" id="pvCov" disabled>★ Vorschaubild</button>`:`<button class="btn" id="pvCov">Als Vorschaubild</button>`):""}<button class="btn" id="pvDel">Löschen</button><button class="btn" id="pvX">Schließen</button></div>
+    <div class="btns"><select id="pvSel" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k===p.view?"selected":""}>${l}</option>`).join("")}</select>${p.subjectType==="individual"&&S.individuals[p.subjectId]?(coverPhoto(S.individuals[p.subjectId])?.id===p.id&&S.individuals[p.subjectId].coverPhotoId===p.id?`<button class="btn" id="pvCov">★ Vorschaubild · zurücksetzen</button>`:coverPhoto(S.individuals[p.subjectId])?.id===p.id?`<button class="btn" id="pvCov" disabled>★ Vorschaubild</button>`:`<button class="btn" id="pvCov">Als Vorschaubild</button>`):""}<button class="btn" id="pvCrop">Ausschnitt</button><button class="btn" id="pvDel">Löschen</button><button class="btn" id="pvX">Schließen</button></div>
     <div id="pvC" hidden class="btns" style="width:100%"><span>Foto endgültig löschen?</span><button class="btn" id="pvYes" style="border-color:#e8806d;color:#e8806d">Löschen</button><button class="btn" id="pvNo">Abbrechen</button></div></div>`;
   document.body.appendChild(v);
   const close = () => v.remove();
   v.querySelector("#pvX").onclick = close;
+  v.querySelector("#pvCrop").onclick = () => cropTool(p, close);
   const cv = v.querySelector("#pvCov");
   if(cv && !cv.disabled) cv.onclick = async () => {
     const ind = S.individuals[p.subjectId]; const isSet = ind.coverPhotoId===p.id;
@@ -2030,6 +2055,93 @@ ACTS.viewPhoto = d => {
   v.querySelector("#pvNo").onclick = () => v.querySelector("#pvC").hidden = true;
   v.querySelector("#pvYes").onclick = async () => { close(); await store.deletePhotoAsset(p); await store.del("photos",p.id); toast("Foto gelöscht"); };
 };
+/* ---- Ausschnitt (z. B. Thorax) aus einem vorhandenen Foto ---- */
+function suggestCrop(img){
+  // Grobe Schätzung: größte zusammenhängende Fläche, die sich vom Rand-Hintergrund abhebt (meist der Falter),
+  // Rahmen um ihren Schwerpunkt. Ersetzt keine Erkennung, nur ein Startpunkt zum Nachziehen.
+  const W = 200, sc = W / Math.max(img.naturalWidth, img.naturalHeight);
+  const w = Math.max(1, Math.round(img.naturalWidth*sc)), h = Math.max(1, Math.round(img.naturalHeight*sc));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d", {willReadFrequently:true}); ctx.drawImage(img, 0, 0, w, h);
+  const d = ctx.getImageData(0, 0, w, h).data, L = new Float32Array(w*h);
+  for(let k=0; k<w*h; k++) L[k] = 0.299*d[k*4] + 0.587*d[k*4+1] + 0.114*d[k*4+2];
+  const border = []; for(let x=0;x<w;x++){ border.push(L[x], L[(h-1)*w+x]); } for(let y=0;y<h;y++){ border.push(L[y*w], L[y*w+w-1]); }
+  const bg = median(border); const darkBg = bg < 90;
+  const m = new Uint8Array(w*h); for(let k=0;k<w*h;k++) m[k] = darkBg ? (L[k] > bg+40) : (L[k] < bg-40);
+  const seen = new Uint8Array(w*h); let best = null;
+  for(let k=0;k<w*h;k++){ if(!m[k]||seen[k]) continue;
+    const st=[k]; seen[k]=1; let n=0,sx=0,sy=0,x0=w,y0=h,x1=0,y1=0;
+    while(st.length){ const q=st.pop(), x=q%w, y=(q/w)|0; n++; sx+=x; sy+=y; if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y;
+      for(const nb of [q-1,q+1,q-w,q+w]){ if(nb<0||nb>=w*h) continue; if((nb===q-1&&x===0)||(nb===q+1&&x===w-1)) continue; if(m[nb]&&!seen[nb]){ seen[nb]=1; st.push(nb); } } }
+    if(!best || n>best.n) best = {n,cx:sx/n,cy:sy/n,y0,bw:x1-x0+1,bh:y1-y0+1};
+  }
+  if(!best || best.n < w*h*0.01) return null;
+  const side = Math.max(0.45*Math.min(best.bw, best.bh), 0.12*Math.min(w,h)) / sc;
+  // Annahme: Falter sitzt aufrecht (Kopf oben) – der Thorax liegt dann etwa im oberen Drittel des Körpers.
+  const ty = best.y0 + best.bh*0.33;
+  return {x:best.cx/sc - side/2, y:ty/sc - side/2, w:side, h:side};
+}
+function cropTool(p, closeViewer){
+  const ov = document.createElement("div"); ov.className = "crop";
+  ov.innerHTML = `<div class="crop-h"><b>Ausschnitt erstellen</b><span>Rahmen verschieben, an den Ecken die Größe ändern. Gespeichert wird ein neues Foto, das Original bleibt.</span></div>
+    <div class="crop-stage"><img alt=""><div class="crop-r"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div>
+    <div class="crop-b"><div class="crop-msg" id="crM"></div>
+      <div class="row2"><select id="crV" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k==="thorax"?"selected":""}>${l}</option>`).join("")}</select>
+      <div class="seg" role="group" id="crA"><button type="button" data-a="1" aria-pressed="true">Quadrat</button><button type="button" data-a="0" aria-pressed="false">Frei</button></div></div>
+      <div class="btns"><button class="btn" id="crS">Vorschlag</button><button class="btn" id="crX">Abbrechen</button><button class="btn primary" id="crOk">Speichern</button></div></div>`;
+  document.body.appendChild(ov);
+  const img = ov.querySelector("img"), stage = ov.querySelector(".crop-stage"), box = ov.querySelector(".crop-r"), msg = ov.querySelector("#crM");
+  let square = true, r = null, map = null;
+  const layout = () => {
+    const W = stage.clientWidth, H = stage.clientHeight, nw = img.naturalWidth, nh = img.naturalHeight; if(!nw) return;
+    const s = Math.min(W/nw, H/nh); map = {s, ox:(W-nw*s)/2, oy:(H-nh*s)/2, nw, nh};
+    box.style.left = (map.ox + r.x*s)+"px"; box.style.top = (map.oy + r.y*s)+"px"; box.style.width = (r.w*s)+"px"; box.style.height = (r.h*s)+"px";
+  };
+  const clamp = q => { const mn = Math.max(24, Math.min(map.nw,map.nh)*0.04);
+    q.w = Math.max(mn, Math.min(q.w, map.nw)); q.h = Math.max(mn, Math.min(q.h, map.nh));
+    q.x = Math.max(0, Math.min(q.x, map.nw-q.w)); q.y = Math.max(0, Math.min(q.y, map.nh-q.h)); return q; };
+  const center = () => { const sd = Math.min(img.naturalWidth, img.naturalHeight)*0.4; return {x:(img.naturalWidth-sd)/2, y:(img.naturalHeight-sd)/2, w:sd, h:sd}; };
+  const suggest = () => { let q = null; try { q = suggestCrop(img); } catch(e){}
+    msg.textContent = q ? "Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und auf den Thorax ziehen." : "Kein Falter erkannt. Rahmen bitte selbst setzen.";
+    r = clamp(q || center()); if(square){ const sd = Math.min(r.w, r.h); r.w = r.h = sd; r = clamp(r); } layout(); };
+  img.onload = () => { map = {s:1,ox:0,oy:0,nw:img.naturalWidth,nh:img.naturalHeight}; suggest(); };
+  img.src = photoSrc(p);
+  const ro = new ResizeObserver(() => r && layout()); ro.observe(stage);
+  let drag = null;
+  box.addEventListener("pointerdown", e => { e.preventDefault(); box.setPointerCapture(e.pointerId); drag = {h:e.target.dataset.h||"move", x:e.clientX, y:e.clientY, r:{...r}}; });
+  box.addEventListener("pointermove", e => { if(!drag || !map) return;
+    const dx = (e.clientX-drag.x)/map.s, dy = (e.clientY-drag.y)/map.s, o = drag.r; let q = {...o};
+    if(drag.h==="move"){ q.x = o.x+dx; q.y = o.y+dy; }
+    else {
+      const left = drag.h.includes("w"), top = drag.h.includes("n");
+      let nwv = o.w + (left ? -dx : dx), nhv = o.h + (top ? -dy : dy);
+      if(square){ const sd = Math.max(nwv, nhv); nwv = nhv = sd; }
+      nwv = Math.max(24, Math.min(nwv, left ? o.x+o.w : map.nw-o.x)); nhv = Math.max(24, Math.min(nhv, top ? o.y+o.h : map.nh-o.y));
+      if(square){ const sd = Math.min(nwv, nhv); nwv = nhv = sd; }
+      q.w = nwv; q.h = nhv; q.x = left ? o.x+o.w-nwv : o.x; q.y = top ? o.y+o.h-nhv : o.y;
+    }
+    r = clamp(q); layout(); });
+  const end = () => { drag = null; }; box.addEventListener("pointerup", end); box.addEventListener("pointercancel", end);
+  ov.querySelectorAll("#crA [data-a]").forEach(b => b.onclick = () => { square = b.dataset.a==="1";
+    ov.querySelectorAll("#crA [data-a]").forEach(x=>x.setAttribute("aria-pressed", x===b));
+    if(square && r){ const sd = Math.min(r.w, r.h); r.w = r.h = sd; r = clamp(r); layout(); } });
+  const close = () => { ro.disconnect(); ov.remove(); };
+  ov.querySelector("#crS").onclick = suggest;
+  ov.querySelector("#crX").onclick = close;
+  ov.querySelector("#crOk").onclick = async () => {
+    if(!r) return; const btn = ov.querySelector("#crOk"); btn.disabled = true;
+    try {
+      const sc = Math.min(1, 1200/Math.max(r.w, r.h)); const c = document.createElement("canvas");
+      c.width = Math.round(r.w*sc); c.height = Math.round(r.h*sc);
+      c.getContext("2d").drawImage(img, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
+      const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.9));
+      const ref = await store.uploadPhoto(blob);
+      await store.put("photos", {...ref, subjectType:p.subjectType, subjectId:p.subjectId, view:ov.querySelector("#crV").value, takenAt:p.takenAt, cropOf:p.id,
+        crop:{x:+(r.x/map.nw).toFixed(4), y:+(r.y/map.nh).toFixed(4), w:+(r.w/map.nw).toFixed(4), h:+(r.h/map.nh).toFixed(4)}});
+      close(); closeViewer && closeViewer(); toast("Ausschnitt gespeichert");
+    } catch(e){ btn.disabled = false; msg.textContent = "Speichern fehlgeschlagen: " + (e.message||e); }
+  };
+}
 /* ---- Klima ---- */
 ACTS.newLocation = () => locationSheet();
 ACTS.editLocation = d => locationSheet(S.locations[d.id]);
