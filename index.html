@@ -324,7 +324,7 @@ button.pill.tag{cursor:pointer}
 .pill.st i{width:7px;height:7px;border-radius:50%;background:var(--c);display:inline-block}
 /* Avatar in Listen */
 .av{position:relative;width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--cs);color:var(--c)}
-.av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.av img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;border-radius:50%;display:block}
 .av svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .av b{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--surface);color:var(--muted);box-shadow:0 0 0 2px var(--surface)}
 .av b.f{color:var(--crit)} .av b.m{color:var(--accent)}
@@ -384,7 +384,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.6.0";
+const APP_VERSION = "5.6.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
