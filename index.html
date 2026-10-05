@@ -407,7 +407,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.9.0";
+const APP_VERSION = "5.10.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -527,7 +527,11 @@ const I18N_EN = {
   "Nichts offen. Alle Falter sind ihren Tieren zugeordnet.":"Nothing open. All moths are assigned to their animals.","Vergleichen":"Compare","zugeordnet":"assigned","offen":"open",
   "Dieser Falter ist zugeordnet. Du findest ihn jetzt beim jeweiligen Tier.":"This moth is assigned. You will find it with its animal now.","nicht zugeordnet":"not assigned","Wer ist das?":"Who is this?",
   "Tippe auf das Tier, wenn du sicher bist. Fotos und Notizen wandern dann zum Tier, und die übrigen Falter dieses Schlupfs werden eingegrenzt.":"Tap the animal when you are sure. Photos and notes move to the animal, and the other moths of this eclosion are narrowed down.",
-  "Keine Kandidaten übrig.":"No candidates left.","Fotos nebeneinander vergleichen":"Compare photos side by side","gleiche Ansicht = besser vergleichbar":"same view = easier to compare",
+  "Keine Kandidaten übrig.":"No candidates left.","Schon geschlüpfte Falter unsicher?":"Unsure about moths already eclosed?","Falter wieder offen setzen":"Reopen moths",
+  "Für Falter, die schon einem Tier zugeordnet sind, bei denen du aber nicht sicher bist, wer wer ist. Sie werden zu „Falter A, B, C …“ mit allen gewählten Tieren als Kandidaten. Schlupfdaten bleiben unverändert.":"For moths already assigned to an animal where you are not sure who is who. They become “Moth A, B, C …” with all selected animals as candidates. Eclosion dates stay unchanged.",
+  "Bei welchen Faltern bist du unsicher?":"Which moths are you unsure about?","Falterfotos mitnehmen (Raupen- und Puppenfotos bleiben beim Tier)":"Take moth photos along (larva and pupa photos stay with the animal)",
+  "Wähle mindestens zwei Falter.":"Select at least two moths.","Offen setzen":"Reopen","Dafür braucht es mindestens zwei geschlüpfte Falter":"This needs at least two eclosed moths","Bitte mindestens zwei Falter wählen":"Please select at least two moths",
+  "Offen gesetzt. Ordne die Falter zu, sobald du es weißt.":"Reopened. Assign the moths once you know.","Fotos nebeneinander vergleichen":"Compare photos side by side","gleiche Ansicht = besser vergleichbar":"same view = easier to compare",
   "Vergleich":"Comparison","Nichts zu vergleichen.":"Nothing to compare.","Puppenfotos der Kandidaten":"Pupa photos of candidates",
   "Noch keine Fotos. Fotografiere jeden Falter am besten von oben auf den Thorax (die Totenkopf-Zeichnung) und die Vorderflügel, immer mit gleichem Abstand und Licht.":"No photos yet. Photograph each moth from above on the thorax (the skull pattern) and the forewings, always at the same distance and light.",
   "Falter bearbeiten":"Edit moth","Bezeichnung":"Label","z. B. Merkmale zum Wiedererkennen":"e.g. features to recognise it",
@@ -645,7 +649,7 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^bisher als (.+) geführt$/, "previously recorded as $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
   [/^(.+) ist mit „(.+)“ gekoppelt\.$/, "$1 is paired with “$2”."], [/^Messwert (.+)$/, "Reading $1"], [/^Nichts gefunden für „(.*)“\.$/, "Nothing found for “$1”."],
   [/^(.+) ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen\. Kandidat für:$/, "$1 has eclosed from this pupa, but which moth it is remains open. Candidate for:"],
   [/^(.+) mit allen Einträgen und Fotos löschen\? Das lässt sich nicht rückgängig machen\.$/, "Delete $1 with all entries and photos? This cannot be undone."],
@@ -654,7 +658,7 @@ const I18N_RX = [
   [/^Tage von (.+) bis Falter$/, (m,s)=>`days from ${tr(s).replace(/^[A-Z][a-z]/,x=>x.toLowerCase())} to moth`], [/^abgerufen (.+)$/, "read $1"], [/^belegt (.+) MB von ca\. (.+) GB$/, "using $1 MB of approx. $2 GB"],
   [/^geschätzt: Eingraben \+ (\d+) Tage$/, "estimated: burrowing + $1 days"], [/^seit (.+)$/, "since $1"], [/^von (.+)$/, "from $1"],
   [/^wie (Zuchtansatz|Ansatz) \((.+)\)$/, (m,_,s)=>`as brood (${tr(s)})`], [/^ist (.+)$/, "is $1"], [/^Nacht (.+)$/, "Night $1"],
-  [/^Schlupf (.+) · (\d+) Falter$/, (m,t,n)=>`Eclosion ${tr(t)} · ${n} moths`], [/^zuletzt (.+)$/, "last $1"], [/^(\d+) Werte$/, "$1 readings"],
+  [/^(\d+) Falter werden als „offen“ angelegt, jeder mit \d+ möglichen Tieren\.$/, "$1 moths will be created as “open”, each with $1 possible animals."], [/^Schlupf (.+) · (\d+) Falter$/, (m,t,n)=>`Eclosion ${tr(t)} · ${n} moths`], [/^zuletzt (.+)$/, "last $1"], [/^(\d+) Werte$/, "$1 readings"],
   [/^eingegr\. (.+)$/, "burrowed $1"], [/^geschl\. (.+)$/, "eclosed $1"], [/^erwartet (.+)$/, "expected $1"], [/^(\d+)× (.+)$/, (m,n,s)=>`${n}× ${tr(s)}`], [/^tot\/weg$/, "dead/gone"],
   [/^(.+): (\d+) erreicht, (\d+) ausstehend, (\d+) verloren$/, (m,s,a,b,c)=>`${tr(s)}: ${a} reached, ${b} pending, ${c} lost`],
   [/^, auch mit den (\d+) Fotos?\. Leg sie z\. B\. in Google Drive ab\. Mit „Backup einspielen“ holst du alles zurück, auch auf einem neuen Handy\.$/, ", including the $1 photo(s). Store it e.g. in Google Drive. “Restore backup” brings everything back, even on a new phone."],
@@ -1456,7 +1460,7 @@ function timeline(evs){
 function imagoRow(m){
   const ind = m.individualId && S.individuals[m.individualId];
   const ph = photosOf("imago",m.id)[0];
-  const sub = ind ? `ist ${esc(ind.name)}` : `Kandidaten: ${(m.candidates||[]).map(indName).map(esc).join(", ")||"keine"}`;
+  const sub = ind ? `ist ${esc(ind.name)}` : `Kandidaten: ${(m.candidates||[]).map(indName).map(esc).join(", ")||"keine"}${m.wasId&&S.individuals[m.wasId]?`<br><span>bisher als ${esc(indName(m.wasId))} geführt</span>`:""}`;
   return `<button class="row" data-go="imago:${m.id}">${ph?`<img src="${esc(photoSrc(ph))}" alt="" style="width:44px;height:44px;border-radius:8px;object-fit:cover;flex:none">`:sexBadge(m.sex)}<span class="main"><span class="t">${esc(m.label)}</span><span class="s">${sub}</span></span><span class="end">${ind?`<span class="pill good">zugeordnet</span>`:`<span class="pill warn">offen</span>`}</span></button>`;
 }
 /* ---- Falter ---- */
@@ -1464,7 +1468,7 @@ VIEWS.imagos = () => {
   const open = openImagos().sort((a,b)=>(b.eclosedAt||"").localeCompare(a.eclosedAt||"") || byName(a,b));
   const batches = {}; open.forEach(m => { (batches[m.batchId||m.id] ||= []).push(m); });
   let h = `<div class="pagehead"><h1>Zuordnen</h1><p class="muted" style="margin:0">Schlüpfen mehrere Falter im selben Zeitraum und du weißt nicht, wer aus welcher Puppe kam, landen sie hier als „Falter A, B, C …“. Fotografiere sie und ordne sie zu, sobald du es weißt. Danach gehören Fotos und Notizen zum jeweiligen Tier. Schlupfdatum und Puppenruhe zählen schon vorher.</p></div>
-  <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button></div>`;
+  <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" data-act="reopenImagos">Schon geschlüpfte Falter unsicher?</button></div>`;
   if(!open.length) return h + `<div class="list"><div class="empty">Nichts offen. Alle Falter sind ihren Tieren zugeordnet.</div></div>`;
   for(const [bid, ms_] of Object.entries(batches)){
     h += `<div class="uncertain"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><b>${esc(ms_[0].batchLabel || "Schlupf")}</b>${ms_.length>1?`<button class="btn ghost" data-go="compare:${bid}">Vergleichen</button>`:""}</div><div class="list">${ms_.map(imagoRow).join("")}</div></div>`;
@@ -1953,6 +1957,48 @@ ACTS.eclosion = d => {
       for(let k=0;k<ids.length;k++) await store.put("imagos",{label:`Falter ${String.fromCharCode(65+k)}`, individualId:null, candidates:[...ids], sex:sx, eclosedAt:tm.t0, batchId, batchLabel:label});
     }
     closeSheet(); toast(known?"Schlupf gespeichert":"Gespeichert. Ordne die Falter zu, sobald du es weißt."); if(!known) tab("imagos");
+  });
+};
+
+/* ---- Nachträglich: bereits geschlüpfte, sicher erfasste Falter wieder offen setzen ---- */
+ACTS.reopenImagos = () => {
+  const busy = new Set(openImagos().flatMap(m=>m.candidates||[]));
+  const cand = all("individuals").filter(i=>firstEv(i,"falterschlupf") && !busy.has(i.id))
+    .sort((a,b)=>(firstEv(b,"falterschlupf").t0||"").localeCompare(firstEv(a,"falterschlupf").t0||"") || byName(a,b));
+  if(cand.length<2){ toast("Dafür braucht es mindestens zwei geschlüpfte Falter"); return; }
+  const root = openSheet(`<h2>Falter wieder offen setzen</h2>
+    <p class="muted" style="margin:0">Für Falter, die schon einem Tier zugeordnet sind, bei denen du aber nicht sicher bist, wer wer ist. Sie werden zu „Falter A, B, C …“ mit allen gewählten Tieren als Kandidaten. Schlupfdaten bleiben unverändert.</p>
+    <div class="f"><span class="lab">Bei welchen Faltern bist du unsicher?</span><div class="checks">${cand.map(i=>`<label><input type="checkbox" value="${i.id}"> ${SEXS[i.sex||"u"]} ${esc(i.name)}<span class="small muted" style="margin-left:auto">${esc(fmtTime(firstEv(i,"falterschlupf")))}</span></label>`).join("")}</div></div>
+    <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="mvPh" checked style="width:20px;height:20px;min-height:0"><span>Falterfotos mitnehmen (Raupen- und Puppenfotos bleiben beim Tier)</span></label>
+    <div id="rPrev" class="small muted"></div>
+    <div class="btns"><button class="btn primary" id="ok">Offen setzen</button></div>`);
+  const sel = () => [...root.querySelectorAll(".checks input:checked")].map(c=>c.value);
+  const upd = () => { const n = sel().length; root.querySelector("#rPrev").textContent = n<2 ? "Wähle mindestens zwei Falter." : `${n} Falter werden als „offen“ angelegt, jeder mit ${n} möglichen Tieren.`; };
+  root.addEventListener("change", upd); upd();
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const ids = sel(); if(ids.length<2){ toast("Bitte mindestens zwei Falter wählen"); return; }
+    const mv = root.querySelector("#mvPh").checked;
+    const ecs = ids.map(id=>firstEv(S.individuals[id],"falterschlupf"));
+    const t0s = ecs.map(e=>e.t0||"").filter(Boolean).sort();
+    const days = [...new Set(t0s.map(t=>t.slice(0,10)))];
+    const when = days.length===1 ? fmtTime(ecs[0]) : `${dDE(days[0])} – ${dDE(days[days.length-1])}`;
+    const batchId = uid(), label = `Schlupf ${when} · ${ids.length} Falter`;
+    const sexes = new Set(ids.map(id=>S.individuals[id].sex||"u")); const sx = sexes.size===1 ? [...sexes][0] : "u";
+    for(let k=0;k<ids.length;k++){
+      const ind = S.individuals[ids[k]], ec = ecs[k];
+      const id = uid();
+      await store.put("imagos",{id, label:`Falter ${String.fromCharCode(65+k)}`, individualId:null, candidates:[...ids], sex:sx, eclosedAt:ec.t0, batchId, batchLabel:label, wasId:ind.id});
+      if(mv){
+        const from = (ec.t0||"").slice(0,10);
+        for(const p of photosOf("individual", ind.id)){
+          if(["puppe","raupe"].includes(p.view)) continue;
+          if(p.takenAt && from && p.takenAt.slice(0,10) < from) continue;
+          await store.put("photos",{...p, subjectType:"imago", subjectId:id});
+        }
+        if(ind.coverPhotoId && !photosOf("individual", ind.id).some(p=>p.id===ind.coverPhotoId)) await store.put("individuals",{...ind, coverPhotoId:null});
+      }
+    }
+    closeSheet(); toast("Offen gesetzt. Ordne die Falter zu, sobald du es weißt."); tab("imagos");
   });
 };
 
