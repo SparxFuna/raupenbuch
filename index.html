@@ -397,6 +397,9 @@ button.pill.tag{cursor:pointer}
 .crop .seg button{color:#bdb8ad}
 .crop .seg button[aria-pressed="true"]{background:#47453c;color:#fff}
 .crop-msg{font-size:13px;color:#e3b55a;min-height:18px}
+.crop-eye{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;background:#e3b55a;pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
+.crop-g{position:absolute;opacity:.38;pointer-events:none;object-fit:cover;mix-blend-mode:screen}
+.crop .btn[aria-pressed="true"]{background:#47453c}
 .rid-q{display:flex;gap:12px;align-items:center;margin:4px 0 10px}
 .rid-q img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}
 .rid-q>span{display:flex;flex-direction:column;gap:4px}
@@ -416,7 +419,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.11.0";
+const APP_VERSION = "5.12.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -543,7 +546,10 @@ const I18N_EN = {
   "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?":"No convincing match. Maybe a different crop, or a moth without a thorax photo?",
   "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an.":"Close call: the top matches are near each other. Look at the pictures carefully.",
   "Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.":"Similarity 0–100 %. What matters is the gap between matches, not the absolute value.",
-  "Foto hier speichern":"Save photo here","Speichern fehlgeschlagen":"Saving failed","Schon geschlüpfte Falter unsicher?":"Unsure about moths already eclosed?","Falter wieder offen setzen":"Reopen moths",
+  "Foto hier speichern":"Save photo here","Vorlage":"Guide",
+  "Am einfachsten: „Augen antippen“ und die beiden dunklen Augenpunkte des Totenkopfs antippen. Oder von Hand deckungsgleich auf die durchscheinende Vorlage legen.":"Easiest: “Tap eyes” and tap the two dark eye spots of the skull. Or line it up by hand with the see-through guide.",
+  "Augen antippen":"Tap eyes","Tippe nacheinander auf die beiden dunklen Augenpunkte des Totenkopfs (vorher ruhig hineinzoomen).":"Tap the two dark eye spots of the skull one after the other (zoom in first if needed).",
+  "Jetzt das zweite Auge antippen.":"Now tap the second eye.","Ausgerichtet. Feinkorrektur mit den Fingern möglich.":"Aligned. You can fine-tune with your fingers.","Speichern fehlgeschlagen":"Saving failed","Schon geschlüpfte Falter unsicher?":"Unsure about moths already eclosed?","Falter wieder offen setzen":"Reopen moths",
   "Für Falter, die schon einem Tier zugeordnet sind, bei denen du aber nicht sicher bist, wer wer ist. Sie werden zu „Falter A, B, C …“ mit allen gewählten Tieren als Kandidaten. Schlupfdaten bleiben unverändert.":"For moths already assigned to an animal where you are not sure who is who. They become “Moth A, B, C …” with all selected animals as candidates. Eclosion dates stay unchanged.",
   "Bei welchen Faltern bist du unsicher?":"Which moths are you unsure about?","Falterfotos mitnehmen (Raupen- und Puppenfotos bleiben beim Tier)":"Take moth photos along (larva and pupa photos stay with the animal)",
   "Wähle mindestens zwei Falter.":"Select at least two moths.","Offen setzen":"Reopen","Dafür braucht es mindestens zwei geschlüpfte Falter":"This needs at least two eclosed moths","Bitte mindestens zwei Falter wählen":"Please select at least two moths",
@@ -665,7 +671,7 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Fotos bei (.+) gespeichert$/, "Photos saved to $1"], [/^Fotografiere den Falter von oben und richte im nächsten Schritt den Thorax so aus wie bei deinen gespeicherten Thoraxfotos \(Kopf oben, Thorax füllt den Rahmen\)\. Die App vergleicht ihn dann mit (\d+) Faltern?, von denen es Thoraxfotos gibt\.$/, (m,n)=>`Photograph the moth from above and, in the next step, align the thorax like your saved thorax photos (head up, thorax filling the frame). The app then compares it with ${n} moth${n==="1"?"":"s"} that have thorax photos.`], [/^bisher als (.+) geführt$/, "previously recorded as $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Ohne Thoraxfoto, können also nicht erkannt werden: (.+)\. Lege zuerst Thoraxfotos von ihnen an\.$/, "No thorax photo, so they can't be recognised: $1. Add thorax photos of them first."], [/^Vergleiche … (\d+) von (\d+)$/, "Comparing … $1 of $2"], [/^Fotos bei (.+) gespeichert$/, "Photos saved to $1"], [/^Fotografiere den Falter von oben und richte im nächsten Schritt den Thorax so aus wie bei deinen gespeicherten Thoraxfotos \(Kopf oben, Thorax füllt den Rahmen\)\. Die App vergleicht ihn dann mit (\d+) Faltern?, von denen es Thoraxfotos gibt\.$/, (m,n)=>`Photograph the moth from above and, in the next step, align the thorax like your saved thorax photos (head up, thorax filling the frame). The app then compares it with ${n} moth${n==="1"?"":"s"} that have thorax photos.`], [/^bisher als (.+) geführt$/, "previously recorded as $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
   [/^(.+) ist mit „(.+)“ gekoppelt\.$/, "$1 is paired with “$2”."], [/^Messwert (.+)$/, "Reading $1"], [/^Nichts gefunden für „(.*)“\.$/, "Nothing found for “$1”."],
   [/^(.+) ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen\. Kandidat für:$/, "$1 has eclosed from this pupa, but which moth it is remains open. Candidate for:"],
   [/^(.+) mit allen Einträgen und Fotos löschen\? Das lässt sich nicht rückgängig machen\.$/, "Delete $1 with all entries and photos? This cannot be undone."],
@@ -2147,11 +2153,11 @@ function cropTool(p, closeViewer, opts={}){
   /* Fester Rahmen, das Bild darunter wird verschoben (1 Finger), gezoomt und gedreht (2 Finger oder Regler). */
   const ov = document.createElement("div"); ov.className = "crop";
   ov.innerHTML = `<div class="crop-h"><b>${opts.title||"Ausschnitt erstellen"}</b><span>${opts.hint||"Bild mit einem Finger verschieben, mit zwei Fingern zoomen und drehen. Gespeichert wird ein neues Foto, das Original bleibt."}</span></div>
-    <div class="crop-stage"><img alt=""><div class="crop-f"></div></div>
+    <div class="crop-stage"><img alt=""><div class="crop-f"></div>${opts.ghost?`<img class="crop-g" alt="" src="${esc(opts.ghost)}">`:""}</div>
     <div class="crop-b"><div class="crop-msg" id="crM"></div>
       <div class="crop-sl"><span>Zoom</span><input type="range" id="crZ" min="0" max="1000" value="500" aria-label="Zoom"><span class="val" id="crZv"></span></div>
       <div class="crop-sl"><span>Drehen</span><input type="range" id="crR" min="-180" max="180" step="0.5" value="0" aria-label="Drehen"><span class="val" id="crRv">0°</span></div>
-      <div class="row2"><button type="button" class="btn sm" id="crL">↺ 90°</button><button type="button" class="btn sm" id="crRr">↻ 90°</button><button type="button" class="btn sm" id="cr0">gerade</button>
+      <div class="row2"><button type="button" class="btn sm" id="crL">↺ 90°</button><button type="button" class="btn sm" id="crRr">↻ 90°</button><button type="button" class="btn sm" id="cr0">gerade</button>${opts.ghost?`<button type="button" class="btn sm" id="crG" aria-pressed="true">Vorlage</button>`:""}${opts.eyes!==false?`<button type="button" class="btn sm" id="crE">Augen antippen</button>`:""}
         <div class="seg" role="group" id="crA"><button type="button" data-a="1" aria-pressed="true">1:1</button><button type="button" data-a="0.8" aria-pressed="false">4:5</button><button type="button" data-a="1.333" aria-pressed="false">4:3</button></div></div>
       <div class="row2" ${opts.onCanvas?"hidden":""}><select id="crV" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k==="thorax"?"selected":""}>${l}</option>`).join("")}</select></div>
       <div class="btns"><button class="btn" id="crS">Vorschlag</button><button class="btn" id="crX">Abbrechen</button><button class="btn primary" id="crOk">${opts.okLabel||"Speichern"}</button></div></div>`;
@@ -2161,7 +2167,8 @@ function cropTool(p, closeViewer, opts={}){
   const zIn = ov.querySelector("#crZ"), rIn = ov.querySelector("#crR");
   let aspect = 1, F = null, T = {x:0, y:0, s:1, a:0}, nw = 0, nh = 0, sMin = 0.05, sMax = 8;
   const frame = () => { const W = stage.clientWidth, H = stage.clientHeight; let fw = Math.min(W*0.86, (H*0.86)*aspect), fh = fw/aspect;
-    F = {x:(W-fw)/2, y:(H-fh)/2, w:fw, h:fh}; Object.assign(fr.style, {left:F.x+"px", top:F.y+"px", width:F.w+"px", height:F.h+"px"}); };
+    F = {x:(W-fw)/2, y:(H-fh)/2, w:fw, h:fh}; Object.assign(fr.style, {left:F.x+"px", top:F.y+"px", width:F.w+"px", height:F.h+"px"});
+    const gh = ov.querySelector(".crop-g"); if(gh) Object.assign(gh.style, {left:F.x+"px", top:F.y+"px", width:F.w+"px", height:F.h+"px"}); };
   const z2s = v => sMin*Math.pow(sMax/sMin, v/1000), s2z = sv => Math.round(1000*Math.log(sv/sMin)/Math.log(sMax/sMin));
   const draw = () => {
     img.style.transform = `translate(${T.x}px,${T.y}px) rotate(${T.a}deg) scale(${T.s}) translate(${-nw/2}px,${-nh/2}px)`;
@@ -2185,6 +2192,34 @@ function cropTool(p, closeViewer, opts={}){
   const P = new Map(); let g0 = null;
   const pair = () => { const [a,b] = [...P.values()]; return {mx:(a.x+b.x)/2, my:(a.y+b.y)/2, d:Math.hypot(b.x-a.x,b.y-a.y), an:Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI}; };
   const loc = e => { const R = stage.getBoundingClientRect(); return {x:e.clientX-R.left, y:e.clientY-R.top}; };
+  /* Ausrichten über zwei Punkte: die beiden dunklen „Augen“ des Totenkopfs. Daraus ergeben sich Lage, Drehung und Größe
+     immer gleich, egal wie das Foto aufgenommen wurde. Zielposition im Rahmen wie bei typischen Thorax-Ausschnitten. */
+  let eyeMode = false, eyes = [], tap0 = null;
+  const toImg = q => { const r = -T.a*Math.PI/180, dx = (q.x-T.x)/T.s, dy = (q.y-T.y)/T.s; return {x: dx*Math.cos(r)-dy*Math.sin(r) + nw/2, y: dx*Math.sin(r)+dy*Math.cos(r) + nh/2}; };
+  const marks = () => { ov.querySelectorAll(".crop-eye").forEach(m=>m.remove()); eyes.forEach(q => { const m = document.createElement("i"); m.className = "crop-eye"; m.style.left = q.sx+"px"; m.style.top = q.sy+"px"; stage.appendChild(m); }); };
+  const applyEyes = () => {
+    let [i1, i2] = eyes.map(q=>q.img);
+    const t1 = {x:F.x+RID_EYE.x1*F.w, y:F.y+RID_EYE.y*F.h}, t2 = {x:F.x+RID_EYE.x2*F.w, y:F.y+RID_EYE.y*F.h};
+    const angOf = (a,b) => Math.atan2(b.y-a.y, b.x-a.x)*180/Math.PI;
+    let da = angOf(t1,t2) - angOf(i1,i2); da = ((da+180)%360+360)%360-180;
+    // Reihenfolge der Augen egal: die Variante mit der kleineren Drehung gegenüber jetzt nehmen
+    const cur = ((T.a+180)%360+360)%360-180;
+    const alt = ((da+180+180)%360+360)%360-180;
+    if(Math.abs(((alt-cur+180)%360+360)%360-180) < Math.abs(((da-cur+180)%360+360)%360-180)){ [i1, i2] = [i2, i1]; da = alt; }
+    const sNew = Math.min(sMax, Math.max(sMin, Math.hypot(t2.x-t1.x, t2.y-t1.y) / (Math.hypot(i2.x-i1.x, i2.y-i1.y) || 1)));
+    const r = da*Math.PI/180, ux = (i1.x-nw/2)*sNew, uy = (i1.y-nh/2)*sNew;
+    T = {s:sNew, a:da, x: t1.x - (ux*Math.cos(r) - uy*Math.sin(r)), y: t1.y - (ux*Math.sin(r) + uy*Math.cos(r))};
+    eyeMode = false; eyes = []; marks(); draw();
+    msg.textContent = "Ausgerichtet. Feinkorrektur mit den Fingern möglich.";
+    ov.querySelector("#crE")?.setAttribute("aria-pressed", "false");
+  };
+  const eb = ov.querySelector("#crE");
+  if(eb) eb.onclick = () => { eyeMode = !eyeMode; eyes = []; marks(); eb.setAttribute("aria-pressed", eyeMode);
+    msg.textContent = eyeMode ? "Tippe nacheinander auf die beiden dunklen Augenpunkte des Totenkopfs (vorher ruhig hineinzoomen)." : ""; };
+  stage.addEventListener("pointerdown", e => { if(eyeMode) tap0 = loc(e); });
+  stage.addEventListener("pointerup", e => { if(!eyeMode || !tap0 || P.size > 1) return; const q = loc(e); if(Math.hypot(q.x-tap0.x, q.y-tap0.y) > 8) return;
+    eyes.push({sx:q.x, sy:q.y, img:toImg(q)}); tap0 = null; marks();
+    if(eyes.length===2) applyEyes(); else msg.textContent = "Jetzt das zweite Auge antippen."; });
   stage.addEventListener("pointerdown", e => { e.preventDefault(); stage.setPointerCapture(e.pointerId); P.set(e.pointerId, loc(e)); g0 = P.size===2 ? pair() : null; });
   stage.addEventListener("pointermove", e => { if(!P.has(e.pointerId)) return; const prev = P.get(e.pointerId), cur = loc(e);
     if(P.size===1){ T.x += cur.x-prev.x; T.y += cur.y-prev.y; P.set(e.pointerId, cur); draw(); return; }
@@ -2204,14 +2239,18 @@ function cropTool(p, closeViewer, opts={}){
     ov.querySelectorAll("#crA [data-a]").forEach(x=>x.setAttribute("aria-pressed", x===b)); const c0 = fc(); frame(); const c1 = fc(); T.x += c1.x-c0.x; T.y += c1.y-c0.y; draw(); });
   const close = () => { ro.disconnect(); ov.remove(); opts.onClose && opts.onClose(); };
   ov.querySelector("#crS").onclick = suggest;
+  const gb = ov.querySelector("#crG"); if(gb) gb.onclick = () => { const on = gb.getAttribute("aria-pressed")!=="true"; gb.setAttribute("aria-pressed", on); ov.querySelector(".crop-g").hidden = !on; };
   ov.querySelector("#crX").onclick = close;
   ov.querySelector("#crOk").onclick = async () => {
     if(!nw) return; const btn = ov.querySelector("#crOk"); btn.disabled = true;
     if(opts.onCanvas){
-      const c = document.createElement("canvas"); c.width = 480; c.height = Math.round(480/aspect); const k = 480/F.w;
-      const ctx = c.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height); ctx.imageSmoothingQuality = "high";
-      ctx.scale(k, k); ctx.translate(-F.x, -F.y); ctx.translate(T.x, T.y); ctx.rotate(T.a*Math.PI/180); ctx.scale(T.s, T.s); ctx.drawImage(img, -nw/2, -nh/2);
-      close(); opts.onCanvas(c); return;
+      const render = t => { const c = document.createElement("canvas"); c.width = 480; c.height = Math.round(480/aspect); const k = 480/F.w;
+        const ctx = c.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height); ctx.imageSmoothingQuality = "high";
+        ctx.scale(k, k); ctx.translate(-F.x, -F.y); ctx.translate(t.x, t.y); ctx.rotate(t.a*Math.PI/180); ctx.scale(t.s, t.s); ctx.drawImage(img, -nw/2, -nh/2); return c; };
+      const c = render(T);
+      // Gegenstück um 180° um die Augenlinie gedreht – falls Kopf und Hinterende vertauscht sind; die Auswertung wählt die passendere Lage
+      const keep = {...T}; around(F.x+0.5*F.w, F.y+RID_EYE.y*F.h, 1, 180); const cAlt = render(T); T = keep;
+      close(); opts.onCanvas(c, cAlt); return;
     }
     try {
       // Auflösung: so viele Pixel wie das Original im Rahmen hergibt, höchstens 1200 px
@@ -2233,7 +2272,7 @@ function cropTool(p, closeViewer, opts={}){
   };
 }
 /* ---- Wiedererkennung über Thoraxfotos (klassischer Bildvergleich, offline) ----
-   Beide Bilder werden auf 64×64 Graustufen gebracht, Hochpass gefiltert (Helligkeit/Licht fällt weitgehend raus),
+   Beide Bilder werden auf 64×64 gebracht (Helligkeit + Orange-Anteil), bandpass-gefiltert (Licht fällt weitgehend raus),
    in einer Kreismaske normiert und per Korrelation verglichen. Das neue Foto wird dabei leicht gedreht,
    skaliert und verschoben, um kleine Unterschiede beim Zuschneiden auszugleichen. */
 const RID = {N:64, M:80, R:29, lo:1, hi:6, chroma:0.7};
@@ -2272,31 +2311,74 @@ function ridVec(bufs, size, ox, oy){
   return v;
 }
 const ridLoad = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; });
+/* Verformungstolerant: Nach der groben Ausrichtung (Drehung, Größe, Lage) wird der Thorax in Felder geteilt,
+   und jedes Feld darf sich einzeln etwas verschieben. So stören leicht verschobene Härchen nach dem Anfassen
+   und ungleich zugeschnittene Ausschnitte weniger. An echten Fotos deutlich treffsicherer als der reine Gesamtvergleich. */
+const RID2 = {G:4, PS:14, LS:4, SC:[0.86,0.93,1,1.07,1.15]};
+// Wo die beiden Augenpunkte des Totenkopfs im Ausschnitt liegen (Mittel aus echten Thorax-Ausschnitten)
+const RID_EYE = {x1:0.395, x2:0.605, y:0.38};
+function rid2Norm(bufs, size, x0, y0, ps){
+  const L = ps*ps, v = new Float32Array(L*2);
+  bufs.forEach((b, ch) => { let m = 0;
+    for(let y=0;y<ps;y++) for(let x=0;x<ps;x++){ const t = b[(y0+y)*size + x0+x]; v[ch*L+y*ps+x] = t; m += t; }
+    m /= L; let n = 0; for(let i=0;i<L;i++){ v[ch*L+i] -= m; n += v[ch*L+i]**2; }
+    const w = Math.sqrt(ch ? RID.chroma : 1-RID.chroma) / (Math.sqrt(n) || 1); for(let i=0;i<L;i++) v[ch*L+i] *= w; });
+  return v;
+}
+const RID2_P = (() => { const N = RID.N, ps = RID2.PS, c = N/2, out = [], step = (2*RID.R-ps)/(RID2.G-1), st = c-RID.R;
+  for(let gy=0;gy<RID2.G;gy++) for(let gx=0;gx<RID2.G;gx++){ const x = Math.round(st+gx*step), y = Math.round(st+gy*step), dx = x+ps/2-c, dy = y+ps/2-c; if(dx*dx+dy*dy <= (RID.R-2)**2) out.push([x,y]); }
+  return out; })();
 async function ridRefVec(p){
   const key = p.id + "|" + (p.blobId||""); if(_ridCache.has(key)) return _ridCache.get(key);
-  const img = await ridLoad(photoSrc(p)); const v = ridVec(ridGray(img, RID.N), RID.N, 0, 0);
+  const img = await ridLoad(photoSrc(p)); const b = ridGray(img, RID.N);
+  const v = {g: ridVec(b, RID.N, 0, 0), p: RID2_P.map(([x,y]) => rid2Norm(b, RID.N, x, y, RID2.PS))};
   _ridCache.set(key, v); return v;
 }
 function ridQueryVariants(canvas){
   const out = [], off = (RID.M-RID.N)/2;
-  for(const a of [-16,-12,-8,-4,0,4,8,12,16]) for(const sc of [0.86,0.93,1,1.07,1.15]){
-    const bufs = ridGray(canvas, RID.M, a, sc);
-    for(let dy=-6; dy<=6; dy+=3) for(let dx=-6; dx<=6; dx+=3) out.push(ridVec(bufs, RID.M, off+dx, off+dy));
+  for(const a0 of [-16,-12,-8,-4,0,4,8,12,16]) for(const sc of RID2.SC){
+    const a = a0, bufs = ridGray(canvas, RID.M, a, sc), g = [];
+    for(let dy=-6; dy<=6; dy+=3) for(let dx=-6; dx<=6; dx+=3) g.push([dx, dy, ridVec(bufs, RID.M, off+dx, off+dy)]);
+    out.push({bufs, g});
   }
   return out;
 }
-function ridScore(vars, ref){ let best = -1; for(const v of vars){ let s = 0; for(let i=0;i<v.length;i++) s += v[i]*ref[i]; if(s > best) best = s; } return best; }
-function ridRefs(){
-  // Wen vergleichen? Offene Falter (A, B, C …) und lebende, geschlüpfte Tiere – nur Fotos mit Ansicht „Thorax oben“.
-  const subs = [];
-  for(const m of openImagos()) subs.push({type:"imago", id:m.id, name:m.label, sub:m.batchLabel||""});
-  for(const i of all("individuals").filter(i=>isAlive(i) && firstEv(i,"falterschlupf"))) subs.push({type:"individual", id:i.id, name:i.name, sub:S.broods[i.broodId]?.name||""});
-  return subs.map(s => ({...s, photos: photosOf(s.type, s.id).filter(p=>p.view==="thorax").sort((a,b)=>(b.cropOf?1:0)-(a.cropOf?1:0))})).filter(s=>s.photos.length);
+function ridGlobal(vars, ref){ let best = -1; for(const v of vars) for(const [,,g] of v.g){ let s = 0; for(let i=0;i<g.length;i++) s += g[i]*ref.g[i]; if(s > best) best = s; } return best; }
+// Kopf oben oder unten? Einmal für das Foto entscheiden: die Lage, die insgesamt besser zu den gespeicherten Thoraxfotos passt.
+function ridOrient(canvas, alt, refVecs){
+  const v0 = ridQueryVariants(canvas); if(!alt) return [v0, canvas];
+  const v1 = ridQueryVariants(alt);
+  const m = vs => refVecs.reduce((a, r) => a + ridGlobal(vs, r), 0) / (refVecs.length || 1);
+  return m(v1) > m(v0) + 0.02 ? [v1, alt] : [v0, canvas];
 }
+function ridScore(vars, ref){
+  const cand = [];
+  for(const v of vars) for(const [dx,dy,g] of v.g){ let s = 0; for(let i=0;i<g.length;i++) s += g[i]*ref.g[i]; cand.push([s, v, dx, dy]); }
+  cand.sort((a,b)=>b[0]-a[0]);
+  const off = (RID.M-RID.N)/2, L = RID2.LS; let best = -1;
+  for(const [, v, dx, dy] of cand.slice(0,4)){
+    let tot = 0;
+    RID2_P.forEach(([x,y], k) => { let pb = -1; const rp = ref.p[k];
+      for(let ly=-L; ly<=L; ly++) for(let lx=-L; lx<=L; lx++){ const q = rid2Norm(v.bufs, RID.M, off+dx+x+lx, off+dy+y+ly, RID2.PS); let s = 0; for(let i=0;i<q.length;i++) s += q[i]*rp[i]; if(s > pb) pb = s; }
+      tot += pb; });
+    best = Math.max(best, tot/RID2_P.length);
+  }
+  return best;
+}
+function ridSubjects(){
+  // Wen vergleichen? Offene Falter (A, B, C …) und lebende, geschlüpfte Tiere (ohne die, die gerade als Kandidat offen sind) –
+  // nur Fotos mit Ansicht „Thorax oben“.
+  const subs = [], busy = new Set(openImagos().flatMap(m=>m.candidates||[]));
+  for(const m of openImagos()) subs.push({type:"imago", id:m.id, name:m.label, sub:m.batchLabel||""});
+  for(const i of all("individuals").filter(i=>isAlive(i) && firstEv(i,"falterschlupf") && !busy.has(i.id))) subs.push({type:"individual", id:i.id, name:i.name, sub:S.broods[i.broodId]?.name||""});
+  return subs.map(s => ({...s, photos: photosOf(s.type, s.id).filter(p=>p.view==="thorax").sort((a,b)=>(b.cropOf?1:0)-(a.cropOf?1:0))}));
+}
+const ridRefs = () => ridSubjects().filter(s=>s.photos.length);
 ACTS.identify = () => {
   const refs = ridRefs();
   const root = openSheet(`<h2>Wer ist das?</h2>
     <p class="muted" style="margin:0">Fotografiere den Falter von oben und richte im nächsten Schritt den Thorax so aus wie bei deinen gespeicherten Thoraxfotos (Kopf oben, Thorax füllt den Rahmen). Die App vergleicht ihn dann mit ${refs.length} ${refs.length===1?"Falter":"Faltern"}, von denen es Thoraxfotos gibt.</p>
+    ${(()=>{ const miss = ridSubjects().filter(s=>!s.photos.length); return miss.length ? `<div class="note">Ohne Thoraxfoto, können also nicht erkannt werden: ${miss.map(s=>esc(s.name)).join(", ")}. Lege zuerst Thoraxfotos von ihnen an.</div>` : ""; })()}
     ${refs.length ? "" : `<div class="note">Noch keine Thoraxfotos zum Vergleichen. Lege bei deinen Faltern zuerst Thorax-Ausschnitte an (Foto öffnen → Ausschnitt).</div>`}
     <span class="hint">Nur ein Hinweis, keine sichere Erkennung. Am besten klappt es mit Ausschnitten, gleichem Abstand und ähnlichem Licht. Flügel werden bewusst nicht verglichen, weil sie sich abnutzen.</span>
     <label class="btn primary block filebtn" id="pick">Foto aufnehmen oder wählen<input type="file" id="pf" accept="image/*" class="vh"></label><div id="pst" class="small muted"></div>`);
@@ -2306,16 +2388,19 @@ ACTS.identify = () => {
     const f = pf.files[0]; if(!f || !refs.length) return;
     const blob = await shrinkImage(f, 2000, .9); const url = URL.createObjectURL(blob);
     closeSheet();
-    cropTool(null, null, {src:url, title:"Thorax ausrichten", hint:"Wie bei deinen Thoraxfotos: Kopf nach oben, Thorax mittig und rahmenfüllend.", okLabel:"Vergleichen",
-      onCanvas: c => ridShow(c, blob, f), onClose: () => setTimeout(()=>URL.revokeObjectURL(url), 1000)});
+    cropTool(null, null, {src:url, title:"Thorax ausrichten", hint:"Am einfachsten: „Augen antippen“ und die beiden dunklen Augenpunkte des Totenkopfs antippen. Oder von Hand deckungsgleich auf die durchscheinende Vorlage legen.", okLabel:"Vergleichen", ghost: photoSrc(refs[0].photos[0]), eyes: true,
+      onCanvas: (c, alt) => ridShow(c, blob, f, alt), onClose: () => setTimeout(()=>URL.revokeObjectURL(url), 1000)});
   });
 };
-async function ridShow(canvas, blob, file){
-  const qUrl = canvas.toDataURL("image/jpeg", .85);
+async function ridShow(canvas0, blob, file, alt){
   const root = openSheet(`<h2>Wer ist das?</h2><div id="ridR" class="small muted">Vergleiche …</div>`);
   await new Promise(r=>setTimeout(r,30));
-  const vars = ridQueryVariants(canvas), res = [];
-  for(const s of ridRefs()){
+  const res = [], subs = ridRefs(), prog = root.querySelector("#ridR"), refVecs = [];
+  for(const s of subs) for(const p of s.photos){ try { refVecs.push(await ridRefVec(p)); } catch(e){} }
+  const [vars, canvas] = ridOrient(canvas0, alt, refVecs);
+  const qUrl = canvas.toDataURL("image/jpeg", .85);
+  for(const [k, s] of subs.entries()){
+    prog.textContent = `Vergleiche … ${k+1} von ${subs.length}`; await new Promise(r=>setTimeout(r,0));
     let best = null;
     for(const p of s.photos){ try { const sc = ridScore(vars, await ridRefVec(p)); if(!best || sc > best.sc) best = {sc, p}; } catch(e){} }
     if(best) res.push({...s, ...best});
@@ -2323,7 +2408,7 @@ async function ridShow(canvas, blob, file){
   res.sort((a,b)=>b.sc-a.sc);
   const pct = x => Math.max(0, Math.round(x*100));
   const gap = res.length>1 ? pct(res[0].sc)-pct(res[1].sc) : 100;
-  const verdict = !res.length ? "Kein Vergleich möglich." : pct(res[0].sc) < 35 ? "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?" : gap < 8 ? "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an." : `Am ähnlichsten: ${res[0].name}`;
+  const verdict = !res.length ? "Kein Vergleich möglich." : pct(res[0].sc) < 45 ? "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?" : gap < 5 ? "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an." : `Am ähnlichsten: ${res[0].name}`;
   const cont = root.querySelector("#ridR"); cont.className = "";
   cont.innerHTML = `<div class="rid-q"><img src="${qUrl}" alt=""><span><b>${esc(verdict)}</b><span class="small muted">Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.</span></span></div>
     <div class="list">${res.map((r,k)=>`<div class="row rid-r"><img src="${esc(photoSrc(r.p))}" alt=""><span class="main"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.sub)}</span><span class="rid-bar"><i style="width:${pct(r.sc)}%"></i></span><span class="rid-a"><button class="btn sm" data-k="${k}" data-do="save">Foto hier speichern</button><button class="btn ghost sm" data-go="${r.type==="imago"?"imago":"animal"}:${r.id}">Öffnen</button></span></span><span class="end"><b class="mono">${pct(r.sc)} %</b></span></div>`).join("")}</div>`;
