@@ -250,6 +250,10 @@ table.t td:first-child{font-family:var(--f-body)}
 .backup.due{border-color:var(--warn);background:var(--warn-soft)}
 .sensor{display:flex;flex-direction:column;gap:8px}
 .sensor .vals{display:flex;gap:14px;font-family:var(--f-data);font-size:20px}
+.pill.tag{background:transparent;border:1px solid var(--ochre);color:var(--ochre);font-weight:500}
+button.pill.tag{cursor:pointer}
+.pill.tag.add{border-style:dashed;color:var(--muted);border-color:var(--line)}
+.tagmini{font-family:var(--f-data);font-size:12px;font-weight:500;color:var(--ochre);margin-left:6px}
 .update{position:fixed;left:var(--gut);right:var(--gut);bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:61;background:var(--accent);color:var(--accent-ink);border-radius:var(--r);padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;max-width:640px;margin:0 auto}
 .update .btn{background:var(--accent-ink);color:var(--accent);border-color:var(--accent-ink);min-height:34px;padding:6px 12px}
 #printArea{display:none}
@@ -277,7 +281,7 @@ table.t td:first-child{font-family:var(--f-body)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.4.0";
+const APP_VERSION = "5.5.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -388,7 +392,8 @@ const I18N_EN = {
   "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
   "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
   "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
-  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag",
+  "z. B. mini, dunkel, Zuchttier":"e.g. mini, dark, breeder","Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.":"Separate several with commas. Tags show on the animal and in the list, where you can filter by them.",
   "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
   // Zuordnen
   "Schlüpfen mehrere Falter im selben Zeitraum und du weißt nicht, wer aus welcher Puppe kam, landen sie hier als „Falter A, B, C …“. Fotografiere sie und ordne sie zu, sobald du es weißt. Danach gehören Fotos und Notizen zum jeweiligen Tier. Schlupfdatum und Puppenruhe zählen schon vorher.":"If several moths eclose in the same period and you don't know who came from which pupa, they appear here as “Falter A, B, C …”. Photograph them and assign them once you know. Photos and notes then belong to the animal. Eclosion date and pupal period count right away.",
@@ -624,7 +629,8 @@ function evIndex(){
   return _evIdx;
 }
 const evOf = indId => evIndex().ind[indId] || [];
-function stageEventsOf(ind){ const now = Date.now(); return evOf(ind.id).filter(e=>ET[e.type]?.stage && ET[e.type].stage(e.data||{}) && ms(e.t0) <= now); }
+const evIsDue = e => (e.t0||"").slice(0,10) <= todayISO();
+function stageEventsOf(ind){ return evOf(ind.id).filter(e=>ET[e.type]?.stage && ET[e.type].stage(e.data||{}) && evIsDue(e)); }
 function currentStage(ind){
   const se = stageEventsOf(ind);
   if(se.length){ const e=se[se.length-1]; return ET[e.type].stage(e.data||{}); }
@@ -1008,9 +1014,13 @@ function stagePill(ind){
   if(s==="?") return `<span class="pill">Stadium ?</span>`;
   return `<span class="pill ${s==="falter"?"falter":"stage"}">${stageLabel(s)}</span>`;
 }
+const tagsOf = i => Array.isArray(i?.tags) ? i.tags : [];
+function allTags(){ const c = new Map(); for(const i of all("individuals")) for(const t of tagsOf(i)) c.set(t, (c.get(t)||0)+1); return [...c.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"de")).map(x=>x[0]); }
+function parseTags(str){ const out = []; for(const t of String(str||"").split(/[,;\n]+/).map(x=>x.trim().replace(/^#/,"")).filter(Boolean)) if(!out.some(o=>o.toLowerCase()===t.toLowerCase())) out.push(t); return out; }
+const tagMini = i => tagsOf(i).map(t=>`<span class="tagmini">#${esc(t)}</span>`).join("");
 function indRow(ind, extra=""){
   const sp = speciesOfInd(ind); const b = S.broods[ind.broodId];
-  return `<button class="row" data-go="animal:${ind.id}">${sexBadge(ind.sex)}<span class="main"><span class="t">${esc(ind.name)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
+  return `<button class="row" data-go="animal:${ind.id}">${sexBadge(ind.sex)}<span class="main"><span class="t">${esc(ind.name)}${tagMini(ind)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
 }
 function photoGrid(list, addAct, addData=""){
   return `<div class="photos">${list.map(p=>`<button class="ph" data-act="viewPhoto" data-id="${p.id}"><img src="${esc(photoSrc(p))}" alt="${esc(PVIEWS[p.view]||"Foto")}" loading="lazy"><span>${esc(PVIEWS[p.view]||"Foto")}</span></button>`).join("")}${addAct?`<button class="ph add" data-act="${addAct}" ${addData}>+ Foto</button>`:""}</div>`;
@@ -1098,11 +1108,14 @@ VIEWS.animals = () => {
   else if(f==="puppe") inds = inds.filter(i=>isAlive(i)&&["vorpuppe","puppe"].includes(currentStage(i)));
   else if(f==="falter") inds = inds.filter(i=>firstEv(i,"falterschlupf"));
   else if(f==="tot") inds = inds.filter(i=>statusOf(i)==="tot");
-  if(q) inds = inds.filter(i => (i.name+" "+(i.notes||"")+" "+(S.broods[i.broodId]?.name||"")).toLowerCase().includes(q));
+  if(R.tagF) inds = inds.filter(i => tagsOf(i).includes(R.tagF));
+  if(q) inds = inds.filter(i => (i.name+" "+(i.notes||"")+" "+(S.broods[i.broodId]?.name||"")+" "+tagsOf(i).map(t=>"#"+t).join(" ")).toLowerCase().includes(q));
+  const TG = allTags();
   const broods = all("broods").sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""));
   const F = [["aktiv","Aktiv"],["puppe","Puppen"],["falter","Falter"],["tot","Tot"],["alle","Alle"]];
   return `<div class="search">${svg("search").replace('<svg','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.8"')}<input id="aq" placeholder="Tier suchen (Name, Notiz, Ansatz)" value="${esc(R.q)}"></div>
   <div class="seg" role="group" aria-label="Filter">${F.map(([k,l])=>`<button data-act="afilter" data-k="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}</div>
+  ${TG.length?`<div class="chips">${TG.map(t=>`<button class="chip ${R.tagF===t?"on":""}" data-act="tagFilter" data-k="${esc(t)}">#${esc(t)}</button>`).join("")}</div>`:""}
   <section class="sec"><div class="sec-h"><h2>${inds.length} Tier${inds.length===1?"":"e"}</h2></div>
   <div class="list">${inds.length? inds.map(i=>indRow(i)).join("") : `<div class="empty">${all("individuals").length? "Keine Tiere für diesen Filter." : "Noch keine Tiere. Öffne einen Zuchtansatz und füge dort Tiere hinzu."}</div>`}</div></section>
   <section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div>
@@ -1110,6 +1123,7 @@ VIEWS.animals = () => {
 };
 document.addEventListener("input", e => { if(e.target.id==="aq"){ R.q = e.target.value; scheduleRender(); } });
 ACTS.afilter = d => { R.animalFilter = d.k; render(); };
+ACTS.tagFilter = d => { R.tagF = R.tagF===d.k ? null : d.k; render(); };
 ACTS.noop = () => {};
 ACTS.lang = d => setLang(d.k);
 
@@ -1172,21 +1186,27 @@ function pupalTable(inds){
 
 /* ---- Auswertung pro Tier ---- */
 const END_TYPES = ["tod","praepariert","freigelassen","abgegeben"];
+const dayNo = t => { const d = new Date(t); return Math.round(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())/864e5); };
 function stageSegments(ind){
   const b = S.broods[ind.broodId]; const now = Date.now(); const pts = [];
   const st0 = startStageOf(ind);
   if(b?.startDate && st0!=="?") pts.push({k:st0, t:ms(b.startDate), est:false, src:"Start des Zuchtansatzes"});
   for(const e of evOf(ind.id)){
     const fn = ET[e.type]?.stage; const k = fn && fn(e.data||{}); if(!k) continue;
-    const t = evMid(e); if(t > now) continue;
-    pts.push({k, t, est:!!e.data?.est || e.type==="stadium" || e.prec==="zeitraum"});
+    if(!evIsDue(e)) continue;
+    const t = Math.min(evMid(e), now);
+    pts.push({k, t, exact:e.prec==="exakt", est:!!e.data?.est || e.type==="stadium" || e.prec==="zeitraum"});
   }
   pts.sort((a,b)=>a.t-b.t);
   const P = []; for(const p of pts){ if(P.length && P[P.length-1].k===p.k) continue; P.push(p); }
   const endEv = evOf(ind.id).find(e=>END_TYPES.includes(e.type));
   const endT = endEv ? evMid(endEv) : null;
-  return P.map((p,i)=>{ const nx = P[i+1]; const to = nx ? nx.t : (endT ?? now);
-    return {k:p.k, from:p.t, to, days:Math.max(0,(to-p.t)/864e5), open:!nx && !endT, est:p.est || !!nx?.est}; });
+  return P.map((p,i)=>{ const nx = P[i+1]; const to = nx ? nx.t : (endT ?? now); const open = !nx && !endT;
+    /* Laufende Stadien und die Falterzeit zählen Kalendertage inklusive Start- und heutigem bzw. letztem Tag,
+       sofern keine genaue Uhrzeit angegeben ist. Abgeschlossene Stadien: Differenz der Daten. */
+    const inclusive = (open || p.k==="falter") && !p.exact;
+    const days = inclusive ? dayNo(to) - dayNo(p.t) + 1 : Math.max(0,(to-p.t)/864e5);
+    return {k:p.k, from:p.t, to, days, open, inclusive, exact:p.exact, est:p.est || !!nx?.est}; });
 }
 function speciesStageDays(spId, k, exceptId){
   const v = [];
@@ -1197,7 +1217,7 @@ function speciesStageDays(spId, k, exceptId){
 function animalStats(i){
   const sp = speciesOfInd(i); const segs = stageSegments(i);
   const rows = segs.map(sg=>{ const cmp = sp ? speciesStageDays(sp.id, sg.k, i.id) : [];
-    const dd = sg.days<1 && !sg.open ? "<1" : fmtN(Math.floor(sg.days),0);
+    const dd = sg.inclusive ? fmtN(sg.days,0) : sg.exact && sg.open ? fmtN(sg.days,1) : sg.days<1 ? "<1" : fmtN(Math.floor(sg.days),0);
     return `<tr><td>${esc(stageLabel(sg.k))}</td><td>${dShort(dFromMs(sg.from))}</td><td>${sg.est?"≈":""}${dd}${sg.open?"+":""}</td><td>${cmp.length>=2?`${fmtN(median(cmp),1)} <span class="muted">n=${cmp.length}</span>`:`<span class="muted">–</span>`}</td></tr>`; }).join("");
   const tiles = [];
   const ec = firstEv(i,"falterschlupf"), ps = pupalStart(i);
@@ -1213,7 +1233,8 @@ function animalStats(i){
     tiles.push([`${tot}`, `Tage von ${stageLabel(first.k)} bis Falter`, ""]);
   }
   const endEv = evOf(i.id).find(e=>END_TYPES.includes(e.type));
-  if(ec && endEv && ["tod","praepariert"].includes(endEv.type)) tiles.push([`${Math.max(0,Math.round((evMid(endEv)-evMid(ec))/864e5))}`, "Tage als Falter", ""]);
+  const fs = segs.find(sg=>sg.k==="falter");
+  if(fs && (fs.open || (endEv && ["tod","praepariert"].includes(endEv.type)))) tiles.push([`${fs.inclusive?fmtN(fs.days,0):fmtN(fs.days,1)}`, fs.open?"Tage als Falter (heute mitgezählt)":"Tage als Falter", ""]);
   const W = evOf(i.id).filter(e=>e.type==="gewicht" && Number.isFinite(+e.data?.g)).map(e=>({at:e.t0, g:+e.data.g}));
   if(W.length) tiles.push([`${fmtN(Math.max(...W.map(w=>w.g)),2)}`, "g höchstes Gewicht", W.length>1?`${W.length} Wägungen`:""]);
   if(!rows && !tiles.length) return "";
@@ -1232,6 +1253,7 @@ VIEWS.animal = r => {
   const st = currentStage(i); const alive = isAlive(i);
   let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1>
     <div class="meta">${sexBadge(i.sex)}<span class="small">${SEXL[i.sex||"u"]}</span>${stagePill(i)}<button class="pill" data-go="brood:${b?.id}" style="border:0;cursor:pointer">${esc(b?.name||"")}</button>${cont?`<span class="pill">${esc(cont.name)}${loc?" · "+esc(loc.name):""}</span>`:""}</div>
+    <div class="chips">${tagsOf(i).map(t=>`<button class="pill tag" data-act="tagSheet" data-id="${i.id}">#${esc(t)}</button>`).join("")}<button class="pill tag add" data-act="tagSheet" data-id="${i.id}">+ Tag</button></div>
     ${i.notes?`<p class="muted" style="margin:0">${esc(i.notes)}</p>`:""}</div>`;
   if(alive){
     const q = [];
@@ -1412,7 +1434,7 @@ VIEWS.search = () => {
   let h = `<div class="search">${svg("search").replace('<svg','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.8"')}<input id="gq" placeholder="Name, Art, Notiz, Futterpflanze …" value="${esc(R.gq||"")}" autofocus></div>`;
   if(!q) return h + `<p class="muted small">Durchsucht Tiere, Zuchtansätze, Arten, Falter und Notizen in Ereignissen.</p>`;
   const has = s => (s||"").toLowerCase().includes(q);
-  const I = all("individuals").filter(i=>has(i.name)||has(i.notes)).sort(byName);
+  const I = all("individuals").filter(i=>has(i.name)||has(i.notes)||tagsOf(i).some(t=>has(t)||has("#"+t))).sort(byName);
   const B = all("broods").filter(b=>has(b.name)||has(b.notes)||has(S.species[b.speciesId]?.sci)||has(S.species[b.speciesId]?.de)||has(spCommon(S.species[b.speciesId]))||has(S.sources[b.sourceId]?.name));
   const M = openImagos().filter(m=>has(m.label)||has(m.notes));
   const E = all("events").filter(e=>has(e.note)||has(evTitle(e))).sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,40);
@@ -1585,6 +1607,28 @@ ACTS.addInds = d => {
   });
 };
 
+/* ---- Tags ---- */
+function tagFieldHtml(id, tags){
+  const others = allTags();
+  return `<div class="f"><label for="${id}">Tags</label><input id="${id}" value="${esc(tags.join(", "))}" placeholder="z. B. mini, dunkel, Zuchttier" autocomplete="off"></div>
+    ${others.length?`<div class="chips" id="${id}Chips">${others.map(t=>`<button type="button" class="chip ${tags.includes(t)?"on":""}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("")}</div>`:""}
+    <div class="hint">Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.</div>`;
+}
+function wireTagField(root, id){
+  const inp = root.querySelector("#"+id);
+  root.querySelectorAll(`#${id}Chips [data-tag]`).forEach(b => b.addEventListener("click", () => {
+    const cur = parseTags(inp.value); const t = b.dataset.tag;
+    const nx = cur.includes(t) ? cur.filter(x=>x!==t) : [...cur, t];
+    inp.value = nx.join(", "); b.classList.toggle("on", nx.includes(t));
+  }));
+}
+ACTS.tagSheet = d => {
+  const i = S.individuals[d.id]; if(!i) return;
+  const root = openSheet(`<h2>Tags</h2><p class="muted" style="margin:-8px 0 0">${esc(i.name)}</p>${tagFieldHtml("tgIn", tagsOf(i))}<div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  wireTagField(root, "tgIn");
+  root.querySelector("#ok").onclick = async () => { await store.put("individuals",{...S.individuals[i.id], tags:parseTags(val(root,"tgIn"))}); closeSheet(); };
+};
+
 /* ---- Tier bearbeiten ---- */
 ACTS.editInd = d => {
   const i = S.individuals[d.id];
@@ -1593,11 +1637,13 @@ ACTS.editInd = d => {
     ${fld.sel("nBrood","Zuchtansatz",all("broods").map(b=>[b.id,b.name]),i.broodId)}
     ${fld.sel("nStart","Startstadium",[["",`wie Zuchtansatz (${stageLabel(S.broods[i.broodId]?.startStage||"L1")})`], ...stageOpts()],i.startStage||"")}
     ${fld.hint("Gilt, solange noch keine Häutung oder kein Stadium eingetragen ist.")}
+    ${tagFieldHtml("nTags", tagsOf(i))}
     ${fld.area("nNotes","Notizen",i.notes||"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>
     ${confirmBlock(`${esc(i.name)} mit allen Einträgen und Fotos löschen? Das lässt sich nicht rückgängig machen.`,"Endgültig löschen")}`);
+  wireTagField(root, "nTags");
   root.querySelector("#ok").addEventListener("click", async () => {
-    await store.put("individuals",{...i, name:val(root,"nName")||nextAutoNames(S.broods[val(root,"nBrood")]?.speciesId,1)[0], sex:val(root,"nSex"), containerId:val(root,"nCont")||null, broodId:val(root,"nBrood"), startStage:val(root,"nStart")||undefined, notes:val(root,"nNotes")});
+    await store.put("individuals",{...i, name:val(root,"nName")||nextAutoNames(S.broods[val(root,"nBrood")]?.speciesId,1)[0], sex:val(root,"nSex"), containerId:val(root,"nCont")||null, broodId:val(root,"nBrood"), startStage:val(root,"nStart")||undefined, tags:parseTags(val(root,"nTags")), notes:val(root,"nNotes")});
     closeSheet();
   });
   wireConfirm(root,"#del", async () => {
@@ -2224,11 +2270,11 @@ ACTS.exportJson = async () => {
 };
 ACTS.exportCsv = () => {
   const q = s => `"${String(s??"").replace(/"/g,'""')}"`;
-  const head = LANG==="en" ? ["Name","Brood","Species","Sex","Status","Stage","Burrowed","Pupated","Eclosed","Pupal period (days)","Died","Cause","Notes"]
-    : ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Notizen"];
+  const head = LANG==="en" ? ["Name","Brood","Species","Sex","Status","Stage","Burrowed","Pupated","Eclosed","Pupal period (days)","Died","Cause","Tags","Notes"]
+    : ["Name","Zuchtansatz","Art","Geschlecht","Status","Stadium","Eingegraben","Verpuppt","Geschlüpft","Puppenruhe (Tage)","Gestorben","Ursache","Tags","Notizen"];
   const rows = all("individuals").sort(byName).map(i=>{
     const b=S.broods[i.broodId], sp=speciesOfBrood(b), eg=firstEv(i,"eingegraben"), vp=realPupation(i)||firstEv(i,"verpuppt"), ec=firstEv(i,"falterschlupf"), d=deathOf(i), st=pupalStart(i);
-    return [i.name,b?.name,sp?.sci,tr(SEXL[i.sex||"u"]),tr(statusOf(i)),tr(stageLabel(currentStage(i))),eg&&fmtTime(eg),vp&&(fmtTime(vp)+(vp.data?.est?(LANG==="en"?" (estimated)":" (geschätzt)"):"")),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&tr(CAUSES[d.data?.cause]||""),i.notes].map(q).join(";");
+    return [i.name,b?.name,sp?.sci,tr(SEXL[i.sex||"u"]),tr(statusOf(i)),tr(stageLabel(currentStage(i))),eg&&fmtTime(eg),vp&&(fmtTime(vp)+(vp.data?.est?(LANG==="en"?" (estimated)":" (geschätzt)"):"")),ec&&fmtTime(ec),st&&ec?daysBetween(st.ev,ec):"",d&&fmtTime(d),d&&tr(CAUSES[d.data?.cause]||""),tagsOf(i).join(", "),i.notes].map(q).join(";");
   });
   store.save(`raupenbuch-tiere-${todayISO()}.csv`, "﻿"+[head.map(q).join(";"),...rows].join("\r\n"));
 };
