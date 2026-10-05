@@ -384,7 +384,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.6.1";
+const APP_VERSION = "5.7.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -495,7 +495,7 @@ const I18N_EN = {
   "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
   "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
   "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
-  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Als Vorschaubild":"Set as cover","★ Vorschaubild":"★ Cover","★ Vorschaubild · zurücksetzen":"★ Cover · reset","Vorschaubild gesetzt":"Cover photo set","Vorschaubild wieder automatisch":"Cover photo automatic again","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
   "z. B. mini, dunkel, Zuchttier":"e.g. mini, dark, breeder","Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.":"Separate several with commas. Tags show on the animal and in the list, where you can filter by them.",
   "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
   // Zuordnen
@@ -1118,7 +1118,7 @@ const IC2 = {
 const ic2 = (k, cls="") => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true">${IC2[k]||""}</svg>`;
 function avatar(ind){
   const st = statusOf(ind); const g = st==="tot" ? "dead" : STG(currentStage(ind));
-  const ph = photosOf("individual", ind.id).slice(-1)[0];
+  const ph = coverPhoto(ind);
   return `<span class="av st-${g}">${ph?`<img src="${esc(photoSrc(ph))}" alt="">`:ic2(g)}<b class="${ind.sex||"u"}">${SEXS[ind.sex||"u"]}</b></span>`;
 }
 const sexBadge = s => `<span class="sex ${s||"u"}" title="${SEXL[s||"u"]}">${SEXS[s||"u"]}</span>`;
@@ -1139,8 +1139,14 @@ function indRow(ind, extra=""){
   const sp = speciesOfInd(ind); const b = S.broods[ind.broodId];
   return `<button class="row" data-go="animal:${ind.id}">${avatar(ind)}<span class="main"><span class="t">${esc(ind.name)}${tagMini(ind)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
 }
+/* Vorschaubild: das gewählte (coverPhotoId), sonst das zuletzt aufgenommene Foto */
+function coverPhoto(ind){
+  const ps = photosOf("individual", ind.id);
+  return (ind.coverPhotoId && ps.find(p=>p.id===ind.coverPhotoId)) || ps.slice(-1)[0] || null;
+}
 function photoGrid(list, addAct, addData=""){
-  return `<div class="photos">${list.map(p=>`<button class="ph" data-act="viewPhoto" data-id="${p.id}"><img src="${esc(photoSrc(p))}" alt="${esc(PVIEWS[p.view]||"Foto")}" loading="lazy"><span>${esc(PVIEWS[p.view]||"Foto")}</span></button>`).join("")}${addAct?`<button class="ph add" data-act="${addAct}" ${addData}>+ Foto</button>`:""}</div>`;
+  const covId = list[0]?.subjectType==="individual" ? coverPhoto(S.individuals[list[0].subjectId]||{id:null})?.id : null;
+  return `<div class="photos">${list.map(p=>`<button class="ph" data-act="viewPhoto" data-id="${p.id}"><img src="${esc(photoSrc(p))}" alt="${esc(PVIEWS[p.view]||"Foto")}" loading="lazy"><span>${p.id===covId?"★ ":""}${esc(PVIEWS[p.view]||"Foto")}</span></button>`).join("")}${addAct?`<button class="ph add" data-act="${addAct}" ${addData}>+ Foto</button>`:""}</div>`;
 }
 /* ============ Ansichten ============ */
 const VIEWS = {};
@@ -1372,7 +1378,7 @@ VIEWS.animal = r => {
   const i = S.individuals[r.id]; if(!i) return `<div class="empty">Dieses Tier existiert nicht mehr.</div>`;
   const b = S.broods[i.broodId]; const sp = speciesOfBrood(b); const cont = S.containers[i.containerId]; const loc = cont && S.locations[cont.locationId];
   const st = currentStage(i); const alive = isAlive(i);
-  const g = statusOf(i)==="tot" ? "dead" : STG(st); const cph = photosOf("individual", i.id).slice(-1)[0];
+  const g = statusOf(i)==="tot" ? "dead" : STG(st); const cph = coverPhoto(i);
   const SX = ["L1","L2","L3","L4","L5","vorpuppe","puppe","falter"]; const SXL = {vorpuppe:"Erde",puppe:"Puppe",falter:"Falter"};
   const curI = SX.indexOf(st), maxI = SX.indexOf(STAGES[maxStageIdx(i)]?.k);
   const stepper = `<div class="stepper st-${g}">${SX.map((k,ix)=>`<span class="s ${ix===curI && alive ? "cur" : ix<=Math.max(curI,maxI) ? "done" : ""}"><i></i>${SXL[k]||k}</span>`).join("")}</div>`;
@@ -2008,11 +2014,17 @@ ACTS.viewPhoto = d => {
   closeSheet();
   const v = document.createElement("div"); v.className = "viewer"; v.id = "viewer";
   v.innerHTML = `<img src="${esc(photoSrc(p))}" alt=""><div class="bar2"><span class="small mono">${esc(PVIEWS[p.view]||"")} · ${dDE(p.takenAt)}</span>
-    <div class="btns"><select id="pvSel" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k===p.view?"selected":""}>${l}</option>`).join("")}</select><button class="btn" id="pvDel">Löschen</button><button class="btn" id="pvX">Schließen</button></div>
+    <div class="btns"><select id="pvSel" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k===p.view?"selected":""}>${l}</option>`).join("")}</select>${p.subjectType==="individual"&&S.individuals[p.subjectId]?(coverPhoto(S.individuals[p.subjectId])?.id===p.id&&S.individuals[p.subjectId].coverPhotoId===p.id?`<button class="btn" id="pvCov">★ Vorschaubild · zurücksetzen</button>`:coverPhoto(S.individuals[p.subjectId])?.id===p.id?`<button class="btn" id="pvCov" disabled>★ Vorschaubild</button>`:`<button class="btn" id="pvCov">Als Vorschaubild</button>`):""}<button class="btn" id="pvDel">Löschen</button><button class="btn" id="pvX">Schließen</button></div>
     <div id="pvC" hidden class="btns" style="width:100%"><span>Foto endgültig löschen?</span><button class="btn" id="pvYes" style="border-color:#e8806d;color:#e8806d">Löschen</button><button class="btn" id="pvNo">Abbrechen</button></div></div>`;
   document.body.appendChild(v);
   const close = () => v.remove();
   v.querySelector("#pvX").onclick = close;
+  const cv = v.querySelector("#pvCov");
+  if(cv && !cv.disabled) cv.onclick = async () => {
+    const ind = S.individuals[p.subjectId]; const isSet = ind.coverPhotoId===p.id;
+    const x = {...ind}; if(isSet) delete x.coverPhotoId; else x.coverPhotoId = p.id;
+    await store.put("individuals", x); close(); toast(isSet ? "Vorschaubild wieder automatisch" : "Vorschaubild gesetzt");
+  };
   v.querySelector("#pvSel").onchange = async e => { await store.put("photos",{...p, view:e.target.value}); toast("Ansicht geändert"); };
   v.querySelector("#pvDel").onclick = () => v.querySelector("#pvC").hidden = false;
   v.querySelector("#pvNo").onclick = () => v.querySelector("#pvC").hidden = true;
