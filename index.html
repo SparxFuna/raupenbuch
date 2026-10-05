@@ -381,14 +381,14 @@ button.pill.tag{cursor:pointer}
 .crop-h b{font-family:var(--f-name);font-size:20px}
 .crop-h span{color:#bdb8ad;font-size:13px}
 .crop-stage{flex:1;min-height:0;position:relative;touch-action:none;margin:0 8px;overflow:hidden}
-.crop-stage img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:contain;user-select:none;-webkit-user-drag:none;pointer-events:none}
-.crop-r{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.58);cursor:move;touch-action:none;box-sizing:border-box}
-.crop-r::before,.crop-r::after{content:"";position:absolute;background:rgba(255,255,255,.35)}
-.crop-r::before{left:33.3%;right:33.3%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35);background:none}
-.crop-r::after{top:33.3%;bottom:33.3%;left:0;right:0;border-top:1px solid rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.35);background:none}
-.crop-r i{position:absolute;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px rgba(0,0,0,.45);z-index:1}
-.crop-r i::after{content:"";position:absolute;inset:-12px}
-.crop-r i[data-h="nw"]{left:-13px;top:-13px} .crop-r i[data-h="ne"]{right:-13px;top:-13px} .crop-r i[data-h="sw"]{left:-13px;bottom:-13px} .crop-r i[data-h="se"]{right:-13px;bottom:-13px}
+.crop-stage img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-drag:none;pointer-events:none}
+.crop-f{position:absolute;border:2px solid #fff;box-shadow:0 0 0 9999px rgba(0,0,0,.6);pointer-events:none;box-sizing:border-box}
+.crop-f::before{content:"";position:absolute;left:33.3%;right:33.3%;top:0;bottom:0;border-left:1px solid rgba(255,255,255,.35);border-right:1px solid rgba(255,255,255,.35)}
+.crop-f::after{content:"";position:absolute;top:33.3%;bottom:33.3%;left:0;right:0;border-top:1px solid rgba(255,255,255,.35);border-bottom:1px solid rgba(255,255,255,.35)}
+.crop-sl{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;font-size:13px;color:#bdb8ad}
+.crop-sl input[type=range]{width:100%;accent-color:var(--accent);min-height:28px}
+.crop-sl .val{font-family:var(--f-data);min-width:44px;text-align:right;color:#fff}
+.crop .btn.sm{min-height:34px;padding:4px 10px;font-size:13px}
 .crop-b{padding:10px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
 .crop-b .row2{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .crop .btn{background:#26251f;color:#fff;box-shadow:none}
@@ -407,7 +407,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.8.0";
+const APP_VERSION = "5.9.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -518,8 +518,8 @@ const I18N_EN = {
   "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
   "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
   "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
-  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Ausschnitt":"Crop","Ausschnitt erstellen":"Create crop","Rahmen verschieben, an den Ecken die Größe ändern. Gespeichert wird ein neues Foto, das Original bleibt.":"Drag the frame, resize it at the corners. A new photo is saved, the original stays.",
-  "Quadrat":"Square","Frei":"Free","Vorschlag":"Suggest","Ausschnitt gespeichert":"Crop saved","Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und auf den Thorax ziehen.":"Suggestion placed (assumes head up): check it and drag it onto the thorax.","Kein Falter erkannt. Rahmen bitte selbst setzen.":"No moth detected. Please place the frame yourself.","Als Vorschaubild":"Set as cover","★ Vorschaubild":"★ Cover","★ Vorschaubild · zurücksetzen":"★ Cover · reset","Vorschaubild gesetzt":"Cover photo set","Vorschaubild wieder automatisch":"Cover photo automatic again","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Ausschnitt":"Crop","Ausschnitt erstellen":"Create crop","Bild mit einem Finger verschieben, mit zwei Fingern zoomen und drehen. Gespeichert wird ein neues Foto, das Original bleibt.":"Move the photo with one finger, zoom and rotate with two. A new photo is saved, the original stays.","Zoom":"Zoom","Drehen":"Rotate","gerade":"straighten",
+  "Quadrat":"Square","Frei":"Free","Vorschlag":"Suggest","Ausschnitt gespeichert":"Crop saved","Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und zurechtrücken.":"Suggestion placed (assumes head up): check and adjust it.","Kein Falter erkannt. Bitte selbst ausrichten.":"No moth detected. Please align it yourself.","Als Vorschaubild":"Set as cover","★ Vorschaubild":"★ Cover","★ Vorschaubild · zurücksetzen":"★ Cover · reset","Vorschaubild gesetzt":"Cover photo set","Vorschaubild wieder automatisch":"Cover photo automatic again","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
   "z. B. mini, dunkel, Zuchttier":"e.g. mini, dark, breeder","Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.":"Separate several with commas. Tags show on the animal and in the list, where you can filter by them.",
   "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
   // Zuordnen
@@ -2082,62 +2082,83 @@ function suggestCrop(img){
   return {x:best.cx/sc - side/2, y:ty/sc - side/2, w:side, h:side};
 }
 function cropTool(p, closeViewer){
+  /* Fester Rahmen, das Bild darunter wird verschoben (1 Finger), gezoomt und gedreht (2 Finger oder Regler). */
   const ov = document.createElement("div"); ov.className = "crop";
-  ov.innerHTML = `<div class="crop-h"><b>Ausschnitt erstellen</b><span>Rahmen verschieben, an den Ecken die Größe ändern. Gespeichert wird ein neues Foto, das Original bleibt.</span></div>
-    <div class="crop-stage"><img alt=""><div class="crop-r"><i data-h="nw"></i><i data-h="ne"></i><i data-h="sw"></i><i data-h="se"></i></div></div>
+  ov.innerHTML = `<div class="crop-h"><b>Ausschnitt erstellen</b><span>Bild mit einem Finger verschieben, mit zwei Fingern zoomen und drehen. Gespeichert wird ein neues Foto, das Original bleibt.</span></div>
+    <div class="crop-stage"><img alt=""><div class="crop-f"></div></div>
     <div class="crop-b"><div class="crop-msg" id="crM"></div>
-      <div class="row2"><select id="crV" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k==="thorax"?"selected":""}>${l}</option>`).join("")}</select>
-      <div class="seg" role="group" id="crA"><button type="button" data-a="1" aria-pressed="true">Quadrat</button><button type="button" data-a="0" aria-pressed="false">Frei</button></div></div>
+      <div class="crop-sl"><span>Zoom</span><input type="range" id="crZ" min="0" max="1000" value="500" aria-label="Zoom"><span class="val" id="crZv"></span></div>
+      <div class="crop-sl"><span>Drehen</span><input type="range" id="crR" min="-180" max="180" step="0.5" value="0" aria-label="Drehen"><span class="val" id="crRv">0°</span></div>
+      <div class="row2"><button type="button" class="btn sm" id="crL">↺ 90°</button><button type="button" class="btn sm" id="crRr">↻ 90°</button><button type="button" class="btn sm" id="cr0">gerade</button>
+        <div class="seg" role="group" id="crA"><button type="button" data-a="1" aria-pressed="true">1:1</button><button type="button" data-a="0.8" aria-pressed="false">4:5</button><button type="button" data-a="1.333" aria-pressed="false">4:3</button></div></div>
+      <div class="row2"><select id="crV" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k==="thorax"?"selected":""}>${l}</option>`).join("")}</select></div>
       <div class="btns"><button class="btn" id="crS">Vorschlag</button><button class="btn" id="crX">Abbrechen</button><button class="btn primary" id="crOk">Speichern</button></div></div>`;
   document.body.appendChild(ov);
-  const img = ov.querySelector("img"), stage = ov.querySelector(".crop-stage"), box = ov.querySelector(".crop-r"), msg = ov.querySelector("#crM");
-  let square = true, r = null, map = null;
-  const layout = () => {
-    const W = stage.clientWidth, H = stage.clientHeight, nw = img.naturalWidth, nh = img.naturalHeight; if(!nw) return;
-    const s = Math.min(W/nw, H/nh); map = {s, ox:(W-nw*s)/2, oy:(H-nh*s)/2, nw, nh};
-    box.style.left = (map.ox + r.x*s)+"px"; box.style.top = (map.oy + r.y*s)+"px"; box.style.width = (r.w*s)+"px"; box.style.height = (r.h*s)+"px";
+  const img = ov.querySelector("img"), stage = ov.querySelector(".crop-stage"), fr = ov.querySelector(".crop-f"), msg = ov.querySelector("#crM");
+  const zIn = ov.querySelector("#crZ"), rIn = ov.querySelector("#crR");
+  let aspect = 1, F = null, T = {x:0, y:0, s:1, a:0}, nw = 0, nh = 0, sMin = 0.05, sMax = 8;
+  const frame = () => { const W = stage.clientWidth, H = stage.clientHeight; let fw = Math.min(W*0.86, (H*0.86)*aspect), fh = fw/aspect;
+    F = {x:(W-fw)/2, y:(H-fh)/2, w:fw, h:fh}; Object.assign(fr.style, {left:F.x+"px", top:F.y+"px", width:F.w+"px", height:F.h+"px"}); };
+  const z2s = v => sMin*Math.pow(sMax/sMin, v/1000), s2z = sv => Math.round(1000*Math.log(sv/sMin)/Math.log(sMax/sMin));
+  const draw = () => {
+    img.style.transform = `translate(${T.x}px,${T.y}px) rotate(${T.a}deg) scale(${T.s}) translate(${-nw/2}px,${-nh/2}px)`;
+    zIn.value = s2z(T.s); ov.querySelector("#crZv").textContent = fmtN(T.s / (F.w/Math.max(nw,nh)), 1)+"×";
+    let ad = ((T.a+180)%360+360)%360-180; rIn.value = ad; ov.querySelector("#crRv").textContent = fmtN(ad,1)+"°";
   };
-  const clamp = q => { const mn = Math.max(24, Math.min(map.nw,map.nh)*0.04);
-    q.w = Math.max(mn, Math.min(q.w, map.nw)); q.h = Math.max(mn, Math.min(q.h, map.nh));
-    q.x = Math.max(0, Math.min(q.x, map.nw-q.w)); q.y = Math.max(0, Math.min(q.y, map.nh-q.h)); return q; };
-  const center = () => { const sd = Math.min(img.naturalWidth, img.naturalHeight)*0.4; return {x:(img.naturalWidth-sd)/2, y:(img.naturalHeight-sd)/2, w:sd, h:sd}; };
+  const fc = () => ({x:F.x+F.w/2, y:F.y+F.h/2});
+  const placeOn = q => { const c = fc(); T.s = Math.min(sMax, Math.max(sMin, Math.min(F.w/q.w, F.h/q.h))); T.a = 0;
+    T.x = c.x - (q.x+q.w/2-nw/2)*T.s; T.y = c.y - (q.y+q.h/2-nh/2)*T.s; draw(); };
   const suggest = () => { let q = null; try { q = suggestCrop(img); } catch(e){}
-    msg.textContent = q ? "Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und auf den Thorax ziehen." : "Kein Falter erkannt. Rahmen bitte selbst setzen.";
-    r = clamp(q || center()); if(square){ const sd = Math.min(r.w, r.h); r.w = r.h = sd; r = clamp(r); } layout(); };
-  img.onload = () => { map = {s:1,ox:0,oy:0,nw:img.naturalWidth,nh:img.naturalHeight}; suggest(); };
+    msg.textContent = q ? "Vorschlag gesetzt (geht von Kopf oben aus): bitte prüfen und zurechtrücken." : "Kein Falter erkannt. Bitte selbst ausrichten.";
+    if(!q){ const sd = Math.min(nw,nh)*0.4; q = {x:(nw-sd)/2, y:(nh-sd)/2, w:sd, h:sd}; } placeOn(q); };
+  // um einen Bildschirmpunkt zoomen/drehen
+  const around = (px, py, k, da) => { const r = da*Math.PI/180, dx = T.x-px, dy = T.y-py;
+    T.x = px + k*(dx*Math.cos(r) - dy*Math.sin(r)); T.y = py + k*(dx*Math.sin(r) + dy*Math.cos(r));
+    T.s *= k; T.a += da; };
+  img.onload = () => { nw = img.naturalWidth; nh = img.naturalHeight; Object.assign(img.style, {width:nw+"px", height:nh+"px"}); frame();
+    sMin = Math.min(F.w, F.h)/Math.max(nw, nh)*0.5; sMax = Math.max(sMin*20, F.w/40); suggest(); };
   img.src = photoSrc(p);
-  const ro = new ResizeObserver(() => r && layout()); ro.observe(stage);
-  let drag = null;
-  box.addEventListener("pointerdown", e => { e.preventDefault(); box.setPointerCapture(e.pointerId); drag = {h:e.target.dataset.h||"move", x:e.clientX, y:e.clientY, r:{...r}}; });
-  box.addEventListener("pointermove", e => { if(!drag || !map) return;
-    const dx = (e.clientX-drag.x)/map.s, dy = (e.clientY-drag.y)/map.s, o = drag.r; let q = {...o};
-    if(drag.h==="move"){ q.x = o.x+dx; q.y = o.y+dy; }
-    else {
-      const left = drag.h.includes("w"), top = drag.h.includes("n");
-      let nwv = o.w + (left ? -dx : dx), nhv = o.h + (top ? -dy : dy);
-      if(square){ const sd = Math.max(nwv, nhv); nwv = nhv = sd; }
-      nwv = Math.max(24, Math.min(nwv, left ? o.x+o.w : map.nw-o.x)); nhv = Math.max(24, Math.min(nhv, top ? o.y+o.h : map.nh-o.y));
-      if(square){ const sd = Math.min(nwv, nhv); nwv = nhv = sd; }
-      q.w = nwv; q.h = nhv; q.x = left ? o.x+o.w-nwv : o.x; q.y = top ? o.y+o.h-nhv : o.y;
-    }
-    r = clamp(q); layout(); });
-  const end = () => { drag = null; }; box.addEventListener("pointerup", end); box.addEventListener("pointercancel", end);
-  ov.querySelectorAll("#crA [data-a]").forEach(b => b.onclick = () => { square = b.dataset.a==="1";
-    ov.querySelectorAll("#crA [data-a]").forEach(x=>x.setAttribute("aria-pressed", x===b));
-    if(square && r){ const sd = Math.min(r.w, r.h); r.w = r.h = sd; r = clamp(r); layout(); } });
+  const ro = new ResizeObserver(() => { if(!nw) return; const c0 = fc(); frame(); const c1 = fc(); T.x += c1.x-c0.x; T.y += c1.y-c0.y; draw(); }); ro.observe(stage);
+  const P = new Map(); let g0 = null;
+  const pair = () => { const [a,b] = [...P.values()]; return {mx:(a.x+b.x)/2, my:(a.y+b.y)/2, d:Math.hypot(b.x-a.x,b.y-a.y), an:Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI}; };
+  const loc = e => { const R = stage.getBoundingClientRect(); return {x:e.clientX-R.left, y:e.clientY-R.top}; };
+  stage.addEventListener("pointerdown", e => { e.preventDefault(); stage.setPointerCapture(e.pointerId); P.set(e.pointerId, loc(e)); g0 = P.size===2 ? pair() : null; });
+  stage.addEventListener("pointermove", e => { if(!P.has(e.pointerId)) return; const prev = P.get(e.pointerId), cur = loc(e);
+    if(P.size===1){ T.x += cur.x-prev.x; T.y += cur.y-prev.y; P.set(e.pointerId, cur); draw(); return; }
+    P.set(e.pointerId, cur); if(P.size!==2 || !g0) return; const g = pair();
+    T.x += g.mx-g0.mx; T.y += g.my-g0.my;
+    let k = g.d/(g0.d||1); k = Math.min(sMax/T.s, Math.max(sMin/T.s, k));
+    around(g.mx, g.my, k, g.an-g0.an); g0 = g; draw(); });
+  const up = e => { P.delete(e.pointerId); g0 = P.size===2 ? pair() : null; };
+  stage.addEventListener("pointerup", up); stage.addEventListener("pointercancel", up);
+  stage.addEventListener("wheel", e => { e.preventDefault(); const c = loc(e); const k = Math.min(sMax/T.s, Math.max(sMin/T.s, Math.exp(-e.deltaY*0.0015))); around(c.x, c.y, k, 0); draw(); }, {passive:false});
+  zIn.oninput = () => { const c = fc(); around(c.x, c.y, z2s(+zIn.value)/T.s, 0); draw(); };
+  rIn.oninput = () => { const c = fc(); let cur = ((T.a+180)%360+360)%360-180; around(c.x, c.y, 1, +rIn.value - cur); draw(); };
+  ov.querySelector("#crL").onclick = () => { const c = fc(); around(c.x, c.y, 1, -90); draw(); };
+  ov.querySelector("#crRr").onclick = () => { const c = fc(); around(c.x, c.y, 1, 90); draw(); };
+  ov.querySelector("#cr0").onclick = () => { const c = fc(); around(c.x, c.y, 1, -T.a); draw(); };
+  ov.querySelectorAll("#crA [data-a]").forEach(b => b.onclick = () => { aspect = +b.dataset.a;
+    ov.querySelectorAll("#crA [data-a]").forEach(x=>x.setAttribute("aria-pressed", x===b)); const c0 = fc(); frame(); const c1 = fc(); T.x += c1.x-c0.x; T.y += c1.y-c0.y; draw(); });
   const close = () => { ro.disconnect(); ov.remove(); };
   ov.querySelector("#crS").onclick = suggest;
   ov.querySelector("#crX").onclick = close;
   ov.querySelector("#crOk").onclick = async () => {
-    if(!r) return; const btn = ov.querySelector("#crOk"); btn.disabled = true;
+    if(!nw) return; const btn = ov.querySelector("#crOk"); btn.disabled = true;
     try {
-      const sc = Math.min(1, 1200/Math.max(r.w, r.h)); const c = document.createElement("canvas");
-      c.width = Math.round(r.w*sc); c.height = Math.round(r.h*sc);
-      c.getContext("2d").drawImage(img, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
+      // Auflösung: so viele Pixel wie das Original im Rahmen hergibt, höchstens 1200 px
+      const native = F.w / T.s; const outW = Math.round(Math.max(400, Math.min(1200, native))), k = outW / F.w;
+      const c = document.createElement("canvas"); c.width = outW; c.height = Math.round(F.h*k);
+      const ctx = c.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.imageSmoothingQuality = "high";
+      ctx.scale(k, k); ctx.translate(-F.x, -F.y); ctx.translate(T.x, T.y); ctx.rotate(T.a*Math.PI/180); ctx.scale(T.s, T.s);
+      ctx.drawImage(img, -nw/2, -nh/2);
       const blob = await new Promise(res => c.toBlob(res, "image/jpeg", 0.9));
       const ref = await store.uploadPhoto(blob);
+      // Bildpunkt in der Rahmenmitte (für spätere Nachvollziehbarkeit)
+      const fcx = F.x+F.w/2-T.x, fcy = F.y+F.h/2-T.y, ar = -T.a*Math.PI/180;
+      const ix = (fcx*Math.cos(ar) - fcy*Math.sin(ar))/T.s + nw/2, iy = (fcx*Math.sin(ar) + fcy*Math.cos(ar))/T.s + nh/2;
       await store.put("photos", {...ref, subjectType:p.subjectType, subjectId:p.subjectId, view:ov.querySelector("#crV").value, takenAt:p.takenAt, cropOf:p.id,
-        crop:{x:+(r.x/map.nw).toFixed(4), y:+(r.y/map.nh).toFixed(4), w:+(r.w/map.nw).toFixed(4), h:+(r.h/map.nh).toFixed(4)}});
+        crop:{cx:+(ix/nw).toFixed(4), cy:+(iy/nh).toFixed(4), w:+((F.w/T.s)/nw).toFixed(4), rot:+(((T.a+180)%360+360)%360-180).toFixed(1), aspect}});
       close(); closeViewer && closeViewer(); toast("Ausschnitt gespeichert");
     } catch(e){ btn.disabled = false; msg.textContent = "Speichern fehlgeschlagen: " + (e.message||e); }
   };
