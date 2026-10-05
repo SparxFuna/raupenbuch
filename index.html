@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Raupenbuch</title>
 <meta name="description" content="Zuchttagebuch für Raupen und Falter – offline auf deinem Gerät.">
-<meta name="theme-color" content="#ECEEE7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#F2EFE7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#111412" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -271,6 +271,109 @@ button.pill.tag{cursor:pointer}
   .lb i,.lb span{line-height:1.25}
   .lb code{margin-top:auto;font-family:Courier,monospace;color:#555}
 }
+
+/* ===== Look 2: Feldbuch, lebendiger ===== */
+:root{
+  --bg:#F2EFE7; --surface:#FFFDF8; --sunk:#E9E5DA; --ink:#1F1D18; --muted:#6A6455; --line:#E2DDD0;
+  --accent:#2F5E4D; --accent-ink:#FFFFFF; --accent-soft:#DDEBE3;
+  --ochre:#9A6410; --ochre-soft:#F5E6C6;
+  --good:#3D6E35; --good-soft:#E1EED9; --warn:#8F5B00; --warn-soft:#F6E5BF; --crit:#A63D2B; --crit-soft:#F6DED7;
+  --larva:#3F7F33; --larva-soft:#E1EFD7; --burrow:#7A5230; --burrow-soft:#EFE3D3; --pupa:#A2482A; --pupa-soft:#F5DDD2;
+  --imago:#5E4596; --imago-soft:#E8E1F5; --egg:#8A7A2C; --egg-soft:#F0EBCF; --dead:#7B776E; --dead-soft:#E7E4DD;
+  --shadow:0 1px 2px rgba(40,32,15,.06),0 6px 18px rgba(40,32,15,.07);
+  --r:16px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121411; --surface:#1B1E1A; --sunk:#252923; --ink:#ECEAE2; --muted:#A39E90; --line:#2E322B;
+  --accent:#8CC5AE; --accent-ink:#0E1F18; --accent-soft:#1E3129;
+  --ochre:#E3B55A; --ochre-soft:#3A2F17;
+  --larva:#95CF7F; --larva-soft:#1F2D19; --burrow:#D2A57B; --burrow-soft:#33281C; --pupa:#EE9A78; --pupa-soft:#3A2219;
+  --imago:#BCA6F0; --imago-soft:#2A2340; --egg:#D8C973; --egg-soft:#2E2A15; --dead:#A8A398; --dead-soft:#2A2A26;
+  --crit:#EE8C76; --crit-soft:#3C221C; --good:#94CC86; --good-soft:#1E2C1B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);}}
+:root[data-theme="dark"]{
+  --bg:#121411; --surface:#1B1E1A; --sunk:#252923; --ink:#ECEAE2; --muted:#A39E90; --line:#2E322B;
+  --accent:#8CC5AE; --accent-ink:#0E1F18; --accent-soft:#1E3129;
+  --ochre:#E3B55A; --ochre-soft:#3A2F17;
+  --larva:#95CF7F; --larva-soft:#1F2D19; --burrow:#D2A57B; --burrow-soft:#33281C; --pupa:#EE9A78; --pupa-soft:#3A2219;
+  --imago:#BCA6F0; --imago-soft:#2A2340; --egg:#D8C973; --egg-soft:#2E2A15; --dead:#A8A398; --dead-soft:#2A2A26;
+  --crit:#EE8C76; --crit-soft:#3C221C; --good:#94CC86; --good-soft:#1E2C1B;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.25);}
+.card,.list,.stat{border:0;box-shadow:var(--shadow)}
+.list{border-radius:var(--r)}
+.row{border-top-color:var(--line);gap:14px;padding:12px 16px}
+.row .t{font-size:15.5px}
+.sec{gap:12px}
+.sec-h h2{font-family:var(--f-name);font-style:italic;font-weight:600;font-size:20px;letter-spacing:0;text-transform:none;color:var(--ink)}
+.pagehead h1{font-size:34px}
+.top{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:0}
+.iconbtn{border:0;background:var(--surface);box-shadow:var(--shadow)}
+.tabs{border-top:0;box-shadow:0 -1px 0 var(--line),0 -8px 24px rgba(40,32,15,.06);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs button{border-radius:14px;padding:6px 0 5px}
+.tabs button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.btn{border:0;background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.btn.primary{box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 35%,transparent)}
+.btn.ghost{box-shadow:none;background:none}
+.btn .ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn.cta{width:100%;justify-content:center;min-height:52px;font-size:16px;border-radius:14px}
+/* Stadium-Farben */
+.st-larva{--c:var(--larva);--cs:var(--larva-soft)} .st-burrow{--c:var(--burrow);--cs:var(--burrow-soft)} .st-pupa{--c:var(--pupa);--cs:var(--pupa-soft)}
+.st-imago{--c:var(--imago);--cs:var(--imago-soft)} .st-egg{--c:var(--egg);--cs:var(--egg-soft)} .st-dead{--c:var(--dead);--cs:var(--dead-soft)}
+.st-unk,.st-neutral{--c:var(--muted);--cs:var(--sunk)} .st-accent{--c:var(--accent);--cs:var(--accent-soft)} .st-crit{--c:var(--crit);--cs:var(--crit-soft)}
+.pill.st{background:var(--cs);color:var(--c);font-family:var(--f-body);font-weight:600;padding:2px 10px 2px 8px;gap:6px}
+.pill.st i{width:7px;height:7px;border-radius:50%;background:var(--c);display:inline-block}
+/* Avatar in Listen */
+.av{position:relative;width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--cs);color:var(--c)}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.av svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.av b{position:absolute;right:-3px;bottom:-3px;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:600;background:var(--surface);color:var(--muted);box-shadow:0 0 0 2px var(--surface)}
+.av b.f{color:var(--crit)} .av b.m{color:var(--accent)}
+/* Übersicht */
+.hero{display:flex;flex-direction:column;gap:14px}
+.hero .kick{font-family:var(--f-data);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hero h1{font-family:var(--f-name);font-size:32px;font-weight:600;margin:0;line-height:1.1}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{border-radius:var(--r);padding:14px 16px;background:var(--cs);color:var(--c);display:flex;flex-direction:column;gap:2px;position:relative;overflow:hidden}
+.kpi b{font-family:var(--f-name);font-size:40px;line-height:1;font-weight:600}
+.kpi span{font-size:13px;font-weight:600}
+.kpi svg{position:absolute;right:10px;top:10px;width:30px;height:30px;stroke:currentColor;fill:none;stroke-width:1.6;opacity:.55;stroke-linecap:round;stroke-linejoin:round}
+.stats .stat b{font-family:var(--f-name);font-size:26px}
+.stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stat{padding:12px 14px;gap:2px}
+/* Tierseite */
+.cover{position:relative;border-radius:20px;overflow:hidden;aspect-ratio:16/11;background:var(--cs);box-shadow:var(--shadow)}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .shade{position:absolute;inset:auto 0 0 0;padding:40px 18px 16px;background:linear-gradient(transparent,rgba(12,10,6,.72));color:#fff;display:flex;flex-direction:column;gap:2px}
+.cover .shade h1{font-family:var(--f-name);font-size:34px;margin:0;color:#fff;line-height:1.05}
+.cover .shade .sp{opacity:.85}
+.cover.noimg{aspect-ratio:auto;padding:22px 18px;display:flex;align-items:center;gap:16px;color:var(--c)}
+.cover.noimg .glyph{width:64px;height:64px;border-radius:50%;background:var(--surface);display:grid;place-items:center;flex:none}
+.cover.noimg .glyph svg{width:36px;height:36px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cover.noimg h1{font-family:var(--f-name);font-size:32px;margin:0;color:var(--ink);line-height:1.05}
+.stepper{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:0;padding:12px 6px 10px;background:var(--surface);border-radius:var(--r);box-shadow:var(--shadow)}
+.stepper .s{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;font-size:10.5px;color:var(--muted);font-weight:500}
+.stepper .s::before{content:"";position:absolute;top:8px;left:-50%;width:100%;height:3px;background:var(--line);z-index:0}
+.stepper .s:first-child::before{display:none}
+.stepper .s.done::before,.stepper .s.cur::before{background:var(--c)}
+.stepper .s i{width:18px;height:18px;border-radius:50%;background:var(--surface);border:3px solid var(--line);z-index:1;box-sizing:border-box}
+.stepper .s.done i{background:var(--c);border-color:var(--c)}
+.stepper .s.cur i{width:22px;height:22px;margin-top:-2px;background:var(--surface);border:6px solid var(--c)}
+.stepper .s.cur{color:var(--c);font-weight:700}
+.quick .btn{flex-direction:row;gap:10px;font-weight:600;min-height:52px;color:var(--ink)}
+.quick .btn .qi{width:30px;height:30px;border-radius:10px;display:grid;place-items:center;background:var(--cs);color:var(--c);flex:none}
+.quick .btn .qi svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.quick .btn .qi.txt{font-size:14px;font-weight:700}
+.tl .ev .dot::after{border-color:var(--c,var(--accent))}
+.tl .ev.stagechg .dot::after{background:var(--c,var(--accent));border-color:var(--c,var(--accent))}
+.tl .ev.death .dot::after{border-color:var(--dead);background:var(--dead)}
+.tl .ev.falter .dot::after{border-color:var(--imago);background:var(--imago)}
+.tl .ev.est .dot::after{background:var(--surface)}
+.track .w{background:var(--imago-soft);border-color:var(--imago)}
+.uncertain{border:0;background:var(--imago-soft);box-shadow:none}
+.uncertain .list{box-shadow:none}
+.pill.tag{border-color:var(--ochre)}
+.photos .ph{border-radius:12px}
+.chart svg path[fill-opacity]{fill-opacity:.18}
 </style>
 </head>
 <body>
@@ -281,7 +384,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.5.0";
+const APP_VERSION = "5.6.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -392,7 +495,7 @@ const I18N_EN = {
   "Häutung → L2":"Moult → L2","Stadium festlegen":"Set stage","Stadium korrigieren":"Correct stage","Anderes …":"Other …","Ereignis eintragen":"Add event",
   "Schlupfprognose":"Eclosion forecast","Noch nicht zugeordnet":"Not yet assigned","Fotos":"Photos","+ Foto":"+ Photo","Verlauf":"History","Tier bearbeiten":"Edit animal","Etikett":"Label",
   "≈ geschätzt · + läuft noch":"≈ estimated · + ongoing","Stadium":"Stage","Art Median":"Species median","g höchstes Gewicht":"g max. weight",
-  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag",
+  "Tage Puppenruhe ab Verpuppung":"days pupal period from pupation","Tage Puppenruhe ab Eingraben":"days pupal period from burrowing","Tage als Falter":"days as moth","Tage als Falter (heute mitgezählt)":"days as moth (incl. today)","Tags":"Tags","+ Tag":"+ Tag","Guten Tag!":"Hello!","Raupen":"Caterpillars","Puppen & Vorpuppen":"Pupae & prepupae","Erde":"Soil",
   "z. B. mini, dunkel, Zuchttier":"e.g. mini, dark, breeder","Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.":"Separate several with commas. Tags show on the animal and in the list, where you can filter by them.",
   "Tipp: Mit einem Startdatum am Zuchtansatz zählt auch das erste Stadium.":"Tip: with a start date on the brood, the first stage is counted too.",
   // Zuordnen
@@ -504,7 +607,7 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
-  [/^(\d+) Tiere$/, "$1 animals"], [/^Falter ([A-Z])$/, "Moth $1"], [/^1 Tier$/, "1 animal"], [/^(\d+) Ansätze$/, "$1 broods"], [/^(\d+) im Katalog$/, "$1 in catalogue"],
+  [/^(\d+) Tiere$/, "$1 animals"], [/^Falter ([A-Z])$/, "Moth $1"], [/^1 Tier$/, "1 animal"], [/^(\d+) Ansätze$/, "$1 broods"], [/^(\d+) Zuchtansätze?$/, "$1 brood(s)"], [/^(\d+) im Katalog$/, "$1 in catalogue"],
   [/^(\d+) Falter noch nicht zugeordnet$/, "$1 moths not yet assigned"], [/^(\d+) Wägungen$/, "$1 weighings"], [/^(\d+) Tagen$/, "$1 days ago"],
   [/^(\d+) Tier\(e\): (.*)$/, "$1 animal(s): $2"], [/^Tag (\d+)$/, "Day $1"], [/^Zuordnen \((\d+)\)$/, "Assign ($1)"], [/^Version (.+)$/, "Version $1"],
   [/^Art: Median (.+) \(n=(\d+)\), (kürzer|länger|gleich)$/, (m,a,b,c)=>`Species: median ${a} (n=${b}), ${({kürzer:"shorter",länger:"longer",gleich:"equal"})[c]}`],
@@ -1003,16 +1106,30 @@ function wireConfirm(root, triggerSel, onOk){
 }
 
 /* gemeinsame Darstellungen */
+const STG = k => k==="?"||!k ? "unk" : k==="ei" ? "egg" : /^L\d/.test(k) ? "larva" : k==="vorpuppe" ? "burrow" : k==="puppe" ? "pupa" : k==="falter" ? "imago" : "unk";
+const IC2 = {
+  larva:'<path d="M3.5 15.5c0-2.2 1.6-3.4 3.2-3.4s2.1 1.1 3.6 1.1 2.1-2.3 3.7-2.3 3.2 1.2 3.2 3.4"/><circle cx="19" cy="13" r="2"/><path d="M6 16v2.2M9.6 15v2.2M13.2 14.8v2.2"/>',
+  burrow:'<path d="M3 15h18M6 18.5h12M9 21.5h6"/><path d="M12 3v8M8.8 8l3.2 3.2L15.2 8"/>',
+  pupa:'<path d="M12 3c3.2 0 5 3.6 5 8.5S15 21 12 21s-5-4.6-5-9.5S8.8 3 12 3z"/><path d="M8 9.5h8M7.4 13h9.2M8.2 16.5h7.6"/>',
+  imago:IC.moth, egg:'<ellipse cx="12" cy="13" rx="6" ry="8"/>', unk:'<circle cx="12" cy="12" r="8"/><path d="M9.8 9.6a2.3 2.3 0 1 1 3.3 2.1c-.7.4-1.1.9-1.1 1.7M12 16.8v.2"/>',
+  dead:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>', note:'<path d="M4 20h4.2L19.5 8.7l-4.2-4.2L4 15.8z"/>', moult:'<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12.5l8 4 8-4M4 17l8 4 8-4"/>',
+  release:'<path d="M12 21V9M7 14l5-5 5 5"/><path d="M5 4h14"/>', pin:'<path d="M12 2.5v5M8 7.5h8l-1.2 6H9.2z"/><path d="M12 13.5v8"/>', more:IC.more, scale:'<path d="M5 20h14l-2.2-11H7.2z"/><circle cx="12" cy="5.8" r="2"/>'
+};
+const ic2 = (k, cls="") => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden="true">${IC2[k]||""}</svg>`;
+function avatar(ind){
+  const st = statusOf(ind); const g = st==="tot" ? "dead" : STG(currentStage(ind));
+  const ph = photosOf("individual", ind.id).slice(-1)[0];
+  return `<span class="av st-${g}">${ph?`<img src="${esc(photoSrc(ph))}" alt="">`:ic2(g)}<b class="${ind.sex||"u"}">${SEXS[ind.sex||"u"]}</b></span>`;
+}
 const sexBadge = s => `<span class="sex ${s||"u"}" title="${SEXL[s||"u"]}">${SEXS[s||"u"]}</span>`;
 function stagePill(ind){
   const st = statusOf(ind);
-  if(st==="tot") return `<span class="pill crit">tot</span>`;
-  if(st==="praepariert") return `<span class="pill falter">präpariert</span>`;
-  if(st==="abgegeben") return `<span class="pill">abgegeben</span>`;
-  if(st==="freigelassen") return `<span class="pill falter">freigelassen</span>`;
+  if(st==="tot") return `<span class="pill st st-dead"><i></i>tot</span>`;
+  if(st==="praepariert") return `<span class="pill st st-imago"><i></i>präpariert</span>`;
+  if(st==="abgegeben") return `<span class="pill st st-neutral"><i></i>abgegeben</span>`;
+  if(st==="freigelassen") return `<span class="pill st st-imago"><i></i>freigelassen</span>`;
   const s = currentStage(ind);
-  if(s==="?") return `<span class="pill">Stadium ?</span>`;
-  return `<span class="pill ${s==="falter"?"falter":"stage"}">${stageLabel(s)}</span>`;
+  return `<span class="pill st st-${STG(s)}"><i></i>${s==="?"?"Stadium ?":stageLabel(s)}</span>`;
 }
 const tagsOf = i => Array.isArray(i?.tags) ? i.tags : [];
 function allTags(){ const c = new Map(); for(const i of all("individuals")) for(const t of tagsOf(i)) c.set(t, (c.get(t)||0)+1); return [...c.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"de")).map(x=>x[0]); }
@@ -1020,7 +1137,7 @@ function parseTags(str){ const out = []; for(const t of String(str||"").split(/[
 const tagMini = i => tagsOf(i).map(t=>`<span class="tagmini">#${esc(t)}</span>`).join("");
 function indRow(ind, extra=""){
   const sp = speciesOfInd(ind); const b = S.broods[ind.broodId];
-  return `<button class="row" data-go="animal:${ind.id}">${sexBadge(ind.sex)}<span class="main"><span class="t">${esc(ind.name)}${tagMini(ind)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
+  return `<button class="row" data-go="animal:${ind.id}">${avatar(ind)}<span class="main"><span class="t">${esc(ind.name)}${tagMini(ind)}</span><span class="s">${extra || `<span class="sp">${esc(sp?.sci||"")}</span> · ${esc(b?.name||"")}`}</span></span><span class="end">${stagePill(ind)}</span></button>`;
 }
 function photoGrid(list, addAct, addData=""){
   return `<div class="photos">${list.map(p=>`<button class="ph" data-act="viewPhoto" data-id="${p.id}"><img src="${esc(photoSrc(p))}" alt="${esc(PVIEWS[p.view]||"Foto")}" loading="lazy"><span>${esc(PVIEWS[p.view]||"Foto")}</span></button>`).join("")}${addAct?`<button class="ph add" data-act="${addAct}" ${addData}>+ Foto</button>`:""}</div>`;
@@ -1054,13 +1171,17 @@ VIEWS.home = () => {
     <div class="btns"><button class="btn primary" data-act="newBrood">Zuchtansatz anlegen</button></div></section>`;
     return h;
   }
+  const larvae = alive.filter(i=>STG(currentStage(i))==="larva").length;
+  h += `<section class="hero"><div><div class="kick">${dDE(todayISO())} · ${broods.length} Zuchtansatz${broods.length===1?"":"e"}</div><h1>Guten Tag!</h1></div>
+    <div class="kpis">
+      <div class="kpi st-larva">${ic2("larva")}<b>${larvae}</b><span>Raupen</span></div>
+      <div class="kpi st-pupa">${ic2("pupa")}<b>${pupae.length}</b><span>Puppen &amp; Vorpuppen</span></div>
+      <div class="kpi st-imago">${ic2("imago")}<b>${inds.filter(i=>firstEv(i,"falterschlupf")).length}</b><span>Falter</span></div>
+      <div class="kpi st-dead">${ic2("dead")}<b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></div>
+    </div>
+    <button class="btn primary cta" data-act="eclosion">${ic2("imago","ic")}Falterschlupf erfassen</button>
+    <button class="btn block" data-act="multiEvent">Ereignis für mehrere</button></section>`;
   h += backupCard();
-  h += `<div class="stats">
-    <div class="stat"><b>${alive.length}</b><span>Tiere aktiv</span></div>
-    <div class="stat"><b>${pupae.length}</b><span>Puppen</span></div>
-    <div class="stat"><b>${inds.filter(i=>firstEv(i,"falterschlupf")).length}</b><span>Falter</span></div>
-    <div class="stat"><b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></div></div>`;
-  h += `<div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" data-act="multiEvent">Ereignis für mehrere</button></div>`;
   if(unresolved.length) h += `<section class="uncertain"><b>${unresolved.length} Falter noch nicht zugeordnet</b><span class="small muted">Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.</span><div><button class="btn" data-tab="imagos">Zuordnen</button></div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Schlupffenster</h2><span class="small muted">aus deinen bisherigen Puppenruhen</span></div>`;
   if(fcs.length) h += `<div class="list">${fcs.map(([i,f])=>forecastRow(i,f)).join("")}</div>`;
@@ -1251,10 +1372,17 @@ VIEWS.animal = r => {
   const i = S.individuals[r.id]; if(!i) return `<div class="empty">Dieses Tier existiert nicht mehr.</div>`;
   const b = S.broods[i.broodId]; const sp = speciesOfBrood(b); const cont = S.containers[i.containerId]; const loc = cont && S.locations[cont.locationId];
   const st = currentStage(i); const alive = isAlive(i);
-  let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1>
+  const g = statusOf(i)==="tot" ? "dead" : STG(st); const cph = photosOf("individual", i.id).slice(-1)[0];
+  const SX = ["L1","L2","L3","L4","L5","vorpuppe","puppe","falter"]; const SXL = {vorpuppe:"Erde",puppe:"Puppe",falter:"Falter"};
+  const curI = SX.indexOf(st), maxI = SX.indexOf(STAGES[maxStageIdx(i)]?.k);
+  const stepper = `<div class="stepper st-${g}">${SX.map((k,ix)=>`<span class="s ${ix===curI && alive ? "cur" : ix<=Math.max(curI,maxI) ? "done" : ""}"><i></i>${SXL[k]||k}</span>`).join("")}</div>`;
+  let h = (cph ? `<div class="cover st-${g}"><img src="${esc(photoSrc(cph))}" alt=""><div class="shade"><span class="sp">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1></div></div>`
+    : `<div class="cover noimg st-${g}"><span class="glyph">${ic2(g)}</span><div><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1></div></div>`)
+    + `<div class="pagehead">
     <div class="meta">${sexBadge(i.sex)}<span class="small">${SEXL[i.sex||"u"]}</span>${stagePill(i)}<button class="pill" data-go="brood:${b?.id}" style="border:0;cursor:pointer">${esc(b?.name||"")}</button>${cont?`<span class="pill">${esc(cont.name)}${loc?" · "+esc(loc.name):""}</span>`:""}</div>
     <div class="chips">${tagsOf(i).map(t=>`<button class="pill tag" data-act="tagSheet" data-id="${i.id}">#${esc(t)}</button>`).join("")}<button class="pill tag add" data-act="tagSheet" data-id="${i.id}">+ Tag</button></div>
     ${i.notes?`<p class="muted" style="margin:0">${esc(i.notes)}</p>`:""}</div>`;
+  h += stepper;
   if(alive){
     const q = [];
     const si = SIDX[st];
@@ -1268,7 +1396,8 @@ VIEWS.animal = r => {
     q.push(["tod","Gestorben"],["notiz","Notiz"]);
     if(si!==undefined) q.push(["stadium","Stadium korrigieren"]);
     q.push(["any","Anderes …"]);
-    h += `<div class="quick">${q.map(([t,l,x=""])=>`<button class="btn" data-act="${t==="eclosion1"?"eclosion":"quickEv"}" data-t="${t}" data-ind="${i.id}" ${x}>${l}</button>`).join("")}</div>`;
+    const QI = {haeutung:["moult","larva"],eingegraben:["burrow","burrow"],verpuppt:["pupa","pupa"],eclosion1:["imago","imago"],freigelassen:["release","imago"],praepariert:["pin","imago"],tod:["dead","dead"],notiz:["note","accent"],stadium:["moult","neutral"],any:["more","neutral"],geschlecht:["","accent"]};
+    h += `<div class="quick">${q.map(([t,l,x=""])=>{ const [ik,ig]=QI[t]||["more","neutral"]; return `<button class="btn" data-act="${t==="eclosion1"?"eclosion":"quickEv"}" data-t="${t}" data-ind="${i.id}" ${x}><span class="qi st-${ig} ${ik?"":"txt"}">${ik?ic2(ik):"♀♂"}</span>${l}</button>`; }).join("")}</div>`;
   } else {
     h += `<div class="btns"><button class="btn" data-act="quickEv" data-t="any" data-ind="${i.id}">Ereignis eintragen</button></div>`;
   }
@@ -1289,7 +1418,8 @@ VIEWS.animal = r => {
 function timeline(evs){
   return `<div class="tl">${[...evs].sort((a,b)=>ms(b.t0)-ms(a.t0) || (b.createdAt||"").localeCompare(a.createdAt||"")).map(e=>{
     const cls = (e.type==="tod"?"death": e.type==="falterschlupf"?"falter": ET[e.type]?.stage?"stagechg":"") + (e.data?.est?" est":"");
-    return `<button class="ev ${cls}" data-act="editEvent" data-id="${e.id}"><span class="dot"></span><span class="body"><span class="w">${esc(fmtTime(e))}</span><br><span class="x">${esc(evTitle(e))}</span>${e.note?`<br><span class="n">${esc(e.note)}</span>`:""}</span></button>`;
+    const sk = ET[e.type]?.stage && ET[e.type].stage(e.data||{}); const stc = sk ? " st-"+STG(sk) : "";
+    return `<button class="ev ${cls}${stc}" data-act="editEvent" data-id="${e.id}"><span class="dot"></span><span class="body"><span class="w">${esc(fmtTime(e))}</span><br><span class="x">${esc(evTitle(e))}</span>${e.note?`<br><span class="n">${esc(e.note)}</span>`:""}</span></button>`;
   }).join("")}</div>`;
 }
 
