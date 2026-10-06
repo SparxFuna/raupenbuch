@@ -398,8 +398,15 @@ button.pill.tag{cursor:pointer}
 .crop .seg button[aria-pressed="true"]{background:#47453c;color:#fff}
 .crop-msg{font-size:13px;color:#e3b55a;min-height:18px}
 .crop-eye{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #fff;background:#e3b55a;pointer-events:none;box-shadow:0 0 0 2px rgba(0,0,0,.5)}
+.crop-eye.ok{width:22px;height:22px;margin:-11px 0 0 -11px;background:none;border:2px solid #e3b55a;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
 .crop-g{position:absolute;opacity:.38;pointer-events:none;object-fit:cover;mix-blend-mode:screen}
 .crop .btn[aria-pressed="true"]{background:#47453c}
+.rbg{border:1px solid var(--line);border-radius:14px;padding:10px;margin:10px 0;display:flex;flex-direction:column;gap:8px;background:var(--surface)}
+.rbg-h{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.rbg-p{display:flex;gap:6px;flex-wrap:wrap}
+.rbg-t{appearance:none;border:2px solid var(--accent);padding:0;border-radius:10px;overflow:hidden;width:64px;height:64px;background:none;cursor:pointer}
+.rbg-t img{width:100%;height:100%;object-fit:cover;display:block}
+.rbg-t[aria-pressed="false"]{border-color:var(--line);opacity:.35}
 .rid-q{display:flex;gap:12px;align-items:center;margin:4px 0 10px}
 .rid-q img{width:84px;height:84px;border-radius:12px;object-fit:cover;flex:none}
 .rid-q>span{display:flex;flex-direction:column;gap:4px}
@@ -419,7 +426,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.12.0";
+const APP_VERSION = "5.13.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -546,7 +553,15 @@ const I18N_EN = {
   "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?":"No convincing match. Maybe a different crop, or a moth without a thorax photo?",
   "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an.":"Close call: the top matches are near each other. Look at the pictures carefully.",
   "Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.":"Similarity 0–100 %. What matters is the gap between matches, not the absolute value.",
-  "Foto hier speichern":"Save photo here","Vorlage":"Guide",
+  "Foto hier speichern":"Save photo here","Augen finden":"Find eyes","Weiter":"Next","Überspringen":"Skip","Rest überspringen":"Skip the rest",
+  "Augen automatisch gefunden. Liegen die gelben Punkte auf den Augen? Wenn nicht: „Augen antippen“.":"Eyes found automatically. Are the yellow circles on the eyes? If not: “Tap eyes”.",
+  "Tippe einmal auf den Totenkopf, dann sucht die App die Augen dort.":"Tap the skull once and the app will look for the eyes there.",
+  "Dort keine Augen gefunden. Tippe genauer auf den Totenkopf oder nimm „Augen antippen“.":"No eyes found there. Tap more precisely on the skull or use “Tap eyes”.",
+  "Tippe einmal auf den Totenkopf: Die App sucht dort die beiden Augenpunkte und richtet danach aus. Liegen die gelben Kreise nicht auf den Augen: „Augen antippen“.":"Tap the skull once: the app looks for the two eye spots there and aligns the photo. If the yellow circles aren't on the eyes: “Tap eyes”.",
+  "Mehrere Fotos sortieren":"Sort several photos","Fotos wählen":"Choose photos","Fotos sortieren":"Sort photos","Nicht speichern":"Don't save","Kein Vergleichsfoto vorhanden.":"No comparison photo available.",
+  "Passt zu keinem Falter mit Thoraxfoto. Vielleicht einer ohne Foto?":"Doesn't match any moth with a thorax photo. Maybe one without a photo?","Keine Fotos ausgerichtet":"No photos aligned","Nichts gespeichert":"Nothing saved",
+  "Wähle beliebig viele Falterfotos. Jedes wird kurz ausgerichtet (die App sucht die Augenpunkte selbst, du prüfst nur). Danach fasst die App Fotos, die sehr wahrscheinlich dasselbe Tier zeigen, zu Gruppen zusammen und schlägt vor, welcher Falter es ist. Gespeichert wird erst, wenn du eine Gruppe einem Falter zuordnest.":"Choose as many moth photos as you like. Each is aligned briefly (the app looks for the eye spots itself, you just check). Then the app groups photos that very likely show the same animal and suggests which moth it is. Nothing is saved until you assign a group to a moth.",
+  "Am besten Fotos von oben, auf denen der Totenkopf gut zu sehen ist. Das Aufnahmedatum wird mitgelesen, Falter die da noch nicht geschlüpft waren, werden nicht vorgeschlagen.":"Photos from above with the skull clearly visible work best. The capture date is read too; moths that hadn't eclosed by then are not suggested.","Vorlage":"Guide",
   "Am einfachsten: „Augen antippen“ und die beiden dunklen Augenpunkte des Totenkopfs antippen. Oder von Hand deckungsgleich auf die durchscheinende Vorlage legen.":"Easiest: “Tap eyes” and tap the two dark eye spots of the skull. Or line it up by hand with the see-through guide.",
   "Augen antippen":"Tap eyes","Tippe nacheinander auf die beiden dunklen Augenpunkte des Totenkopfs (vorher ruhig hineinzoomen).":"Tap the two dark eye spots of the skull one after the other (zoom in first if needed).",
   "Jetzt das zweite Auge antippen.":"Now tap the second eye.","Ausgerichtet. Feinkorrektur mit den Fingern möglich.":"Aligned. You can fine-tune with your fingers.","Speichern fehlgeschlagen":"Saving failed","Schon geschlüpfte Falter unsicher?":"Unsure about moths already eclosed?","Falter wieder offen setzen":"Reopen moths",
@@ -671,7 +686,12 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Ohne Thoraxfoto, können also nicht erkannt werden: (.+)\. Lege zuerst Thoraxfotos von ihnen an\.$/, "No thorax photo, so they can't be recognised: $1. Add thorax photos of them first."], [/^Vergleiche … (\d+) von (\d+)$/, "Comparing … $1 of $2"], [/^Fotos bei (.+) gespeichert$/, "Photos saved to $1"], [/^Fotografiere den Falter von oben und richte im nächsten Schritt den Thorax so aus wie bei deinen gespeicherten Thoraxfotos \(Kopf oben, Thorax füllt den Rahmen\)\. Die App vergleicht ihn dann mit (\d+) Faltern?, von denen es Thoraxfotos gibt\.$/, (m,n)=>`Photograph the moth from above and, in the next step, align the thorax like your saved thorax photos (head up, thorax filling the frame). The app then compares it with ${n} moth${n==="1"?"":"s"} that have thorax photos.`], [/^bisher als (.+) geführt$/, "previously recorded as $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
+  [/^Bereite vor … (\d+) von (\d+)$/, "Preparing … $1 of $2"], [/^Vergleiche Fotos untereinander … (\d+) %$/, "Comparing photos with each other … $1 %"], [/^Suche passende Falter … Gruppe (\d+) von (\d+)$/, "Finding matching moths … group $1 of $2"],
+  [/^(\d+) Fotos, (\d+) Gruppen?\. Fotos einer Gruppe zeigen sehr wahrscheinlich dasselbe Tier\. Tippe ein Foto an, um es aus der Gruppe zu nehmen\. Wähle dann je Gruppe den Falter und speichere\.$/, "$1 photos, $2 group(s). Photos in a group very likely show the same animal. Tap a photo to remove it from the group. Then choose the moth for each group and save."],
+  [/^Gruppe (\d+)$/, "Group $1"], [/^(\d+) Fotos? · (.+?)(?: · untereinander ≥ (\d+) %)?$/, (m,n,w,u)=>`${n} photo${n==="1"?"":"s"} · ${w}${u?` · each other ≥ ${u} %`:""}`],
+  [/^(.+) \(noch ohne Thoraxfoto\)$/, "$1 (no thorax photo yet)"], [/^(\d+) Fotos? gespeichert bei (.+)$/, "$1 photo(s) saved to $2"],
+  [/^Aufgenommen (.+): (\d+) Falter (?:war|waren) da noch nicht geschlüpft und (?:wird|werden) nicht verglichen\.$/, "Taken $1: $2 moth(s) had not eclosed yet and are not compared."], [/^Ohne Thoraxfoto, können also nicht erkannt werden: (.+)\. Lege zuerst Thoraxfotos von ihnen an\.$/, "No thorax photo, so they can't be recognised: $1. Add thorax photos of them first."], [/^Vergleiche … (\d+) von (\d+)$/, "Comparing … $1 of $2"], [/^Fotos bei (.+) gespeichert$/, "Photos saved to $1"], [/^Fotografiere den Falter von oben und richte im nächsten Schritt den Thorax so aus wie bei deinen gespeicherten Thoraxfotos \(Kopf oben, Thorax füllt den Rahmen\)\. Die App vergleicht ihn dann mit (\d+) Faltern?, von denen es Thoraxfotos gibt\.$/, (m,n)=>`Photograph the moth from above and, in the next step, align the thorax like your saved thorax photos (head up, thorax filling the frame). The app then compares it with ${n} moth${n==="1"?"":"s"} that have thorax photos.`], [/^bisher als (.+) geführt$/, "previously recorded as $1"], [/^Kandidaten: (.*)$/, (m,x)=>`Candidates: ${x==="keine"?"none":x}`],
   [/^(.+) ist mit „(.+)“ gekoppelt\.$/, "$1 is paired with “$2”."], [/^Messwert (.+)$/, "Reading $1"], [/^Nichts gefunden für „(.*)“\.$/, "Nothing found for “$1”."],
   [/^(.+) ist aus dieser Puppe geschlüpft, aber welcher Falter es ist, ist noch offen\. Kandidat für:$/, "$1 has eclosed from this pupa, but which moth it is remains open. Candidate for:"],
   [/^(.+) mit allen Einträgen und Fotos löschen\? Das lässt sich nicht rückgängig machen\.$/, "Delete $1 with all entries and photos? This cannot be undone."],
@@ -997,6 +1017,35 @@ function seedSpeciesLocal(){
 }
 
 /* ============ Fotos verkleinern ============ */
+/* Aufnahmezeit aus den EXIF-Daten (DateTimeOriginal), sonst Dateidatum. Ergebnis "YYYY-MM-DDTHH:MM" */
+async function exifDate(file){
+  try {
+    const v = new DataView(await file.slice(0, 262144).arrayBuffer());
+    if(v.getUint16(0) !== 0xFFD8) return null;
+    let o = 2;
+    while(o < v.byteLength - 4){
+      const m = v.getUint16(o), len = v.getUint16(o+2);
+      if(m === 0xFFE1 && v.getUint32(o+4) === 0x45786966){
+        const t = o + 10, le = v.getUint16(t) === 0x4949, g16 = q => v.getUint16(t+q, le), g32 = q => v.getUint32(t+q, le);
+        const str = (q, n) => { let r = ""; for(let i=0;i<n-1 && t+q+i<v.byteLength;i++) r += String.fromCharCode(v.getUint8(t+q+i)); return r; };
+        const ifd = q => { const out = {}, n = g16(q); for(let i=0;i<n;i++){ const e = q+2+i*12, tag = g16(e), cnt = g32(e+4), val = g32(e+8); out[tag] = tag===0x8769 ? val : (cnt>4 ? str(val, cnt) : null); } return out; };
+        const i0 = ifd(g32(4)); let dt = null;
+        if(i0[0x8769]){ const ex = ifd(i0[0x8769]); dt = ex[0x9003] || ex[0x9004]; }
+        dt = dt || i0[0x0132];
+        const mm = dt && dt.match(/^(\d{4}):(\d\d):(\d\d) (\d\d):(\d\d)/);
+        return mm ? `${mm[1]}-${mm[2]}-${mm[3]}T${mm[4]}:${mm[5]}` : null;
+      }
+      if((m & 0xFF00) !== 0xFF00) break;
+      o += 2 + len;
+    }
+  } catch(e){}
+  return null;
+}
+async function takenAtOf(file){
+  const ex = file && await exifDate(file); if(ex) return ex;
+  const t = file?.lastModified ? new Date(file.lastModified) : new Date();
+  return `${dFromMs(t.getTime())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
+}
 async function shrinkImage(file, max=1600, q=.85){
   const url = URL.createObjectURL(file);
   try {
@@ -1490,7 +1539,7 @@ VIEWS.imagos = () => {
   const open = openImagos().sort((a,b)=>(b.eclosedAt||"").localeCompare(a.eclosedAt||"") || byName(a,b));
   const batches = {}; open.forEach(m => { (batches[m.batchId||m.id] ||= []).push(m); });
   let h = `<div class="pagehead"><h1>Zuordnen</h1><p class="muted" style="margin:0">Schlüpfen mehrere Falter im selben Zeitraum und du weißt nicht, wer aus welcher Puppe kam, landen sie hier als „Falter A, B, C …“. Fotografiere sie und ordne sie zu, sobald du es weißt. Danach gehören Fotos und Notizen zum jeweiligen Tier. Schlupfdatum und Puppenruhe zählen schon vorher.</p></div>
-  <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" data-act="identify">Wer ist das? (Foto)</button><button class="btn" data-act="reopenImagos">Schon geschlüpfte Falter unsicher?</button></div>`;
+  <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" data-act="identify">Wer ist das? (Foto)</button><button class="btn" data-act="batchPhotos">Mehrere Fotos sortieren</button><button class="btn" data-act="reopenImagos">Schon geschlüpfte Falter unsicher?</button></div>`;
   if(!open.length) return h + `<div class="list"><div class="empty">Nichts offen. Alle Falter sind ihren Tieren zugeordnet.</div></div>`;
   for(const [bid, ms_] of Object.entries(batches)){
     h += `<div class="uncertain"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap"><b>${esc(ms_[0].batchLabel || "Schlupf")}</b>${ms_.length>1?`<button class="btn ghost" data-go="compare:${bid}">Vergleichen</button>`:""}</div><div class="list">${ms_.map(imagoRow).join("")}</div></div>`;
@@ -2093,8 +2142,7 @@ ACTS.addPhoto = d => {
       try {
         const blob = await shrinkImage(f);
         const ref = await store.uploadPhoto(blob);
-        const taken = f.lastModified ? new Date(f.lastModified) : new Date();
-        await store.put("photos",{...ref, subjectType:d.type, subjectId:d.id, view, takenAt:`${dFromMs(taken.getTime())}T${pad(taken.getHours())}:${pad(taken.getMinutes())}`});
+        await store.put("photos",{...ref, subjectType:d.type, subjectId:d.id, view, takenAt: await takenAtOf(f)});
         ok++;
       } catch(e){ st.textContent = `Foto ${k+1} fehlgeschlagen: ${e && (e.code||e.message) || "Fehler"}`; }
     }
@@ -2157,10 +2205,10 @@ function cropTool(p, closeViewer, opts={}){
     <div class="crop-b"><div class="crop-msg" id="crM"></div>
       <div class="crop-sl"><span>Zoom</span><input type="range" id="crZ" min="0" max="1000" value="500" aria-label="Zoom"><span class="val" id="crZv"></span></div>
       <div class="crop-sl"><span>Drehen</span><input type="range" id="crR" min="-180" max="180" step="0.5" value="0" aria-label="Drehen"><span class="val" id="crRv">0°</span></div>
-      <div class="row2"><button type="button" class="btn sm" id="crL">↺ 90°</button><button type="button" class="btn sm" id="crRr">↻ 90°</button><button type="button" class="btn sm" id="cr0">gerade</button>${opts.ghost?`<button type="button" class="btn sm" id="crG" aria-pressed="true">Vorlage</button>`:""}${opts.eyes!==false?`<button type="button" class="btn sm" id="crE">Augen antippen</button>`:""}
+      <div class="row2"><button type="button" class="btn sm" id="crL">↺ 90°</button><button type="button" class="btn sm" id="crRr">↻ 90°</button><button type="button" class="btn sm" id="cr0">gerade</button>${opts.ghost?`<button type="button" class="btn sm" id="crG" aria-pressed="true">Vorlage</button>`:""}${opts.eyes!==false?`<button type="button" class="btn sm" id="crAuto">Augen finden</button><button type="button" class="btn sm" id="crE">Augen antippen</button>`:""}
         <div class="seg" role="group" id="crA"><button type="button" data-a="1" aria-pressed="true">1:1</button><button type="button" data-a="0.8" aria-pressed="false">4:5</button><button type="button" data-a="1.333" aria-pressed="false">4:3</button></div></div>
       <div class="row2" ${opts.onCanvas?"hidden":""}><select id="crV" class="btn">${Object.entries(PVIEWS).map(([k,l])=>`<option value="${k}" ${k==="thorax"?"selected":""}>${l}</option>`).join("")}</select></div>
-      <div class="btns"><button class="btn" id="crS">Vorschlag</button><button class="btn" id="crX">Abbrechen</button><button class="btn primary" id="crOk">${opts.okLabel||"Speichern"}</button></div></div>`;
+      <div class="btns"><button class="btn" id="crS">Vorschlag</button>${opts.stopLabel?`<button class="btn" id="crStop">${opts.stopLabel}</button>`:""}<button class="btn" id="crX">${opts.cancelLabel||"Abbrechen"}</button><button class="btn primary" id="crOk">${opts.okLabel||"Speichern"}</button></div></div>`;
   if(opts.onCanvas) ov.querySelector("#crA").hidden = true;
   document.body.appendChild(ov);
   const img = ov.querySelector("img"), stage = ov.querySelector(".crop-stage"), fr = ov.querySelector(".crop-f"), msg = ov.querySelector("#crM");
@@ -2186,7 +2234,7 @@ function cropTool(p, closeViewer, opts={}){
     T.x = px + k*(dx*Math.cos(r) - dy*Math.sin(r)); T.y = py + k*(dx*Math.sin(r) + dy*Math.cos(r));
     T.s *= k; T.a += da; };
   img.onload = () => { nw = img.naturalWidth; nh = img.naturalHeight; Object.assign(img.style, {width:nw+"px", height:nh+"px"}); frame();
-    sMin = Math.min(F.w, F.h)/Math.max(nw, nh)*0.5; sMax = Math.max(sMin*20, F.w/40); suggest(); };
+    sMin = Math.min(F.w, F.h)/Math.max(nw, nh)*0.5; sMax = Math.max(sMin*20, F.w/40); suggest(); if(opts.autoEyes){ placeOn({x:0, y:0, w:nw, h:nh}); msg.textContent = "Tippe einmal auf den Totenkopf, dann sucht die App die Augen dort."; } };
   img.src = opts.src || photoSrc(p);
   const ro = new ResizeObserver(() => { if(!nw) return; const c0 = fc(); frame(); const c1 = fc(); T.x += c1.x-c0.x; T.y += c1.y-c0.y; draw(); }); ro.observe(stage);
   const P = new Map(); let g0 = null;
@@ -2197,7 +2245,23 @@ function cropTool(p, closeViewer, opts={}){
   let eyeMode = false, eyes = [], tap0 = null;
   const toImg = q => { const r = -T.a*Math.PI/180, dx = (q.x-T.x)/T.s, dy = (q.y-T.y)/T.s; return {x: dx*Math.cos(r)-dy*Math.sin(r) + nw/2, y: dx*Math.sin(r)+dy*Math.cos(r) + nh/2}; };
   const marks = () => { ov.querySelectorAll(".crop-eye").forEach(m=>m.remove()); eyes.forEach(q => { const m = document.createElement("i"); m.className = "crop-eye"; m.style.left = q.sx+"px"; m.style.top = q.sy+"px"; stage.appendChild(m); }); };
-  const applyEyes = () => {
+  // aktuellen Rahmeninhalt als Bild (für Auswertung und automatische Augensuche)
+  const renderFrame = (t, w=480) => { const c = document.createElement("canvas"); c.width = w; c.height = Math.round(w/aspect); const k = w/F.w;
+    const ctx = c.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height); ctx.imageSmoothingQuality = "high";
+    ctx.scale(k, k); ctx.translate(-F.x, -F.y); ctx.translate(t.x, t.y); ctx.rotate(t.a*Math.PI/180); ctx.scale(t.s, t.s); ctx.drawImage(img, -nw/2, -nh/2); return c; };
+  const showTargets = () => { ov.querySelectorAll(".crop-eye").forEach(m=>m.remove());
+    for(const x of [RID_EYE.x1, RID_EYE.x2]){ const m = document.createElement("i"); m.className = "crop-eye ok"; m.style.left = (F.x+x*F.w)+"px"; m.style.top = (F.y+RID_EYE.y*F.h)+"px"; stage.appendChild(m); } };
+  // Augen automatisch: zuerst im aktuellen Rahmen, sonst rund um die Rahmenmitte bzw. den angetippten Punkt
+  const autoEyes = (initial, at) => {
+    if(!nw) return; let pts = null;
+    try {
+      if(!at){ const e = ridFindEyes(renderFrame(T, 400)); if(e){ const k = F.w/400; pts = [[e.x1,e.y1],[e.x2,e.y2]].map(([x,y]) => toImg({x:F.x+x*k, y:F.y+y*k})); } }
+      if(!pts && !initial){ const c = toImg(at || fc()), e = ridEyesAt(img, c.x, c.y); if(e) pts = [{x:e.x1, y:e.y1}, {x:e.x2, y:e.y2}]; }
+    } catch(err){}
+    if(!pts){ msg.textContent = initial ? "Tippe einmal auf den Totenkopf, dann sucht die App die Augen dort." : "Dort keine Augen gefunden. Tippe genauer auf den Totenkopf oder nimm „Augen antippen“."; return; }
+    eyes = pts.map(q => ({img:q})); applyEyes(true);
+  };
+  const applyEyes = auto => {
     let [i1, i2] = eyes.map(q=>q.img);
     const t1 = {x:F.x+RID_EYE.x1*F.w, y:F.y+RID_EYE.y*F.h}, t2 = {x:F.x+RID_EYE.x2*F.w, y:F.y+RID_EYE.y*F.h};
     const angOf = (a,b) => Math.atan2(b.y-a.y, b.x-a.x)*180/Math.PI;
@@ -2209,18 +2273,26 @@ function cropTool(p, closeViewer, opts={}){
     const sNew = Math.min(sMax, Math.max(sMin, Math.hypot(t2.x-t1.x, t2.y-t1.y) / (Math.hypot(i2.x-i1.x, i2.y-i1.y) || 1)));
     const r = da*Math.PI/180, ux = (i1.x-nw/2)*sNew, uy = (i1.y-nh/2)*sNew;
     T = {s:sNew, a:da, x: t1.x - (ux*Math.cos(r) - uy*Math.sin(r)), y: t1.y - (ux*Math.sin(r) + uy*Math.cos(r))};
-    eyeMode = false; eyes = []; marks(); draw();
-    msg.textContent = "Ausgerichtet. Feinkorrektur mit den Fingern möglich.";
+    eyeMode = false; eyes = []; marks(); draw(); if(auto) showTargets();
+    msg.textContent = auto ? "Augen automatisch gefunden. Liegen die gelben Punkte auf den Augen? Wenn nicht: „Augen antippen“." : "Ausgerichtet. Feinkorrektur mit den Fingern möglich.";
     ov.querySelector("#crE")?.setAttribute("aria-pressed", "false");
   };
   const eb = ov.querySelector("#crE");
+  const ab = ov.querySelector("#crAuto"); if(ab) ab.onclick = () => autoEyes(false, fc());
+  // Einmal kurz auf den Totenkopf tippen (ohne zu schieben) sucht dort die Augen
+  let tapT = null;
+  if(opts.autoEyes){
+    stage.addEventListener("pointerdown", e => { tapT = P.size ? null : {...loc(e), t: Date.now()}; });
+    stage.addEventListener("pointerup", e => { if(eyeMode || !tapT || P.size > 1) return; const q = loc(e);
+      if(Math.hypot(q.x-tapT.x, q.y-tapT.y) < 8 && Date.now()-tapT.t < 500) autoEyes(false, q); tapT = null; });
+  }
   if(eb) eb.onclick = () => { eyeMode = !eyeMode; eyes = []; marks(); eb.setAttribute("aria-pressed", eyeMode);
     msg.textContent = eyeMode ? "Tippe nacheinander auf die beiden dunklen Augenpunkte des Totenkopfs (vorher ruhig hineinzoomen)." : ""; };
   stage.addEventListener("pointerdown", e => { if(eyeMode) tap0 = loc(e); });
   stage.addEventListener("pointerup", e => { if(!eyeMode || !tap0 || P.size > 1) return; const q = loc(e); if(Math.hypot(q.x-tap0.x, q.y-tap0.y) > 8) return;
     eyes.push({sx:q.x, sy:q.y, img:toImg(q)}); tap0 = null; marks();
     if(eyes.length===2) applyEyes(); else msg.textContent = "Jetzt das zweite Auge antippen."; });
-  stage.addEventListener("pointerdown", e => { e.preventDefault(); stage.setPointerCapture(e.pointerId); P.set(e.pointerId, loc(e)); g0 = P.size===2 ? pair() : null; });
+  stage.addEventListener("pointerdown", e => { if(!eyeMode) ov.querySelectorAll(".crop-eye.ok").forEach(m=>m.remove()); e.preventDefault(); stage.setPointerCapture(e.pointerId); P.set(e.pointerId, loc(e)); g0 = P.size===2 ? pair() : null; });
   stage.addEventListener("pointermove", e => { if(!P.has(e.pointerId)) return; const prev = P.get(e.pointerId), cur = loc(e);
     if(P.size===1){ T.x += cur.x-prev.x; T.y += cur.y-prev.y; P.set(e.pointerId, cur); draw(); return; }
     P.set(e.pointerId, cur); if(P.size!==2 || !g0) return; const g = pair();
@@ -2241,12 +2313,11 @@ function cropTool(p, closeViewer, opts={}){
   ov.querySelector("#crS").onclick = suggest;
   const gb = ov.querySelector("#crG"); if(gb) gb.onclick = () => { const on = gb.getAttribute("aria-pressed")!=="true"; gb.setAttribute("aria-pressed", on); ov.querySelector(".crop-g").hidden = !on; };
   ov.querySelector("#crX").onclick = close;
+  const sb = ov.querySelector("#crStop"); if(sb) sb.onclick = () => { opts.onStop && opts.onStop(); close(); };
   ov.querySelector("#crOk").onclick = async () => {
     if(!nw) return; const btn = ov.querySelector("#crOk"); btn.disabled = true;
     if(opts.onCanvas){
-      const render = t => { const c = document.createElement("canvas"); c.width = 480; c.height = Math.round(480/aspect); const k = 480/F.w;
-        const ctx = c.getContext("2d"); ctx.fillStyle = "#000"; ctx.fillRect(0, 0, c.width, c.height); ctx.imageSmoothingQuality = "high";
-        ctx.scale(k, k); ctx.translate(-F.x, -F.y); ctx.translate(t.x, t.y); ctx.rotate(t.a*Math.PI/180); ctx.scale(t.s, t.s); ctx.drawImage(img, -nw/2, -nh/2); return c; };
+      const render = t => renderFrame(t, 480);
       const c = render(T);
       // Gegenstück um 180° um die Augenlinie gedreht – falls Kopf und Hinterende vertauscht sind; die Auswertung wählt die passendere Lage
       const keep = {...T}; around(F.x+0.5*F.w, F.y+RID_EYE.y*F.h, 1, 180); const cAlt = render(T); T = keep;
@@ -2286,6 +2357,66 @@ function ridBox(g, size, r){
     out[y*size+x] = (I[y1*(size+1)+x1]-I[y0*(size+1)+x1]-I[y1*(size+1)+x0]+I[y0*(size+1)+x0])/((x1-x0)*(y1-y0));
   }
   return out;
+}
+/* Augenpunkte automatisch finden: kleine, ringsum hellere dunkle Punkte, paarweise; bevorzugt wird das Paar mit hellem
+   Schädel dazwischen/darüber und großen dunklen Flecken darunter. Liefert Punkte im Koordinatensystem des Eingabebildes. */
+function ridFindEyes(src){
+  // Sucht die beiden dunklen Augenpunkte des Totenkopfs im übergebenen Bildausschnitt (Canvas/Bild).
+  const W = 200, c = document.createElement("canvas"); c.width = c.height = W;
+  const sw = src.naturalWidth||src.width, sh = src.naturalHeight||src.height, side = Math.min(sw, sh);
+  const ctx = c.getContext("2d", {willReadFrequently:true}); ctx.drawImage(src, (sw-side)/2, (sh-side)/2, side, side, 0, 0, W, W);
+  const d = ctx.getImageData(0,0,W,W).data, n = W*W, L = new Float32Array(n);
+  for(let i=0;i<n;i++) L[i] = 0.299*d[i*4] + 0.587*d[i*4+1] + 0.114*d[i*4+2];
+  const at = (A,x,y) => { x = Math.max(0, Math.min(W-1, Math.round(x))); y = Math.max(0, Math.min(W-1, Math.round(y))); return A[y*W+x]; };
+  const cands = [];
+  for(const rs of [1,2,3,4,5,6]){
+    const sm = ridBox(L, W, rs), bg = ridBox(L, W, rs*3+2), D = new Float32Array(n);
+    for(let i=0;i<n;i++) D[i] = bg[i]-sm[i];
+    const pk = [], m = Math.max(6, rs*3);
+    for(let y=m;y<W-m;y++) for(let x=m;x<W-m;x++){ const v = D[y*W+x]; if(v <= 4) continue; let ok = true;
+      for(let yy=y-m; yy<=y+m && ok; yy++) for(let xx=x-m; xx<=x+m; xx++) if(D[yy*W+xx] > v){ ok = false; break; }
+      if(ok) pk.push({v, x, y}); }
+    // nur kompakte Punkte: ringsum (8 Richtungen) heller als die Mitte – Fleckränder fallen so raus
+    for(const q of pk){ const r = rs*2.5+1.5, c0 = at(sm, q.x, q.y); let mn = 1e9;
+      for(let k=0;k<8;k++){ const an = k*Math.PI/4; mn = Math.min(mn, at(sm, q.x+r*Math.cos(an), q.y+r*Math.sin(an)) - c0); }
+      q.dot = mn; }
+    const P = pk.filter(q=>q.dot > 4).sort((a,b)=>b.dot-a.dot).slice(0, 12);
+    const big = ridBox(L, W, Math.max(2, rs*2));
+    for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){
+      const a = P[i], b = P[j], dd = Math.hypot(b.x-a.x, b.y-a.y);
+      if(dd < rs*5 || dd > rs*20 || dd > W*0.6) continue;
+      if(Math.min(a.dot,b.dot) < 0.3*Math.max(a.dot,b.dot)) continue;
+      const ux = (b.x-a.x)/dd, uy = (b.y-a.y)/dd, nx = -uy, ny = ux, mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+      const mid = at(big, mx, my), sp = (at(L,a.x,a.y)+at(L,b.x,b.y))/2;
+      if(mid - sp < 8) continue;
+      let best = -1e9;
+      for(const s of [1,-1]){ // s: Seite mit den großen dunklen Flecken (unterhalb der Augen)
+        const blot = (at(big, a.x+s*nx*0.6*dd, a.y+s*ny*0.6*dd) + at(big, b.x+s*nx*0.6*dd, b.y+s*ny*0.6*dd))/2;
+        const top = at(big, mx-s*nx*0.5*dd, my-s*ny*0.5*dd);
+        const sc = 1.5*(a.dot+b.dot) + 0.4*(mid-sp) + 0.8*(top-blot) + 0.5*(mid-blot);
+        if(sc > best) best = sc;
+      }
+      cands.push({sc:best, a, b, k: side/W});
+    }
+  }
+  if(!cands.length) return null;
+  cands.sort((p,q)=>q.sc-p.sc); const r = cands[0], ox = (sw-side)/2, oy = (sh-side)/2;
+  return {x1: ox+r.a.x*r.k, y1: oy+r.a.y*r.k, x2: ox+r.b.x*r.k, y2: oy+r.b.y*r.k, score: r.sc};
+}
+
+// Augen rund um einen Punkt suchen (z. B. dort, wo auf den Totenkopf getippt wurde); probiert mehrere Ausschnittgrößen
+function ridEyesAt(img, px, py){
+  const nw = img.naturalWidth||img.width, nh = img.naturalHeight||img.height, mn = Math.min(nw, nh); let best = null;
+  const c = document.createElement("canvas"); c.width = c.height = 400; const ctx = c.getContext("2d");
+  for(const f of [0.06, 0.09, 0.13, 0.19, 0.27]){ const S = mn*f;
+    ctx.fillStyle = "#808080"; ctx.fillRect(0,0,400,400); ctx.drawImage(img, px-S/2, py-S/2, S, S, 0, 0, 400, 400);
+    const e = ridFindEyes(c); if(!e) continue; const k = S/400;
+    const mx = (e.x1+e.x2)/2*k - S/2, my = (e.y1+e.y2)/2*k - S/2, dd = Math.hypot(e.x2-e.x1, e.y2-e.y1)*k;
+    if(Math.hypot(mx, my) > Math.max(0.3*S, 1.2*dd)) continue;
+    const sc = e.score - 20*Math.hypot(mx,my)/dd;
+    if(!best || sc > best.sc) best = {sc, x1:px-S/2+e.x1*k, y1:py-S/2+e.y1*k, x2:px-S/2+e.x2*k, y2:py-S/2+e.y2*k};
+  }
+  return best;
 }
 // Zwei Kanäle: Helligkeit und „Orange-Anteil“ (R−B, hebt die Totenkopf-Zeichnung hervor), jeweils bandpass-gefiltert
 function ridGray(src, size, rotDeg=0, scale=1){
@@ -2365,15 +2496,18 @@ function ridScore(vars, ref){
   }
   return best;
 }
-function ridSubjects(){
+function ridSubjects(date){
   // Wen vergleichen? Offene Falter (A, B, C …) und lebende, geschlüpfte Tiere (ohne die, die gerade als Kandidat offen sind) –
-  // nur Fotos mit Ansicht „Thorax oben“.
+  // nur Fotos mit Ansicht „Thorax oben“. Mit Aufnahmedatum: nur Falter, die da schon geschlüpft waren.
   const subs = [], busy = new Set(openImagos().flatMap(m=>m.candidates||[]));
-  for(const m of openImagos()) subs.push({type:"imago", id:m.id, name:m.label, sub:m.batchLabel||""});
-  for(const i of all("individuals").filter(i=>isAlive(i) && firstEv(i,"falterschlupf") && !busy.has(i.id))) subs.push({type:"individual", id:i.id, name:i.name, sub:S.broods[i.broodId]?.name||""});
-  return subs.map(s => ({...s, photos: photosOf(s.type, s.id).filter(p=>p.view==="thorax").sort((a,b)=>(b.cropOf?1:0)-(a.cropOf?1:0))}));
+  for(const m of openImagos()) subs.push({type:"imago", id:m.id, name:m.label, sub:m.batchLabel||"", ecl:(m.eclosedAt||"").slice(0,10)});
+  for(const i of all("individuals").filter(i=>isAlive(i) && firstEv(i,"falterschlupf") && !busy.has(i.id))) subs.push({type:"individual", id:i.id, name:i.name, sub:S.broods[i.broodId]?.name||"", ecl:(firstEv(i,"falterschlupf").t0||"").slice(0,10)});
+  return subs.filter(s => !date || !s.ecl || s.ecl <= date.slice(0,10))
+    .map(s => ({...s, photos: photosOf(s.type, s.id).filter(p=>p.view==="thorax").sort((a,b)=>(b.cropOf?1:0)-(a.cropOf?1:0))}));
 }
-const ridRefs = () => ridSubjects().filter(s=>s.photos.length);
+const ridRefs = date => ridSubjects(date).filter(s=>s.photos.length);
+const ridLater = date => date ? ridSubjects().length - ridSubjects(date).length : 0;
+async function ridVecOf(canvas){ const b = ridGray(canvas, RID.N); return {g: ridVec(b, RID.N, 0, 0), p: RID2_P.map(([x,y]) => rid2Norm(b, RID.N, x, y, RID2.PS))}; }
 ACTS.identify = () => {
   const refs = ridRefs();
   const root = openSheet(`<h2>Wer ist das?</h2>
@@ -2386,16 +2520,19 @@ ACTS.identify = () => {
   const pf = root.querySelector("#pf");
   pf.addEventListener("change", async () => {
     const f = pf.files[0]; if(!f || !refs.length) return;
+    const taken = await takenAtOf(f);
     const blob = await shrinkImage(f, 2000, .9); const url = URL.createObjectURL(blob);
     closeSheet();
-    cropTool(null, null, {src:url, title:"Thorax ausrichten", hint:"Am einfachsten: „Augen antippen“ und die beiden dunklen Augenpunkte des Totenkopfs antippen. Oder von Hand deckungsgleich auf die durchscheinende Vorlage legen.", okLabel:"Vergleichen", ghost: photoSrc(refs[0].photos[0]), eyes: true,
-      onCanvas: (c, alt) => ridShow(c, blob, f, alt), onClose: () => setTimeout(()=>URL.revokeObjectURL(url), 1000)});
+    cropTool(null, null, {src:url, title:"Thorax ausrichten", hint:RID_HINT, okLabel:"Vergleichen", ghost: photoSrc(refs[0].photos[0]), eyes: true, autoEyes: true,
+      onCanvas: (c, alt) => ridShow(c, blob, taken, alt), onClose: () => setTimeout(()=>URL.revokeObjectURL(url), 1000)});
   });
 };
-async function ridShow(canvas0, blob, file, alt){
+const RID_HINT = "Tippe einmal auf den Totenkopf: Die App sucht dort die beiden Augenpunkte und richtet danach aus. Liegen die gelben Kreise nicht auf den Augen: „Augen antippen“.";
+async function ridShow(canvas0, blob, takenAt, alt){
   const root = openSheet(`<h2>Wer ist das?</h2><div id="ridR" class="small muted">Vergleiche …</div>`);
   await new Promise(r=>setTimeout(r,30));
-  const res = [], subs = ridRefs(), prog = root.querySelector("#ridR"), refVecs = [];
+  const later = ridLater(takenAt);
+  const res = [], subs = ridRefs(takenAt), prog = root.querySelector("#ridR"), refVecs = [];
   for(const s of subs) for(const p of s.photos){ try { refVecs.push(await ridRefVec(p)); } catch(e){} }
   const [vars, canvas] = ridOrient(canvas0, alt, refVecs);
   const qUrl = canvas.toDataURL("image/jpeg", .85);
@@ -2410,13 +2547,11 @@ async function ridShow(canvas0, blob, file, alt){
   const gap = res.length>1 ? pct(res[0].sc)-pct(res[1].sc) : 100;
   const verdict = !res.length ? "Kein Vergleich möglich." : pct(res[0].sc) < 45 ? "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?" : gap < 5 ? "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an." : `Am ähnlichsten: ${res[0].name}`;
   const cont = root.querySelector("#ridR"); cont.className = "";
-  cont.innerHTML = `<div class="rid-q"><img src="${qUrl}" alt=""><span><b>${esc(verdict)}</b><span class="small muted">Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.</span></span></div>
+  cont.innerHTML = `<div class="rid-q"><img src="${qUrl}" alt=""><span><b>${esc(verdict)}</b><span class="small muted">Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.</span>${later?`<span class="small muted">Aufgenommen ${esc(fmtTime({t0:takenAt, prec:"exakt"}))}: ${later} ${later===1?"Falter war":"Falter waren"} da noch nicht geschlüpft und ${later===1?"wird":"werden"} nicht verglichen.</span>`:""}</span></div>
     <div class="list">${res.map((r,k)=>`<div class="row rid-r"><img src="${esc(photoSrc(r.p))}" alt=""><span class="main"><span class="t">${esc(r.name)}</span><span class="s">${esc(r.sub)}</span><span class="rid-bar"><i style="width:${pct(r.sc)}%"></i></span><span class="rid-a"><button class="btn sm" data-k="${k}" data-do="save">Foto hier speichern</button><button class="btn ghost sm" data-go="${r.type==="imago"?"imago":"animal"}:${r.id}">Öffnen</button></span></span><span class="end"><b class="mono">${pct(r.sc)} %</b></span></div>`).join("")}</div>`;
   cont.querySelectorAll("[data-do=save]").forEach(b => b.onclick = async () => {
     const r = res[+b.dataset.k]; b.disabled = true;
     try {
-      const taken = file?.lastModified ? new Date(file.lastModified) : new Date();
-      const takenAt = `${dFromMs(taken.getTime())}T${pad(taken.getHours())}:${pad(taken.getMinutes())}`;
       const orig = await store.uploadPhoto(blob);
       const op = await store.put("photos", {...orig, subjectType:r.type, subjectId:r.id, view:"ganz", takenAt});
       const cb = await new Promise(res => canvas.toBlob(res, "image/jpeg", .9));
@@ -2426,6 +2561,95 @@ async function ridShow(canvas0, blob, file, alt){
     } catch(e){ b.disabled = false; toast("Speichern fehlgeschlagen"); }
   });
 }
+
+/* ---- Mehrere Fotos auf einmal: ausrichten, nach Tieren gruppieren, zuordnen ---- */
+ACTS.batchPhotos = () => {
+  const refs = ridRefs();
+  const root = openSheet(`<h2>Mehrere Fotos sortieren</h2>
+    <p class="muted" style="margin:0">Wähle beliebig viele Falterfotos. Jedes wird kurz ausgerichtet (die App sucht die Augenpunkte selbst, du prüfst nur). Danach fasst die App Fotos, die sehr wahrscheinlich dasselbe Tier zeigen, zu Gruppen zusammen und schlägt vor, welcher Falter es ist. Gespeichert wird erst, wenn du eine Gruppe einem Falter zuordnest.</p>
+    <span class="hint">Am besten Fotos von oben, auf denen der Totenkopf gut zu sehen ist. Das Aufnahmedatum wird mitgelesen, Falter die da noch nicht geschlüpft waren, werden nicht vorgeschlagen.</span>
+    <label class="btn primary block filebtn" id="pick">Fotos wählen<input type="file" id="pf" accept="image/*" multiple class="vh"></label><div id="pst" class="small muted"></div>`);
+  const pf = root.querySelector("#pf");
+  pf.addEventListener("change", async () => {
+    const files = [...pf.files]; if(!files.length) return;
+    const st = root.querySelector("#pst"); root.querySelector("#pick").classList.add("spin");
+    const list = [];
+    for(const [k,f] of files.entries()){ st.textContent = `Lese Foto ${k+1} von ${files.length} …`;
+      try { list.push({file:f, taken: await takenAtOf(f), blob: await shrinkImage(f, 1600, .85)}); } catch(e){} }
+    closeSheet();
+    const items = []; let i = 0, stop = false;
+    const next = () => {
+      if(stop || i >= list.length){ if(items.length) ridBatchShow(items); else toast("Keine Fotos ausgerichtet"); return; }
+      const it = list[i++], url = URL.createObjectURL(it.blob);
+      cropTool(null, null, {src:url, title:`Foto ${i} von ${list.length}`, hint:RID_HINT, okLabel:"Weiter", cancelLabel:"Überspringen", stopLabel: i < list.length ? "Rest überspringen" : null,
+        ghost: refs.length ? photoSrc(refs[0].photos[0]) : null, eyes:true, autoEyes:true,
+        onCanvas: (c, alt) => { items.push({...it, c, alt, url}); },
+        onStop: () => { stop = true; },
+        onClose: () => setTimeout(next, 0)});
+    };
+    next();
+  });
+};
+async function ridBatchShow(items){
+  const root = openSheet(`<h2>Fotos sortieren</h2><div id="rbR" class="small muted">Vergleiche …</div>`);
+  const prog = root.querySelector("#rbR"), tick = t => { prog.textContent = t; return new Promise(r=>setTimeout(r,0)); };
+  const refsAll = ridRefs(), refVecs = [];
+  for(const s of refsAll) for(const p of s.photos){ try { refVecs.push(await ridRefVec(p)); } catch(e){} }
+  for(const [k,it] of items.entries()){ await tick(`Bereite vor … ${k+1} von ${items.length}`);
+    const [vars, c] = ridOrient(it.c, it.alt, refVecs); it.vars = vars; it.c = c; it.vec = await ridVecOf(c); it.thumb = c.toDataURL("image/jpeg", .8); }
+  // Ähnlichkeit der Fotos untereinander (beide Richtungen gemittelt)
+  const n = items.length, M = [...Array(n)].map(()=>new Float32Array(n));
+  let done = 0; const tot = n*(n-1)/2;
+  for(let a=0;a<n;a++) for(let b=a+1;b<n;b++){ if(done++ % 3 === 0) await tick(`Vergleiche Fotos untereinander … ${Math.round(100*done/Math.max(1,tot))} %`);
+    M[a][b] = M[b][a] = (ridScore(items[a].vars, items[b].vec) + ridScore(items[b].vars, items[a].vec))/2; }
+  // Gruppen: zusammenfassen, solange die mittlere Ähnlichkeit zweier Gruppen hoch genug ist (vorsichtig gewählt)
+  let groups = items.map((_,k)=>[k]);
+  for(;;){ let best = null;
+    for(let a=0;a<groups.length;a++) for(let b=a+1;b<groups.length;b++){ let sum = 0, cnt = 0; for(const x of groups[a]) for(const y of groups[b]){ sum += M[x][y]; cnt++; }
+      const m = sum/cnt; if(m >= RID_GROUP && (!best || m > best.m)) best = {a, b, m}; }
+    if(!best) break; groups[best.a] = groups[best.a].concat(groups[best.b]); groups.splice(best.b, 1); }
+  // je Gruppe: Vorschläge aus den Faltern, die zum frühesten Aufnahmedatum schon geschlüpft waren
+  const G = [];
+  for(const [gi, g] of groups.entries()){ await tick(`Suche passende Falter … Gruppe ${gi+1} von ${groups.length}`);
+    const its = g.map(k=>items[k]), date = its.map(x=>x.taken).sort()[0];
+    const subs = ridSubjects(date), sc = [];
+    for(const s of subs){ if(!s.photos.length){ sc.push({s, v:null}); continue; }
+      let tot = 0; for(const it of its){ let b = -1; for(const p of s.photos){ try { b = Math.max(b, ridScore(it.vars, await ridRefVec(p))); } catch(e){} } tot += b; }
+      sc.push({s, v: tot/its.length}); }
+    sc.sort((x,y)=>(y.v??-2)-(x.v??-2));
+    const tm = its.map(x=>x.taken).sort();
+    G.push({its, sc, from: tm[0], to: tm[tm.length-1], inner: g.length>1 ? Math.min(...g.flatMap(x=>g.filter(y=>y!==x).map(y=>M[x][y]))) : null});
+  }
+  G.sort((a,b)=>(b.its.length-a.its.length) || (a.from||"").localeCompare(b.from||""));
+  const pct = x => Math.max(0, Math.round(x*100));
+  const when = g => { const a = fmtTime({t0:g.from, prec:"exakt"}), b = fmtTime({t0:g.to, prec:"exakt"}); return a===b ? a : `${a} – ${b}`; };
+  const hint = g => { const w = g.sc.filter(x=>x.v!=null); if(!w.length) return "Kein Vergleichsfoto vorhanden.";
+    const gap = w.length>1 ? pct(w[0].v)-pct(w[1].v) : 100;
+    return pct(w[0].v) < 60 ? "Passt zu keinem Falter mit Thoraxfoto. Vielleicht einer ohne Foto?" : gap < 5 ? `Knapp: ${w[0].s.name} oder ${w[1].s.name}` : `Am ähnlichsten: ${w[0].s.name}`; };
+  prog.className = "";
+  prog.innerHTML = `<p class="muted" style="margin:0">${items.length} Fotos, ${G.length} ${G.length===1?"Gruppe":"Gruppen"}. Fotos einer Gruppe zeigen sehr wahrscheinlich dasselbe Tier. Tippe ein Foto an, um es aus der Gruppe zu nehmen. Wähle dann je Gruppe den Falter und speichere.</p>
+    ${G.map((g,gi)=>`<section class="rbg" data-g="${gi}"><div class="rbg-h"><b>Gruppe ${gi+1}</b><span class="small muted">${g.its.length} ${g.its.length===1?"Foto":"Fotos"} · ${esc(when(g))}${g.inner!=null?` · untereinander ≥ ${pct(g.inner)} %`:""}</span></div>
+      <div class="rbg-p">${g.its.map((it,k)=>`<button type="button" class="rbg-t" data-k="${k}" aria-pressed="true"><img src="${it.thumb}" alt=""></button>`).join("")}</div>
+      <div class="small"><b>${esc(hint(g))}</b> ${g.sc.filter(x=>x.v!=null).slice(0,3).map(x=>`${esc(x.s.name)} ${pct(x.v)} %`).join(" · ")}</div>
+      <select class="btn rbg-s"><option value="">Nicht speichern</option>${g.sc.map((x,k)=>`<option value="${k}">${esc(x.s.name)}${x.v!=null?` (${pct(x.v)} %)`:" (noch ohne Thoraxfoto)"}</option>`).join("")}</select></section>`).join("")}
+    <div class="btns"><button class="btn primary" id="rbOk">Speichern</button></div>`;
+  prog.querySelectorAll(".rbg-t").forEach(b => b.onclick = () => b.setAttribute("aria-pressed", b.getAttribute("aria-pressed")!=="true"));
+  prog.querySelector("#rbOk").onclick = async () => {
+    const btn = prog.querySelector("#rbOk"); btn.disabled = true; let saved = 0, to = new Set();
+    try {
+      for(const sec of prog.querySelectorAll(".rbg")){ const g = G[+sec.dataset.g], v = sec.querySelector(".rbg-s").value; if(v==="") continue;
+        const s = g.sc[+v].s;
+        for(const b of sec.querySelectorAll(".rbg-t[aria-pressed=true]")){ const it = g.its[+b.dataset.k];
+          const op = await store.put("photos", {...(await store.uploadPhoto(it.blob)), subjectType:s.type, subjectId:s.id, view:"ganz", takenAt:it.taken});
+          const cb = await new Promise(r => it.c.toBlob(r, "image/jpeg", .9));
+          await store.put("photos", {...(await store.uploadPhoto(cb)), subjectType:s.type, subjectId:s.id, view:"thorax", takenAt:it.taken, cropOf:op});
+          saved++; to.add(s.name); } }
+      items.forEach(it => URL.revokeObjectURL(it.url));
+      closeSheet(); toast(saved ? `${saved} ${saved===1?"Foto":"Fotos"} gespeichert bei ${[...to].join(", ")}` : "Nichts gespeichert");
+    } catch(e){ btn.disabled = false; toast("Speichern fehlgeschlagen"); }
+  };
+}
+const RID_GROUP = 0.8;
 
 /* ---- Klima ---- */
 ACTS.newLocation = () => locationSheet();
