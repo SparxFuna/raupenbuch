@@ -426,7 +426,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.13.0";
+const APP_VERSION = "5.13.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -549,7 +549,7 @@ const I18N_EN = {
   "Keine Kandidaten übrig.":"No candidates left.","Wer ist das? (Foto)":"Who is this? (photo)","Foto aufnehmen oder wählen":"Take or choose a photo","Thorax ausrichten":"Align thorax",
   "Noch keine Thoraxfotos zum Vergleichen. Lege bei deinen Faltern zuerst Thorax-Ausschnitte an (Foto öffnen → Ausschnitt).":"No thorax photos to compare yet. First create thorax crops for your moths (open photo → Crop).",
   "Nur ein Hinweis, keine sichere Erkennung. Am besten klappt es mit Ausschnitten, gleichem Abstand und ähnlichem Licht. Flügel werden bewusst nicht verglichen, weil sie sich abnutzen.":"Only a hint, not a reliable identification. Works best with crops, the same distance and similar light. Wings are deliberately not compared because they wear off.",
-  "Wie bei deinen Thoraxfotos: Kopf nach oben, Thorax mittig und rahmenfüllend.":"Like your thorax photos: head up, thorax centred and filling the frame.","Vergleiche …":"Comparing …","Kein Vergleich möglich.":"No comparison possible.",
+  "Wie bei deinen Thoraxfotos: Kopf nach oben, Thorax mittig und rahmenfüllend.":"Like your thorax photos: head up, thorax centred and filling the frame.","Vergleiche …":"Comparing …","Lade Foto …":"Loading photo …","Kein Vergleich möglich.":"No comparison possible.",
   "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?":"No convincing match. Maybe a different crop, or a moth without a thorax photo?",
   "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an.":"Close call: the top matches are near each other. Look at the pictures carefully.",
   "Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.":"Similarity 0–100 %. What matters is the gap between matches, not the absolute value.",
@@ -686,7 +686,7 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Foto konnte nicht geladen werden: (.*)$/, "Photo could not be loaded: $1"], [/^Kein Foto konnte geladen werden: (.*)$/, "No photo could be loaded: $1"], [/^(\d+) Foto\(s\) konnten nicht geladen werden$/, "$1 photo(s) could not be loaded"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
   [/^Bereite vor … (\d+) von (\d+)$/, "Preparing … $1 of $2"], [/^Vergleiche Fotos untereinander … (\d+) %$/, "Comparing photos with each other … $1 %"], [/^Suche passende Falter … Gruppe (\d+) von (\d+)$/, "Finding matching moths … group $1 of $2"],
   [/^(\d+) Fotos, (\d+) Gruppen?\. Fotos einer Gruppe zeigen sehr wahrscheinlich dasselbe Tier\. Tippe ein Foto an, um es aus der Gruppe zu nehmen\. Wähle dann je Gruppe den Falter und speichere\.$/, "$1 photos, $2 group(s). Photos in a group very likely show the same animal. Tap a photo to remove it from the group. Then choose the moth for each group and save."],
   [/^Gruppe (\d+)$/, "Group $1"], [/^(\d+) Fotos? · (.+?)(?: · untereinander ≥ (\d+) %)?$/, (m,n,w,u)=>`${n} photo${n==="1"?"":"s"} · ${w}${u?` · each other ≥ ${u} %`:""}`],
@@ -1042,16 +1042,19 @@ async function exifDate(file){
   return null;
 }
 async function takenAtOf(file){
-  const ex = file && await exifDate(file); if(ex) return ex;
+  const ex = file && await Promise.race([exifDate(file), new Promise(r=>setTimeout(()=>r(null), 3000))]); if(ex) return ex;
   const t = file?.lastModified ? new Date(file.lastModified) : new Date();
   return `${dFromMs(t.getTime())}T${pad(t.getHours())}:${pad(t.getMinutes())}`;
 }
 async function shrinkImage(file, max=1600, q=.85){
   const url = URL.createObjectURL(file);
   try {
-    const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src=url; });
-    const sc = Math.min(1, max/Math.max(img.naturalWidth, img.naturalHeight));
-    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth*sc); c.height = Math.round(img.naturalHeight*sc);
+    let img = await new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=url; });
+    if(!img && window.createImageBitmap){ try { img = await createImageBitmap(file); } catch(e){} }
+    if(!img) throw new Error("Bildformat wird nicht unterstützt (z. B. HEIC). Bitte als JPG speichern oder in der Kamera „Hohe Effizienz“ ausschalten.");
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+    const sc = Math.min(1, max/Math.max(iw, ih));
+    const c = document.createElement("canvas"); c.width = Math.round(iw*sc); c.height = Math.round(ih*sc);
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
     return await new Promise(res => c.toBlob(res, "image/jpeg", q));
   } finally { URL.revokeObjectURL(url); }
@@ -2520,8 +2523,11 @@ ACTS.identify = () => {
   const pf = root.querySelector("#pf");
   pf.addEventListener("change", async () => {
     const f = pf.files[0]; if(!f || !refs.length) return;
-    const taken = await takenAtOf(f);
-    const blob = await shrinkImage(f, 2000, .9); const url = URL.createObjectURL(blob);
+    const st = root.querySelector("#pst"); st.textContent = "Lade Foto …"; root.querySelector("#pick").classList.add("spin");
+    let taken, blob;
+    try { taken = await takenAtOf(f); blob = await shrinkImage(f, 2000, .9); }
+    catch(e){ st.textContent = "Foto konnte nicht geladen werden: " + (e && e.message || e); root.querySelector("#pick").classList.remove("spin"); pf.value = ""; return; }
+    const url = URL.createObjectURL(blob);
     closeSheet();
     cropTool(null, null, {src:url, title:"Thorax ausrichten", hint:RID_HINT, okLabel:"Vergleichen", ghost: photoSrc(refs[0].photos[0]), eyes: true, autoEyes: true,
       onCanvas: (c, alt) => ridShow(c, blob, taken, alt), onClose: () => setTimeout(()=>URL.revokeObjectURL(url), 1000)});
@@ -2573,9 +2579,11 @@ ACTS.batchPhotos = () => {
   pf.addEventListener("change", async () => {
     const files = [...pf.files]; if(!files.length) return;
     const st = root.querySelector("#pst"); root.querySelector("#pick").classList.add("spin");
-    const list = [];
+    const list = [], fails = [];
     for(const [k,f] of files.entries()){ st.textContent = `Lese Foto ${k+1} von ${files.length} …`;
-      try { list.push({file:f, taken: await takenAtOf(f), blob: await shrinkImage(f, 1600, .85)}); } catch(e){} }
+      try { list.push({file:f, taken: await takenAtOf(f), blob: await shrinkImage(f, 1600, .85)}); } catch(e){ fails.push(e && e.message || String(e)); } }
+    if(!list.length){ st.textContent = "Kein Foto konnte geladen werden: " + (fails[0]||""); root.querySelector("#pick").classList.remove("spin"); pf.value = ""; return; }
+    if(fails.length) toast(`${fails.length} Foto(s) konnten nicht geladen werden`);
     closeSheet();
     const items = []; let i = 0, stop = false;
     const next = () => {
