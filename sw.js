@@ -1,6 +1,6 @@
 /* Raupenbuch Service Worker – offline-first.
    Bei jeder Änderung an einer Datei VERSION erhöhen, dann lädt die App die neue Version. */
-const VERSION = "rb-5.14.1";
+const VERSION = "rb-5.14.2";
 const FILES = [
   "./", "index.html", "manifest.webmanifest",
   "icon-192.png", "icon-512.png", "icon-maskable.png",
