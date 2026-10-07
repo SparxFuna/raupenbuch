@@ -175,6 +175,32 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 
 /* chips/segmented */
 .seg{display:flex;gap:4px;background:var(--sunk);padding:3px;border-radius:999px;overflow-x:auto}
+.seg.sm button{padding:4px 10px;font-size:12px}
+.sortsel{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+.sortsel select{flex:1;min-height:36px;padding:4px 10px;font-size:14px}
+.gantt{padding:10px 10px 8px;display:flex;flex-direction:column;gap:2px;overflow:hidden}
+.g-row{appearance:none;border:0;background:none;padding:3px 0;display:grid;grid-template-columns:96px 1fr;gap:8px;align-items:center;text-align:left;cursor:pointer;color:inherit;font:inherit;width:100%}
+.g-row:hover .g-n .t{text-decoration:underline}
+.g-n{display:flex;flex-direction:column;min-width:0}
+.g-n .t{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-n .s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.g-b{position:relative;height:18px;background:var(--sunk);border-radius:5px}
+.g-b i{position:absolute;top:0;bottom:0;border-left:1px solid var(--line)}
+.g-s{position:absolute;top:2px;bottom:2px;background:var(--c);border-radius:3px}
+.g-s.est{background:var(--cs);box-shadow:inset 0 0 0 1.5px var(--c)}
+.g-end{position:absolute;top:-1px;bottom:-1px;width:4px;margin-left:-2px;border-radius:2px;background:var(--muted)}
+.g-end.dead{background:var(--dead)}
+.g-today{position:absolute;top:-3px;bottom:-3px;border-left:2px solid var(--accent)}
+.g-ax{cursor:default;padding-bottom:0}
+.g-ax .g-b{background:none;height:16px}
+.g-ax .g-b i{border:0}
+.g-ax em{position:absolute;transform:translateX(-50%);font-style:normal;font-size:10px;color:var(--muted);white-space:nowrap;font-family:var(--f-data)}
+.g-ax .g-today{display:none}
+.g-leg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:11px;margin-top:8px;color:var(--ink)}
+.g-leg span{display:flex;align-items:center;gap:4px}
+.g-leg i{display:inline-block;width:12px;height:8px;border-radius:2px;background:var(--c)}
+.g-leg .g-estk{background:var(--cs);box-shadow:inset 0 0 0 1.5px var(--c)}
+.g-leg .g-endk{width:3px;height:12px;background:var(--dead)}
 .seg button{appearance:none;border:0;background:none;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap;color:var(--muted)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -426,7 +452,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.13.1";
+const APP_VERSION = "5.14.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -553,7 +579,10 @@ const I18N_EN = {
   "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?":"No convincing match. Maybe a different crop, or a moth without a thorax photo?",
   "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an.":"Close call: the top matches are near each other. Look at the pictures carefully.",
   "Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.":"Similarity 0–100 %. What matters is the gap between matches, not the absolute value.",
-  "Foto hier speichern":"Save photo here","Augen finden":"Find eyes","Weiter":"Next","Überspringen":"Skip","Rest überspringen":"Skip the rest",
+  "Foto hier speichern":"Save photo here","Sortieren":"Sort","Liste":"List","Zeitstrahl":"Timeline","Name (A–Z)":"Name (A–Z)","Alter: älteste zuerst":"Age: oldest first",
+  "Falterzeit: längste zuerst":"Moth time: longest first","Falterschlupf: neueste zuerst":"Eclosion: newest first","Puppenruhe: längste zuerst":"Pupal period: longest first","Stadium: am weitesten zuerst":"Stage: most advanced first","Zugang: neueste zuerst":"Added: newest first",
+  "kein Startdatum":"no start date","noch nicht geschlüpft":"not eclosed yet","noch nicht verpuppt":"not pupated yet","Ende (tot, präpariert, abgegeben)":"End (dead, preserved, given away)","hell = Beginn geschätzt":"light = start estimated",
+  "Für den Zeitstrahl braucht es Stadien mit Datum (z. B. Startdatum am Zuchtansatz).":"The timeline needs stages with dates (e.g. a start date on the brood).","Augen finden":"Find eyes","Weiter":"Next","Überspringen":"Skip","Rest überspringen":"Skip the rest",
   "Augen automatisch gefunden. Liegen die gelben Punkte auf den Augen? Wenn nicht: „Augen antippen“.":"Eyes found automatically. Are the yellow circles on the eyes? If not: “Tap eyes”.",
   "Tippe einmal auf den Totenkopf, dann sucht die App die Augen dort.":"Tap the skull once and the app will look for the eyes there.",
   "Dort keine Augen gefunden. Tippe genauer auf den Totenkopf oder nimm „Augen antippen“.":"No eyes found there. Tap more precisely on the skull or use “Tap eyes”.",
@@ -686,7 +715,9 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^Foto konnte nicht geladen werden: (.*)$/, "Photo could not be loaded: $1"], [/^Kein Foto konnte geladen werden: (.*)$/, "No photo could be loaded: $1"], [/^(\d+) Foto\(s\) konnten nicht geladen werden$/, "$1 photo(s) could not be loaded"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^(\d+) (?:Tag|Tage) alt( \(bis (.+)\))?$/, (m,n,x,d)=>`${n} day${n==="1"?"":"s"} old${x?` (until ${d})`:""}`],
+  [/^(\d+) (?:Tag|Tage) Falter( \(beendet\))?$/, (m,n,x)=>`${n} day${n==="1"?"":"s"} as moth${x?" (ended)":""}`], [/^geschlüpft (.+)$/, "eclosed $1"], [/^seit (.+)$/, "since $1"],
+  [/^(\d+) (?:Tag|Tage) Puppenruhe( \(läuft\)| \(beendet\))?( ab Eingraben)?$/, (m,n,x,y)=>`${n} day${n==="1"?"":"s"} pupal period${x===" (läuft)"?" (ongoing)":x?" (ended)":""}${y?" from burrowing":""}`], [/^Foto konnte nicht geladen werden: (.*)$/, "Photo could not be loaded: $1"], [/^Kein Foto konnte geladen werden: (.*)$/, "No photo could be loaded: $1"], [/^(\d+) Foto\(s\) konnten nicht geladen werden$/, "$1 photo(s) could not be loaded"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
   [/^Bereite vor … (\d+) von (\d+)$/, "Preparing … $1 of $2"], [/^Vergleiche Fotos untereinander … (\d+) %$/, "Comparing photos with each other … $1 %"], [/^Suche passende Falter … Gruppe (\d+) von (\d+)$/, "Finding matching moths … group $1 of $2"],
   [/^(\d+) Fotos, (\d+) Gruppen?\. Fotos einer Gruppe zeigen sehr wahrscheinlich dasselbe Tier\. Tippe ein Foto an, um es aus der Gruppe zu nehmen\. Wähle dann je Gruppe den Falter und speichere\.$/, "$1 photos, $2 group(s). Photos in a group very likely show the same animal. Tap a photo to remove it from the group. Then choose the moth for each group and save."],
   [/^Gruppe (\d+)$/, "Group $1"], [/^(\d+) Fotos? · (.+?)(?: · untereinander ≥ (\d+) %)?$/, (m,n,w,u)=>`${n} photo${n==="1"?"":"s"} · ${w}${u?` · each other ≥ ${u} %`:""}`],
@@ -1087,7 +1118,7 @@ const IC = {
 };
 const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
 
-const R = { stack: [{v:"home"}], q: "", animalFilter: "aktiv", imagoTab: "offen" };
+const R = { stack: [{v:"home"}], q: "", animalFilter: "aktiv", imagoTab: "offen", aSort: (()=>{ try { return localStorage.getItem("rb-asort") || "name"; } catch(e){ return "name"; } })(), aView: (()=>{ try { return localStorage.getItem("rb-aview") || "liste"; } catch(e){ return "liste"; } })() };
 const cur = () => R.stack[R.stack.length-1];
 function nav(v, p={}){ R.stack.push({v, ...p}); window.scrollTo(0,0); render(); }
 function tab(v){ R.stack = [{v}]; window.scrollTo(0,0); render(); }
@@ -1333,25 +1364,78 @@ VIEWS.animals = () => {
   const q = R.q.toLowerCase();
   const f = R.animalFilter;
   let inds = all("individuals").sort(byName);
+  const SK = R.aSort;
   if(f==="aktiv") inds = inds.filter(isAlive);
   else if(f==="puppe") inds = inds.filter(i=>isAlive(i)&&["vorpuppe","puppe"].includes(currentStage(i)));
   else if(f==="falter") inds = inds.filter(i=>firstEv(i,"falterschlupf"));
   else if(f==="tot") inds = inds.filter(i=>statusOf(i)==="tot");
   if(R.tagF) inds = inds.filter(i => tagsOf(i).includes(R.tagF));
   if(q) inds = inds.filter(i => (i.name+" "+(i.notes||"")+" "+(S.broods[i.broodId]?.name||"")+" "+tagsOf(i).map(t=>"#"+t).join(" ")).toLowerCase().includes(q));
+  const met = new Map(inds.map(i => [i.id, animalMetric(i, SK)]));
+  inds.sort((a,b) => { const x = met.get(a.id).v, y = met.get(b.id).v;
+    if(x==null && y==null) return byName(a,b); if(x==null) return 1; if(y==null) return -1;
+    return (SK==="name" ? 0 : y - x) || byName(a,b); });
   const TG = allTags();
   const broods = all("broods").sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""));
   const F = [["aktiv","Aktiv"],["puppe","Puppen"],["falter","Falter"],["tot","Tot"],["alle","Alle"]];
   return `<div class="search">${svg("search").replace('<svg','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.8"')}<input id="aq" placeholder="Tier suchen (Name, Notiz, Ansatz)" value="${esc(R.q)}"></div>
   <div class="seg" role="group" aria-label="Filter">${F.map(([k,l])=>`<button data-act="afilter" data-k="${k}" aria-pressed="${f===k}">${l}</button>`).join("")}</div>
   ${TG.length?`<div class="chips">${TG.map(t=>`<button class="chip ${R.tagF===t?"on":""}" data-act="tagFilter" data-k="${esc(t)}">#${esc(t)}</button>`).join("")}</div>`:""}
-  <section class="sec"><div class="sec-h"><h2>${inds.length} Tier${inds.length===1?"":"e"}</h2></div>
-  <div class="list">${inds.length? inds.map(i=>indRow(i)).join("") : `<div class="empty">${all("individuals").length? "Keine Tiere für diesen Filter." : "Noch keine Tiere. Öffne einen Zuchtansatz und füge dort Tiere hinzu."}</div>`}</div></section>
+  <section class="sec"><div class="sec-h"><h2>${inds.length} Tier${inds.length===1?"":"e"}</h2>
+    <div class="seg sm" role="group" aria-label="Ansicht">${[["liste","Liste"],["zeit","Zeitstrahl"]].map(([k,l])=>`<button data-act="aview" data-k="${k}" aria-pressed="${R.aView===k}">${l}</button>`).join("")}</div></div>
+  <label class="sortsel"><span class="small muted">Sortieren</span><select class="btn" id="asort">${ASORTS.map(([k,l])=>`<option value="${k}" ${k===SK?"selected":""}>${l}</option>`).join("")}</select></label>
+  ${!inds.length ? `<div class="list"><div class="empty">${all("individuals").length? "Keine Tiere für diesen Filter." : "Noch keine Tiere. Öffne einen Zuchtansatz und füge dort Tiere hinzu."}</div></div>`
+    : R.aView==="zeit" ? ganttHtml(inds, met)
+    : `<div class="list">${inds.map(i=>{ const m = met.get(i.id), b = S.broods[i.broodId];
+        return indRow(i, SK==="name"||SK==="stadium" ? "" : `${m.label ? `<b>${esc(m.label)}</b>` : `<span class="muted">${esc(m.none)}</span>`} · ${esc(b?.name||"")}`); }).join("")}</div>`}</section>
   <section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div>
   <div class="list">${broods.length? broods.map(broodRow).join("") : `<div class="empty">Noch kein Zuchtansatz.</div>`}</div></section>`;
 };
 document.addEventListener("input", e => { if(e.target.id==="aq"){ R.q = e.target.value; scheduleRender(); } });
 ACTS.afilter = d => { R.animalFilter = d.k; render(); };
+ACTS.aview = d => { R.aView = d.k; try { localStorage.setItem("rb-aview", d.k); } catch(e){} render(); };
+document.addEventListener("change", e => { if(e.target.id==="asort"){ R.aSort = e.target.value; try { localStorage.setItem("rb-asort", R.aSort); } catch(err){} render(); } });
+
+/* Sortierung der Tierliste: Kennzahl je Tier (größer = weiter oben), dazu ein kurzer Text für die Zeile */
+const ASORTS = [["name","Name (A–Z)"],["alter","Alter: älteste zuerst"],["falter","Falterzeit: längste zuerst"],["schlupf","Falterschlupf: neueste zuerst"],["ruhe","Puppenruhe: längste zuerst"],["stadium","Stadium: am weitesten zuerst"],["start","Zugang: neueste zuerst"]];
+function animalMetric(i, k){
+  const now = Date.now(), endEv = evOf(i.id).find(e=>END_TYPES.includes(e.type)), endT = endEv ? evMid(endEv) : now;
+  const T = n => `${n} ${n===1?"Tag":"Tage"}`;
+  if(k==="name") return {v:0};
+  if(k==="stadium") return {v: isAlive(i) ? (SIDX[currentStage(i)] ?? -1) : -2};
+  if(k==="alter"){ const sg = stageSegments(i); if(!sg.length) return {v:null, none:"kein Startdatum"};
+    const n = dayNo(endT) - dayNo(sg[0].from) + 1; return {v:n, label:`${T(n)} alt${endEv?" (bis "+dShort(dFromMs(endT))+")":""}`}; }
+  if(k==="falter"){ const fs = stageSegments(i).find(sg=>sg.k==="falter"); if(!fs) return {v:null, none:"noch nicht geschlüpft"};
+    const n = fs.inclusive ? Math.round(fs.days) : Math.floor(fs.days); return {v:fs.days, label:`${T(n)} Falter${fs.open?"":" (beendet)"}`}; }
+  if(k==="schlupf"){ const ec = firstEv(i,"falterschlupf"); if(!ec) return {v:null, none:"noch nicht geschlüpft"};
+    return {v:ms(ec.t0), label:`geschlüpft ${fmtTime(ec)}`}; }
+  if(k==="ruhe"){ const ps = pupalStart(i); if(!ps) return {v:null, none:"noch nicht verpuppt"};
+    const ec = firstEv(i,"falterschlupf"), to = ec ? evMid(ec) : endT, n = Math.max(0, Math.round((to-evMid(ps.ev))/864e5));
+    return {v:n, label:`${T(n)} Puppenruhe${ec?"":endEv?" (beendet)":" (läuft)"}${ps.basis==="eingegraben"?" ab Eingraben":""}`}; }
+  if(k==="start"){ const sg = stageSegments(i); const t = sg.length ? sg[0].from : ms(i.createdAt||0); return {v:t, label:`seit ${dShort(dFromMs(t))}`}; }
+  return {v:0};
+}
+/* Zeitstrahl: je Tier ein Balken, farbig nach Stadium, gemeinsame Zeitachse bis heute */
+function ganttHtml(inds, met){
+  const now = Date.now(), rows = inds.map(i => ({i, sg: stageSegments(i), end: evOf(i.id).find(e=>END_TYPES.includes(e.type))}));
+  const starts = rows.flatMap(r => r.sg.map(s=>s.from)); if(!starts.length) return `<div class="list"><div class="empty">Für den Zeitstrahl braucht es Stadien mit Datum (z. B. Startdatum am Zuchtansatz).</div></div>`;
+  const t0 = dayNo(Math.min(...starts))*864e5, t1 = (dayNo(now)+1)*864e5, span = t1 - t0, pc = t => Math.max(0, Math.min(100, (t - t0)/span*100));
+  const days = span/864e5, ticks = [];
+  const d = new Date(t0); d.setHours(0,0,0,0);
+  if(days <= 75){ d.setDate(d.getDate() + ((8 - d.getDay()) % 7)); for(; d.getTime() < t1; d.setDate(d.getDate()+7)) ticks.push([d.getTime(), `${d.getDate()}.${d.getMonth()+1}.`]); }
+  else { d.setDate(1); d.setMonth(d.getMonth()+1); const step = days > 400 ? 3 : 1; for(; d.getTime() < t1; d.setMonth(d.getMonth()+step)) ticks.push([d.getTime(), d.toLocaleDateString(LANG==="en"?"en-GB":"de-DE",{month:"short"})]); }
+  const used = new Set(rows.flatMap(r=>r.sg.map(s=>STG(s.k))));
+  const LEG = [["egg","Ei"],["larva","Raupe"],["burrow","Vorpuppe"],["pupa","Puppe"],["imago","Falter"]].filter(([k])=>used.has(k));
+  const sk = R.aSort;
+  return `<div class="gantt card">
+    <div class="g-row g-ax"><span class="g-n"></span><span class="g-b">${ticks.map(([t,l])=>`<i style="left:${pc(t)}%"><em>${l}</em></i>`).join("")}<b class="g-today" style="left:${pc(now)}%"></b></span></div>
+    ${rows.map(({i, sg, end}) => { const m = met.get(i.id);
+      const bars = sg.map(s => `<span class="g-s st-${STG(s.k)}${s.est?" est":""}" style="left:${pc(s.from)}%;width:${Math.max(0.6, pc(s.to)-pc(s.from))}%" title="${esc(stageLabel(s.k))}: ${dShort(dFromMs(s.from))} – ${dShort(dFromMs(s.to))}"></span>`).join("");
+      const cap = end ? `<span class="g-end ${end.type==="tod"?"dead":""}" style="left:${pc(evMid(end))}%" title="${esc(evTitle(end))}"></span>` : "";
+      return `<button class="g-row" data-go="animal:${i.id}"><span class="g-n"><span class="t">${esc(i.name)}</span>${sk!=="name"&&sk!=="stadium"&&m.label?`<span class="s">${esc(m.label)}</span>`:""}</span><span class="g-b">${ticks.map(([t])=>`<i style="left:${pc(t)}%"></i>`).join("")}${bars}${cap}<b class="g-today" style="left:${pc(now)}%"></b></span></button>`; }).join("")}
+    <div class="g-leg">${LEG.map(([k,l])=>`<span><i class="st-${k}"></i>${l}</span>`).join("")}<span><i class="g-endk"></i>Ende (tot, präpariert, abgegeben)</span><span><i class="g-estk st-pupa"></i>hell = Beginn geschätzt</span></div>
+  </div>`;
+}
 ACTS.tagFilter = d => { R.tagF = R.tagF===d.k ? null : d.k; render(); };
 ACTS.noop = () => {};
 ACTS.lang = d => setLang(d.k);
