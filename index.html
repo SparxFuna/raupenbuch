@@ -452,7 +452,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.14.0";
+const APP_VERSION = "5.14.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -579,9 +579,9 @@ const I18N_EN = {
   "Keine überzeugende Übereinstimmung. Vielleicht ein anderer Ausschnitt oder ein Falter ohne Thoraxfoto?":"No convincing match. Maybe a different crop, or a moth without a thorax photo?",
   "Knapp: Die ersten Treffer liegen dicht beieinander. Schau dir die Bilder genau an.":"Close call: the top matches are near each other. Look at the pictures carefully.",
   "Ähnlichkeit 0–100 %. Wichtig ist der Abstand zwischen den Treffern, nicht der absolute Wert.":"Similarity 0–100 %. What matters is the gap between matches, not the absolute value.",
-  "Foto hier speichern":"Save photo here","Sortieren":"Sort","Liste":"List","Zeitstrahl":"Timeline","Name (A–Z)":"Name (A–Z)","Alter: älteste zuerst":"Age: oldest first",
-  "Falterzeit: längste zuerst":"Moth time: longest first","Falterschlupf: neueste zuerst":"Eclosion: newest first","Puppenruhe: längste zuerst":"Pupal period: longest first","Stadium: am weitesten zuerst":"Stage: most advanced first","Zugang: neueste zuerst":"Added: newest first",
-  "kein Startdatum":"no start date","noch nicht geschlüpft":"not eclosed yet","noch nicht verpuppt":"not pupated yet","Ende (tot, präpariert, abgegeben)":"End (dead, preserved, given away)","hell = Beginn geschätzt":"light = start estimated",
+  "Foto hier speichern":"Save photo here","Sortieren":"Sort","Liste":"List","Zeitstrahl":"Timeline","Name (A–Z)":"Name (A–Z)",
+  "Falteralter: älteste zuerst":"Moth age: oldest first","Falterschlupf: neueste zuerst":"Eclosion: newest first","Puppenruhe: längste zuerst":"Pupal period: longest first","Stadium: am weitesten zuerst":"Stage: most advanced first","Zugang: neueste zuerst":"Added: newest first",
+  "noch nicht geschlüpft":"not eclosed yet","noch nicht verpuppt":"not pupated yet","Ende (tot, präpariert, abgegeben)":"End (dead, preserved, given away)","hell = Beginn geschätzt":"light = start estimated",
   "Für den Zeitstrahl braucht es Stadien mit Datum (z. B. Startdatum am Zuchtansatz).":"The timeline needs stages with dates (e.g. a start date on the brood).","Augen finden":"Find eyes","Weiter":"Next","Überspringen":"Skip","Rest überspringen":"Skip the rest",
   "Augen automatisch gefunden. Liegen die gelben Punkte auf den Augen? Wenn nicht: „Augen antippen“.":"Eyes found automatically. Are the yellow circles on the eyes? If not: “Tap eyes”.",
   "Tippe einmal auf den Totenkopf, dann sucht die App die Augen dort.":"Tap the skull once and the app will look for the eyes there.",
@@ -715,8 +715,7 @@ const I18N_RX = [
   [/^Gestorben: (.+?)( \(Verdacht\))?$/, (m,c,v)=>`Died: ${tr(c)}${v?" (suspected)":""}`], [/^Gewogen: (.+) g$/, "Weighed: $1 g"], [/^Häutung → (.+)$/, "Moult → $1"],
   [/^Geschlecht: (\S+)( \(an (Puppe|Falter|Raupe)\))?$/, (m,s,_,a)=>`Sex: ${tr(s)}${a?` (on ${tr(a).toLowerCase()})`:""}`], [/^Futter: (.*)$/, "Food: $1"],
   [/^Umgesetzt → (.*)$/, "Moved → $1"], [/^Abgegeben an (.*)$/, "Given to $1"], [/^Stadium: (.+)$/, (m,s)=>`Stage: ${tr(s)}`],
-  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"], [/^(\d+) (?:Tag|Tage) alt( \(bis (.+)\))?$/, (m,n,x,d)=>`${n} day${n==="1"?"":"s"} old${x?` (until ${d})`:""}`],
-  [/^(\d+) (?:Tag|Tage) Falter( \(beendet\))?$/, (m,n,x)=>`${n} day${n==="1"?"":"s"} as moth${x?" (ended)":""}`], [/^geschlüpft (.+)$/, "eclosed $1"], [/^seit (.+)$/, "since $1"],
+  [/^Kamera nicht verfügbar: (.*)$/, "Camera not available: $1"], [/^Am ähnlichsten: (.+)$/, "Most similar: $1"],   [/^(\d+) (?:Tag|Tage) Falter( \(beendet\))?$/, (m,n,x)=>`${n} day${n==="1"?"":"s"} as moth${x?" (ended)":""}`], [/^geschlüpft (.+)$/, "eclosed $1"], [/^seit (.+)$/, "since $1"],
   [/^(\d+) (?:Tag|Tage) Puppenruhe( \(läuft\)| \(beendet\))?( ab Eingraben)?$/, (m,n,x,y)=>`${n} day${n==="1"?"":"s"} pupal period${x===" (läuft)"?" (ongoing)":x?" (ended)":""}${y?" from burrowing":""}`], [/^Foto konnte nicht geladen werden: (.*)$/, "Photo could not be loaded: $1"], [/^Kein Foto konnte geladen werden: (.*)$/, "No photo could be loaded: $1"], [/^(\d+) Foto\(s\) konnten nicht geladen werden$/, "$1 photo(s) could not be loaded"], [/^Knapp: (.+) oder (.+)$/, "Close call: $1 or $2"], [/^Lese Foto (\d+) von (\d+) …$/, "Reading photo $1 of $2 …"], [/^Foto (\d+) von (\d+)$/, "Photo $1 of $2"],
   [/^Bereite vor … (\d+) von (\d+)$/, "Preparing … $1 of $2"], [/^Vergleiche Fotos untereinander … (\d+) %$/, "Comparing photos with each other … $1 %"], [/^Suche passende Falter … Gruppe (\d+) von (\d+)$/, "Finding matching moths … group $1 of $2"],
   [/^(\d+) Fotos, (\d+) Gruppen?\. Fotos einer Gruppe zeigen sehr wahrscheinlich dasselbe Tier\. Tippe ein Foto an, um es aus der Gruppe zu nehmen\. Wähle dann je Gruppe den Falter und speichere\.$/, "$1 photos, $2 group(s). Photos in a group very likely show the same animal. Tap a photo to remove it from the group. Then choose the moth for each group and save."],
@@ -1118,7 +1117,7 @@ const IC = {
 };
 const svg = (k) => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k]}</svg>`;
 
-const R = { stack: [{v:"home"}], q: "", animalFilter: "aktiv", imagoTab: "offen", aSort: (()=>{ try { return localStorage.getItem("rb-asort") || "name"; } catch(e){ return "name"; } })(), aView: (()=>{ try { return localStorage.getItem("rb-aview") || "liste"; } catch(e){ return "liste"; } })() };
+const R = { stack: [{v:"home"}], q: "", animalFilter: "aktiv", imagoTab: "offen", aSort: (()=>{ try { const v = localStorage.getItem("rb-asort") || "name"; return v==="alter" ? "falter" : v; } catch(e){ return "name"; } })(), aView: (()=>{ try { return localStorage.getItem("rb-aview") || "liste"; } catch(e){ return "liste"; } })() };
 const cur = () => R.stack[R.stack.length-1];
 function nav(v, p={}){ R.stack.push({v, ...p}); window.scrollTo(0,0); render(); }
 function tab(v){ R.stack = [{v}]; window.scrollTo(0,0); render(); }
@@ -1397,14 +1396,12 @@ ACTS.aview = d => { R.aView = d.k; try { localStorage.setItem("rb-aview", d.k); 
 document.addEventListener("change", e => { if(e.target.id==="asort"){ R.aSort = e.target.value; try { localStorage.setItem("rb-asort", R.aSort); } catch(err){} render(); } });
 
 /* Sortierung der Tierliste: Kennzahl je Tier (größer = weiter oben), dazu ein kurzer Text für die Zeile */
-const ASORTS = [["name","Name (A–Z)"],["alter","Alter: älteste zuerst"],["falter","Falterzeit: längste zuerst"],["schlupf","Falterschlupf: neueste zuerst"],["ruhe","Puppenruhe: längste zuerst"],["stadium","Stadium: am weitesten zuerst"],["start","Zugang: neueste zuerst"]];
+const ASORTS = [["name","Name (A–Z)"],["falter","Falteralter: älteste zuerst"],["schlupf","Falterschlupf: neueste zuerst"],["ruhe","Puppenruhe: längste zuerst"],["stadium","Stadium: am weitesten zuerst"],["start","Zugang: neueste zuerst"]];
 function animalMetric(i, k){
   const now = Date.now(), endEv = evOf(i.id).find(e=>END_TYPES.includes(e.type)), endT = endEv ? evMid(endEv) : now;
   const T = n => `${n} ${n===1?"Tag":"Tage"}`;
   if(k==="name") return {v:0};
   if(k==="stadium") return {v: isAlive(i) ? (SIDX[currentStage(i)] ?? -1) : -2};
-  if(k==="alter"){ const sg = stageSegments(i); if(!sg.length) return {v:null, none:"kein Startdatum"};
-    const n = dayNo(endT) - dayNo(sg[0].from) + 1; return {v:n, label:`${T(n)} alt${endEv?" (bis "+dShort(dFromMs(endT))+")":""}`}; }
   if(k==="falter"){ const fs = stageSegments(i).find(sg=>sg.k==="falter"); if(!fs) return {v:null, none:"noch nicht geschlüpft"};
     const n = fs.inclusive ? Math.round(fs.days) : Math.floor(fs.days); return {v:fs.days, label:`${T(n)} Falter${fs.open?"":" (beendet)"}`}; }
   if(k==="schlupf"){ const ec = firstEv(i,"falterschlupf"); if(!ec) return {v:null, none:"noch nicht geschlüpft"};
