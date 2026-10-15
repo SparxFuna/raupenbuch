@@ -472,7 +472,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.16.0";
+const APP_VERSION = "5.16.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -2849,6 +2849,23 @@ const EGG = {
     }
     return best && best.v > 0.02 ? best.R*0.82 : null;
   },
+  sobel(I, w, h){ const gx = new Float32Array(w*h), gy = new Float32Array(w*h);
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
+      gx[i] = (I[i-w+1]+2*I[i+1]+I[i+w+1]) - (I[i-w-1]+2*I[i-1]+I[i+w-1]);
+      gy[i] = (I[i+w-1]+2*I[i+w]+I[i+w+1]) - (I[i-w-1]+2*I[i-w]+I[i-w+1]); }
+    return [gx, gy]; },
+  /* Kreis-Hough mit bekannter Größe: Jeder Kantenpunkt stimmt in Richtung des Anstiegs (ins Ei hinein) im Abstand ≈ R
+     für eine Eimitte. Jedes Ei sammelt so die Stimmen seines eigenen Randes – auch dicht an dicht liegende Eier
+     bekommen getrennte Mitten, und ein Ei mit hellem Reflex bekommt trotzdem nur eine. */
+  votes(I, w, h, R, sel, A){
+    const [gx, gy] = this.sobel(I, w, h), g = new Float32Array(w*h), smp = [];
+    for(let i=0;i<w*h;i++){ g[i] = Math.hypot(gx[i], gy[i]); if(sel[i] && g[i] > 0 && (i % 7) === 0) smp.push(g[i]); }
+    if(smp.length < 10) return;
+    smp.sort((a,b)=>a-b); const gt = smp[Math.floor(smp.length*0.8)]*0.4;
+    const rs = [0.75,0.85,0.95,1.05,1.15,1.25].map(f=>f*R);
+    for(let i=0;i<w*h;i++){ if(!sel[i] || g[i] <= gt) continue; const ux = gx[i]/g[i], uy = gy[i]/g[i], wt = Math.min(g[i]/gt, 4), x = i % w, y = (i/w)|0;
+      for(const r of rs){ const cx = Math.round(x+ux*r), cy = Math.round(y+uy*r); if(cx>=0 && cx<w && cy>=0 && cy<h) A[cy*w+cx] += wt; } }
+  },
   /* px: RGBA-Daten, tx/ty: angetipptes Ei. Liefert Kandidaten (stärkste zuerst, schon ausgedünnt) mit relativer Stärke. */
   detect(px, w, h, tx, ty){
     const n = w*h, F = this.feat(px, n);
@@ -2859,28 +2876,35 @@ const EGG = {
     let S = this.blur(this.score(F, n, e, bg), w, h, 1);
     const R = this.tapRadius(S, w, h, tx, ty);
     if(!R) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen."};
-    e = this.medianVec(F, this.disk(F, w, h, tx, ty, R*0.6));
+    const core = this.disk(F, w, h, tx, ty, R*0.6);
+    e = this.medianVec(F, core);
     S = this.blur(this.score(F, n, e, bg), w, h, 1);
-    const cr = Math.max(1, Math.round(R*0.35));
-    const Sc = this.minmax(this.minmax(S, w, h, cr, true), w, h, cr, false); // Lichtreflexe in der Eimitte schließen
-    const L = this.log(Sc, w, h, R*0.55);
-    let ref = 0; for(const i of this.disk(F, w, h, tx, ty, R)) ref = Math.max(ref, L[i]);
+    const lumRaw = new Float32Array(n); for(let i=0;i<n;i++) lumRaw[i] = (px[i*4]+px[i*4+1]+px[i*4+2])/3;
+    const lum = this.blur(lumRaw, w, h, 1), I = new Float32Array(n), m4 = new Float32Array(n), m3 = new Float32Array(n);
+    for(let i=0;i<n;i++){ I[i] = Math.min(1, S[i]); m4[i] = S[i] >= 0.4 ? 1 : 0; m3[i] = S[i] >= 0.3 ? 1 : 0; }
+    const near = this.minmax(m4, w, h, Math.round(R*0.5)+1, true), inner = this.minmax(m3, w, h, 1, false);
+    const A = new Float32Array(n);
+    this.votes(I, w, h, R, near, A);   // Rand Ei ↔ Hintergrund (Farbe)
+    this.votes(lum, w, h, R, inner, A); // Ränder zwischen Eiern (Helligkeit)
+    const As = this.blur(A, w, h, Math.max(1, R*0.25));
+    const k = Math.floor(R*0.6)+2; let ref = 0;
+    for(let y=Math.max(0,Math.round(ty)-k); y<=Math.min(h-1,Math.round(ty)+k); y++) for(let x=Math.max(0,Math.round(tx)-k); x<=Math.min(w-1,Math.round(tx)+k); x++) ref = Math.max(ref, As[y*w+x]);
     if(ref <= 0) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen."};
     const cand = [];
-    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x, v=L[i];
-      if(v < ref*0.08 || Sc[i] < 0.4) continue;
-      if(v<L[i-1]||v<L[i+1]||v<L[i-w]||v<L[i+w]||v<L[i-w-1]||v<L[i-w+1]||v<L[i+w-1]||v<L[i+w+1]) continue;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x, v=As[i];
+      if(v < ref*0.06 || S[i] < 0.3) continue;
+      if(v<As[i-1]||v<As[i+1]||v<As[i-w]||v<As[i+w]||v<As[i-w-1]||v<As[i-w+1]||v<As[i+w-1]||v<As[i+w+1]) continue;
       cand.push({x, y, v: v/ref}); }
     cand.sort((a,b)=>b.v-a.v);
-    // Ausdünnen: im Umkreis von 0,8·R bleibt nur der stärkste Punkt
-    const cs = Math.max(2, R*0.8), grid = new Map(), keep = [], key = (gx,gy)=>gx+","+gy;
+    // Ausdünnen: Mitten zweier Eier liegen mindestens etwa 2·R auseinander – im Umkreis von 1,4·R bleibt nur der stärkste Punkt
+    const cs = Math.max(2, R*1.4), grid = new Map(), keep = [], key = (gx,gy)=>gx+","+gy;
     for(const c of cand){ const gx = Math.floor(c.x/cs), gy = Math.floor(c.y/cs); let ok = true;
       for(let a=-1;a<=1&&ok;a++) for(let b=-1;b<=1&&ok;b++) for(const q of grid.get(key(gx+a,gy+b))||[]) if((q.x-c.x)**2+(q.y-c.y)**2 < cs*cs){ ok=false; break; }
-      if(ok){ keep.push(c); const k = key(gx,gy); (grid.get(k)||grid.set(k,[]).get(k)).push(c); } }
+      if(ok){ keep.push(c); const kk = key(gx,gy); (grid.get(kk)||grid.set(kk,[]).get(kk)).push(c); } }
     return {R, pts: keep};
   }
 };
-const EGG_THR = 0.25;
+const EGG_THR = 0.2;
 
 /* Vollbild-Zähler. onDone(anzahl, markiertesFotoBlob, aufnahmezeit) */
 function eggCounter(onDone){
