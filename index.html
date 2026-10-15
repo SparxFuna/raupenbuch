@@ -272,6 +272,16 @@ table.t td:first-child{font-family:var(--f-body)}
 .viewer img{flex:1;min-height:0;object-fit:contain;width:100%}
 .viewer .bar2{display:flex;gap:8px;padding:12px var(--gut) calc(12px + env(safe-area-inset-bottom,0px));justify-content:space-between;align-items:center;color:#fff;flex-wrap:wrap}
 .viewer .btn{background:#222;color:#fff;border-color:#444}
+.viewer.eggc{background:#000}
+.eggc .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.eggc .btn.primary:disabled{opacity:.5}
+.eggc .eggc-top{display:flex;gap:12px;align-items:center;padding:calc(10px + env(safe-area-inset-top,0px)) var(--gut) 8px;color:#fff}
+.eggc .eggc-top b{font-size:28px;min-width:2ch;font-variant-numeric:tabular-nums}
+.eggc .eggc-wrap{flex:1;min-height:0;overflow:auto;display:flex;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y}
+.eggc canvas{display:block;margin:auto;flex:none;cursor:crosshair}
+.eggc .eggc-sl{display:flex;align-items:center;gap:8px;color:#ddd}
+.eggc .eggc-sl input[type=range]{width:140px}
+.eggc .eggc-sl input[type=checkbox]{width:18px;height:18px;min-height:0}
 .spin{opacity:.6}
 .filebtn{position:relative;overflow:hidden}
 .vh{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:0}
@@ -462,7 +472,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.15.0";
+const APP_VERSION = "5.16.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -529,6 +539,8 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Eier auf Foto zählen":"Count eggs on photo","Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of a single egg. The app learns colour and size from it.","Anderes Ei antippen":"Tap another egg","Empfindlichkeit":"Sensitivity","Foto mit Markierungen speichern":"Save photo with markers","Übernehmen":"Apply","Tippe mitten auf ein einzelnes Ei.":"Tap the middle of a single egg.","Zähle …":"Counting …",
+  "Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.":"Red = detected. Tap a missing egg to add it, tap a wrong marker to remove it.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen.":"No egg found here. Please zoom in and tap the middle of a single egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen.":"No egg found here. Please tap the middle of a single egg.","Das markierte Foto wird beim Speichern zum Gelege gelegt.":"The marked photo will be added to the clutch when you save.","Verkleinern":"Zoom out","Vergrößern":"Zoom in","Eier":"Eggs",
   // Navigation & allgemein
   "Übersicht":"Overview","Tiere":"Animals","Zuordnen":"Assign","Klima":"Climate","Mehr":"More","Zurück":"Back","Suchen":"Search",
   "QR-Etikett scannen":"Scan QR label","Hauptnavigation":"Main navigation","Lade dein Raupenbuch …":"Loading your Raupenbuch …","ohne Speicher":"no storage",
@@ -725,6 +737,9 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^(geschlüpft|unbefruchtet|vertrocknet|sonstige|offen) (\d+)$/, (m,a,n)=>`${({geschlüpft:"hatched",unbefruchtet:"infertile",vertrocknet:"dried up",sonstige:"other",offen:"open"})[a]} ${n}`],
+  [/^Eier: (\d+) \(vorher (\d+)\)$/, "Eggs: $1 (before $2)"], [/^Eier: (\d+)$/, "Eggs: $1"], [/^Übernehmen \((\d+)\)$/, "Apply ($1)"], [/^(\d+) Eier$/, "$1 eggs"],
+  [/^(\d+) gezählt – weniger als schon eingetragen \((\d+)\)\. Nicht übernommen\.$/, "$1 counted – fewer than already recorded ($2). Not applied."],
   [/^(\d+) Tiere$/, "$1 animals"], [/^Falter ([A-Z])$/, "Moth $1"], [/^1 Tier$/, "1 animal"], [/^(\d+) Ansätze$/, "$1 broods"], [/^(\d+) Zuchtansätze?$/, "$1 brood(s)"], [/^(\d+) im Katalog$/, "$1 in catalogue"],
   [/^(\d+) Falter noch nicht zugeordnet$/, "$1 moths not yet assigned"], [/^(\d+) Wägungen$/, "$1 weighings"], [/^(\d+) Tagen$/, "$1 days ago"],
   [/^(\d+) Tier\(e\): (.*)$/, "$1 animal(s): $2"], [/^Tag (\d+)$/, "Day $1"], [/^Zuordnen \((\d+)\)$/, "Assign ($1)"], [/^Version (.+)$/, "Version $1"],
@@ -2786,6 +2801,205 @@ async function ridBatchShow(items){
 }
 const RID_GROUP = 0.8;
 
+/* ---- Eier auf einem Foto zählen ----
+   Ohne KI: Man tippt ein einzelnes Ei an. Daraus ergeben sich Farbe und Größe der Eier. Dann wird jeder Bildpunkt danach
+   bewertet, wie sehr er der Eifarbe gegenüber dem Hintergrund ähnelt, und es werden runde Flecken dieser Größe gesucht
+   (Laplace-of-Gaussian). Ergebnis sind Vorschläge – fehlende Eier antippen zum Hinzufügen, falsche antippen zum Entfernen. */
+const EGG = {
+  blur(src, w, h, s){ // separabler Gauß-Filter
+    if(s < 0.3) return Float32Array.from(src);
+    const r = Math.ceil(s*3), k = new Float32Array(2*r+1); let sum = 0;
+    for(let i=-r;i<=r;i++){ k[i+r] = Math.exp(-i*i/(2*s*s)); sum += k[i+r]; } for(let i=0;i<k.length;i++) k[i] /= sum;
+    const tmp = new Float32Array(w*h), out = new Float32Array(w*h);
+    for(let y=0;y<h;y++){ const o=y*w; for(let x=0;x<w;x++){ let a=0; for(let i=-r;i<=r;i++){ let xx=x+i; xx = xx<0?-xx:xx>=w?2*w-2-xx:xx; a += src[o+xx]*k[i+r]; } tmp[o+x]=a; } }
+    for(let y=0;y<h;y++){ for(let x=0;x<w;x++){ let a=0; for(let i=-r;i<=r;i++){ let yy=y+i; yy = yy<0?-yy:yy>=h?2*h-2-yy:yy; a += tmp[yy*w+x]*k[i+r]; } out[y*w+x]=a; } }
+    return out;
+  },
+  minmax(src, w, h, r, isMax){ // quadratischer Max-/Min-Filter (separabel)
+    const tmp = new Float32Array(w*h), out = new Float32Array(w*h), f = isMax ? Math.max : Math.min;
+    for(let y=0;y<h;y++){ const o=y*w; for(let x=0;x<w;x++){ let a = src[o+x]; for(let i=Math.max(0,x-r); i<=Math.min(w-1,x+r); i++) a = f(a, src[o+i]); tmp[o+x]=a; } }
+    for(let y=0;y<h;y++) for(let x=0;x<w;x++){ let a = tmp[y*w+x]; for(let i=Math.max(0,y-r); i<=Math.min(h-1,y+r); i++) a = f(a, tmp[i*w+x]); out[y*w+x]=a; }
+    return out;
+  },
+  log(src, w, h, s){ // normierte negative Laplace-of-Gaussian-Antwort: helle Flecken der Größe s·√2 → hohe Werte
+    const g = this.blur(src, w, h, s), out = new Float32Array(w*h), k = s*s;
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; out[i] = -k*(g[i-1]+g[i+1]+g[i-w]+g[i+w]-4*g[i]); }
+    return out;
+  },
+  feat(px, n){ const F = new Float32Array(n*3); // Helligkeit (halb gewichtet), Rot-Grün, Gelb-Blau
+    for(let i=0;i<n;i++){ const r=px[i*4], g=px[i*4+1], b=px[i*4+2]; F[i*3]=0.5*(r+g+b)/3; F[i*3+1]=r-g; F[i*3+2]=(r+g)/2-b; } return F; },
+  medianVec(F, idx){ const out=[0,0,0]; for(let c=0;c<3;c++) out[c] = median(idx.map(i=>F[i*3+c])); return out; },
+  score(F, n, e, bg){ // Projektion auf die Richtung Hintergrund→Ei, minus Abweichung quer dazu (andere Farbtöne)
+    const d = [e[0]-bg[0], e[1]-bg[1], e[2]-bg[2]], dd = d[0]*d[0]+d[1]*d[1]+d[2]*d[2] || 1, dl = Math.sqrt(dd), S = new Float32Array(n);
+    for(let i=0;i<n;i++){ const x0=F[i*3]-bg[0], x1=F[i*3+1]-bg[1], x2=F[i*3+2]-bg[2];
+      const t = (x0*d[0]+x1*d[1]+x2*d[2])/dd, p0=x0-t*d[0], p1=x1-t*d[1], p2=x2-t*d[2];
+      S[i] = Math.min(1.5, Math.max(0, t - Math.sqrt(p0*p0+p1*p1+p2*p2)/dl)); }
+    return S;
+  },
+  disk(F, w, h, x, y, r){ const out=[]; const R=Math.max(1,r); for(let yy=Math.max(0,Math.round(y-R)); yy<=Math.min(h-1,Math.round(y+R)); yy++) for(let xx=Math.max(0,Math.round(x-R)); xx<=Math.min(w-1,Math.round(x+R)); xx++) if((xx-x)**2+(yy-y)**2<=R*R) out.push(yy*w+xx); return out; },
+  tapRadius(S, w, h, x, y){ // Größe des angetippten Flecks: Maßstab mit der stärksten LoG-Antwort
+    let best = null;
+    for(let R=3; R<=32; R*=1.06){
+      const s = R/Math.SQRT2, r0 = Math.ceil(0.6*R + 3*s) + 5, x0 = Math.max(0, Math.round(x)-r0), y0 = Math.max(0, Math.round(y)-r0), x1 = Math.min(w, Math.round(x)+r0), y1 = Math.min(h, Math.round(y)+r0);
+      const pw = x1-x0, ph = y1-y0; if(pw<5||ph<5) continue;
+      const P = new Float32Array(pw*ph); for(let yy=0;yy<ph;yy++) for(let xx=0;xx<pw;xx++) P[yy*pw+xx] = S[(y0+yy)*w+x0+xx];
+      const L = this.log(P, pw, ph, s), rr = Math.round(R*0.6)+2; let v = -1e9;
+      for(let yy=Math.max(1,Math.round(y)-y0-rr); yy<=Math.min(ph-2,Math.round(y)-y0+rr); yy++) for(let xx=Math.max(1,Math.round(x)-x0-rr); xx<=Math.min(pw-2,Math.round(x)-x0+rr); xx++) v = Math.max(v, L[yy*pw+xx]);
+      if(!best || v > best.v) best = {R, v};
+    }
+    return best && best.v > 0.02 ? best.R*0.82 : null;
+  },
+  /* px: RGBA-Daten, tx/ty: angetipptes Ei. Liefert Kandidaten (stärkste zuerst, schon ausgedünnt) mit relativer Stärke. */
+  detect(px, w, h, tx, ty){
+    const n = w*h, F = this.feat(px, n);
+    const tap = this.disk(F, w, h, tx, ty, 2.5);
+    const samp = []; for(let i=0;i<n;i+=Math.max(1, Math.floor(n/60000))) samp.push(i);
+    const bg = this.medianVec(F, samp);
+    let e = this.medianVec(F, tap);
+    let S = this.blur(this.score(F, n, e, bg), w, h, 1);
+    const R = this.tapRadius(S, w, h, tx, ty);
+    if(!R) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen."};
+    e = this.medianVec(F, this.disk(F, w, h, tx, ty, R*0.6));
+    S = this.blur(this.score(F, n, e, bg), w, h, 1);
+    const cr = Math.max(1, Math.round(R*0.35));
+    const Sc = this.minmax(this.minmax(S, w, h, cr, true), w, h, cr, false); // Lichtreflexe in der Eimitte schließen
+    const L = this.log(Sc, w, h, R*0.55);
+    let ref = 0; for(const i of this.disk(F, w, h, tx, ty, R)) ref = Math.max(ref, L[i]);
+    if(ref <= 0) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen."};
+    const cand = [];
+    for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x, v=L[i];
+      if(v < ref*0.08 || Sc[i] < 0.4) continue;
+      if(v<L[i-1]||v<L[i+1]||v<L[i-w]||v<L[i+w]||v<L[i-w-1]||v<L[i-w+1]||v<L[i+w-1]||v<L[i+w+1]) continue;
+      cand.push({x, y, v: v/ref}); }
+    cand.sort((a,b)=>b.v-a.v);
+    // Ausdünnen: im Umkreis von 0,8·R bleibt nur der stärkste Punkt
+    const cs = Math.max(2, R*0.8), grid = new Map(), keep = [], key = (gx,gy)=>gx+","+gy;
+    for(const c of cand){ const gx = Math.floor(c.x/cs), gy = Math.floor(c.y/cs); let ok = true;
+      for(let a=-1;a<=1&&ok;a++) for(let b=-1;b<=1&&ok;b++) for(const q of grid.get(key(gx+a,gy+b))||[]) if((q.x-c.x)**2+(q.y-c.y)**2 < cs*cs){ ok=false; break; }
+      if(ok){ keep.push(c); const k = key(gx,gy); (grid.get(k)||grid.set(k,[]).get(k)).push(c); } }
+    return {R, pts: keep};
+  }
+};
+const EGG_THR = 0.25;
+
+/* Vollbild-Zähler. onDone(anzahl, markiertesFotoBlob, aufnahmezeit) */
+function eggCounter(onDone){
+  const inp = document.createElement("input"); inp.type = "file"; inp.accept = "image/*"; inp.className = "vh"; document.body.appendChild(inp);
+  inp.addEventListener("change", async () => {
+    const f = inp.files[0]; inp.remove(); if(!f) return;
+    let pk, img; try {
+      pk = await readPick(f);
+      const url = URL.createObjectURL(pk.data);
+      img = await new Promise(res=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=url; });
+      if(!img && window.createImageBitmap){ try { img = await createImageBitmap(pk.data); } catch(e){} }
+      URL.revokeObjectURL(url);
+      if(!img) throw new Error(/heic|heif/i.test(pk.data.type||"") ? "HEIC-Fotos kann der Browser nicht öffnen. Bitte als JPG aufnehmen." : "Bild konnte nicht geöffnet werden.");
+    } catch(e){ toast(e.message || "Foto konnte nicht geladen werden"); return; }
+    eggCounterUI(img, pk.taken, onDone);
+  });
+  inp.click();
+}
+function eggCounterUI(img, taken, onDone){
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, sc = Math.min(1, 1600/Math.max(iw, ih));
+  const W = Math.round(iw*sc), H = Math.round(ih*sc);
+  const base = document.createElement("canvas"); base.width = W; base.height = H;
+  const bctx = base.getContext("2d", {willReadFrequently:true}); bctx.drawImage(img, 0, 0, W, H);
+  const px = bctx.getImageData(0, 0, W, H).data;
+  const v = document.createElement("div"); v.className = "viewer eggc"; v.id = "eggc";
+  v.innerHTML = `<div class="eggc-top"><b id="ecN">–</b><span id="ecHint" class="small">Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.</span></div>
+    <div class="eggc-wrap" id="ecWrap"><canvas id="ecCv"></canvas></div>
+    <div class="bar2"><div class="btns"><button class="btn" id="ecOut" aria-label="Verkleinern">−</button><button class="btn" id="ecIn" aria-label="Vergrößern">+</button><button class="btn" id="ecRe" hidden>Anderes Ei antippen</button></div>
+      <label class="eggc-sl small" id="ecSlW" hidden>Empfindlichkeit <input type="range" id="ecSl" min="0.08" max="0.6" step="0.01" value="${(0.68-EGG_THR).toFixed(2)}"></label>
+      <label class="eggc-sl small"><input type="checkbox" id="ecSave" checked> Foto mit Markierungen speichern</label>
+      <div class="btns"><button class="btn" id="ecX">Abbrechen</button><button class="btn primary" id="ecOk" disabled>Übernehmen</button></div></div>`;
+  document.body.appendChild(v);
+  const wrap = v.querySelector("#ecWrap"), cv = v.querySelector("#ecCv"), ctx = cv.getContext("2d");
+  const sl = v.querySelector("#ecSl"), hint = v.querySelector("#ecHint"), nEl = v.querySelector("#ecN");
+  sl.value = String(0.68 - EGG_THR); // Regler: rechts = empfindlicher (niedrigere Schwelle)
+  let zoom = 1, res = null, removed = new Set(), added = [], mode = "calib", tap = null;
+  const fitW = () => Math.max(50, Math.min(wrap.clientWidth, wrap.clientHeight * W/H));
+  const thr = () => 0.68 - (+sl.value);
+  const shown = () => res ? res.pts.filter((p,i)=>p.v >= thr() && !removed.has(i)) : [];
+  const count = () => shown().length + added.length;
+  function draw(){
+    const fw = fitW()*zoom, dpr = Math.min(2, window.devicePixelRatio||1);
+    cv.style.width = fw+"px"; cv.style.height = (fw*H/W)+"px"; cv.width = Math.round(fw*dpr); cv.height = Math.round(fw*H/W*dpr);
+    const k = cv.width / W; ctx.setTransform(k,0,0,k,0,0); ctx.drawImage(base, 0, 0);
+    if(res){ const r = Math.max(res.R*1.05, 3/zoom/k*dpr), lw = Math.max(1.2, 2/k*dpr);
+      ctx.lineWidth = lw; ctx.strokeStyle = "#ff3b30"; for(const p of shown()){ ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.stroke(); }
+      ctx.strokeStyle = "#2ea8ff"; for(const p of added){ ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.stroke(); } }
+    if(tap){ ctx.fillStyle = "#2ea8ff"; ctx.beginPath(); ctx.arc(tap.x, tap.y, Math.max(2, 4/k*dpr), 0, 7); ctx.fill(); }
+    nEl.textContent = res ? String(count()) : "–";
+    v.querySelector("#ecOk").disabled = !res;
+    v.querySelector("#ecOk").textContent = res ? `${tr("Übernehmen")} (${count()})` : tr("Übernehmen");
+  }
+  function setZoom(z, cx, cy){
+    const old = zoom; zoom = Math.max(1, Math.min(10, z)); if(zoom===old) return;
+    const ax = cx ?? wrap.clientWidth/2, ay = cy ?? wrap.clientHeight/2;
+    const fx = (wrap.scrollLeft + ax)/old, fy = (wrap.scrollTop + ay)/old;
+    draw(); wrap.scrollLeft = fx*zoom - ax; wrap.scrollTop = fy*zoom - ay;
+  }
+  v.querySelector("#ecIn").onclick = () => setZoom(zoom*1.8);
+  v.querySelector("#ecOut").onclick = () => setZoom(zoom/1.8);
+  v.querySelector("#ecX").onclick = () => v.remove();
+  v.querySelector("#ecRe").onclick = () => { mode = "calib"; hint.textContent = tr("Tippe mitten auf ein einzelnes Ei."); };
+  sl.oninput = () => draw();
+  // Zwei-Finger-Zoom
+  let pinch = null;
+  wrap.addEventListener("touchstart", e => { if(e.touches.length===2){ const [a,b] = e.touches; pinch = {d: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY), z: zoom}; } }, {passive:true});
+  wrap.addEventListener("touchmove", e => { if(pinch && e.touches.length===2){ e.preventDefault(); const [a,b] = e.touches, r = wrap.getBoundingClientRect();
+    setZoom(pinch.z * Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY)/pinch.d, (a.clientX+b.clientX)/2-r.left, (a.clientY+b.clientY)/2-r.top); } }, {passive:false});
+  wrap.addEventListener("touchend", e => { if(e.touches.length<2) setTimeout(()=>{ pinch = null; }, 50); });
+  cv.addEventListener("click", e => {
+    if(pinch) return;
+    const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
+    if(mode === "calib"){
+      tap = {x, y}; hint.textContent = tr("Zähle …"); draw();
+      setTimeout(() => {
+        const out = EGG.detect(px, W, H, x, y);
+        if(out.error){ hint.textContent = tr(out.error); tap = null; draw(); return; }
+        res = out; removed = new Set(); added = []; mode = "edit"; tap = null;
+        v.querySelector("#ecRe").hidden = false; v.querySelector("#ecSlW").hidden = false;
+        hint.textContent = tr("Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.");
+        draw();
+      }, 30);
+      return;
+    }
+    const tol = Math.max(res.R*1.1, 16 * W / r.width);
+    const ai = added.findIndex(p => (p.x-x)**2 + (p.y-y)**2 < tol*tol);
+    if(ai >= 0){ added.splice(ai, 1); draw(); return; }
+    let bi = -1, bd = tol*tol; res.pts.forEach((p,i) => { if(p.v < thr() || removed.has(i)) return; const d = (p.x-x)**2 + (p.y-y)**2; if(d < bd){ bd = d; bi = i; } });
+    if(bi >= 0) removed.add(bi); else added.push({x, y});
+    draw();
+  });
+  v.querySelector("#ecOk").onclick = async () => {
+    const n = count(); let blob = null;
+    if(v.querySelector("#ecSave").checked){
+      const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); x.drawImage(base, 0, 0);
+      x.lineWidth = Math.max(1.5, W/700); const r = res.R*1.15;
+      x.strokeStyle = "#ff3b30"; for(const p of shown()){ x.beginPath(); x.arc(p.x, p.y, r, 0, 7); x.stroke(); }
+      x.strokeStyle = "#2ea8ff"; for(const p of added){ x.beginPath(); x.arc(p.x, p.y, r, 0, 7); x.stroke(); }
+      const fs = Math.round(W/22); x.font = `600 ${fs}px system-ui, sans-serif`; const label = `${n} ${tr("Eier")}`, tw = x.measureText(label).width;
+      x.fillStyle = "rgba(0,0,0,.6)"; x.fillRect(fs*0.4, fs*0.4, tw+fs*0.8, fs*1.5); x.fillStyle = "#fff"; x.fillText(label, fs*0.8, fs*1.45);
+      blob = await new Promise(res => c.toBlob(res, "image/jpeg", .85));
+    }
+    v.remove(); onDone(n, blob, taken);
+  };
+  requestAnimationFrame(draw);
+  window.addEventListener("resize", draw);
+  new MutationObserver((m, o) => { if(!document.body.contains(v)){ window.removeEventListener("resize", draw); o.disconnect(); } }).observe(document.body, {childList:true});
+}
+ACTS.eggCount = d => {
+  const c = S.clutches[d.id]; if(!c) return;
+  eggCounter(async (n, blob, taken) => {
+    const cc = S.clutches[d.id] || c, s = clutchSum(cc), prev = s.eggs;
+    if(n < s.hatched + s.lost){ toast(`${n} gezählt – weniger als schon eingetragen (${s.hatched + s.lost}). Nicht übernommen.`); }
+    else { await store.put("clutches", {...cc, eggs: n}); }
+    if(blob) await store.put("photos", {...(await store.uploadPhoto(blob)), subjectType:"clutch", subjectId:c.id, view:"eier", takenAt:taken});
+    toast(prev != null && prev !== n ? `Eier: ${n} (vorher ${prev})` : `Eier: ${n}`);
+  });
+};
+
 /* ---- Gelege: Eier mit Ablagedatum, möglichen Eltern, Schlupf und Ausfällen ---- */
 const clutchSum = c => { const n = k => Math.max(0, +c[k] || 0);
   const eggs = c.eggs === "" || c.eggs == null ? null : n("eggs"), hatched = n("hatched"), infertile = n("infertile"), dried = n("dried"), other = n("other");
@@ -2823,7 +3037,7 @@ VIEWS.clutch = r => {
   h += `<div class="stats"><div class="stat"><b>${s.eggs ?? "?"}</b><span>Eier</span></div><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div><div class="stat"><b>${dev ?? "–"}</b><span>Tage bis Schlupf</span></div></div>`;
   h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
     ${c.hatchFirst?`<p class="small muted" style="margin:8px 0 0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
-  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle zählen</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:`<button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>Raupen weiterführen</button>`}</div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle zählen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:`<button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>Raupen weiterführen</button>`}</div>`;
   h += `<section class="sec"><div class="sec-h"><h2>Eltern</h2></div><div class="list">
     ${(c.mothers||[]).filter(id=>S.individuals[id]).map(id=>indRow(S.individuals[id], (c.mothers.length>1?"mögliche Mutter":"Mutter"))).join("") || `<div class="empty">Mutter unbekannt</div>`}
     ${(c.fathers||[]).filter(id=>S.individuals[id]).map(id=>indRow(S.individuals[id], (c.fathers.length>1?"möglicher Vater":"Vater"))).join("")}</div></section>`;
@@ -2846,6 +3060,7 @@ ACTS.editClutch = d => {
     <span class="lab" style="font-weight:600">Abgelegt</span>
     ${timeFields("c", c || {prec:"nacht", t0:yest+"T20:00", t1:todayISO()+"T08:00"})}
     <div class="frow2">${fld.date("cCol","Eingesammelt am",c?.collectedAt||todayISO())}${fld.num("cEggs","Anzahl Eier",c?.eggs??"","1")}</div>
+    <div class="f" style="margin-top:-6px"><button type="button" class="linkbtn" id="cCount">Eier auf Foto zählen</button><span class="hint" id="cCountH"></span></div>
     ${parentPicker("cMo","Mögliche Mutter",["f","u"],c?.mothers||pre,"Mehrere ankreuzen, wenn nicht klar ist, welches Weibchen gelegt hat. Keins = unbekannt.")}
     ${parentPicker("cFa","Möglicher Vater (optional)",["m","u"],c?.fathers||[],"")}
     ${fld.sel("cCont","Behälter",[["","– keiner –"],...all("containers").sort(byName).map(x=>[x.id,x.name])],c?.containerId||"")}
@@ -2854,11 +3069,17 @@ ACTS.editClutch = d => {
     ${c?confirmBlock("Dieses Gelege löschen? Ein daraus angelegter Zuchtansatz bleibt erhalten.","Löschen"):""}`);
   wireTime(root, "c");
   const picks = id => [...root.querySelectorAll(`#${id} input:checked`)].map(x=>x.value);
+  let eggPhoto = null;
+  root.querySelector("#cCount").addEventListener("click", () => eggCounter((n, blob, taken) => {
+    root.querySelector("#cEggs").value = n; eggPhoto = blob ? {blob, taken} : null;
+    root.querySelector("#cCountH").textContent = blob ? tr("Das markierte Foto wird beim Speichern zum Gelege gelegt.") : "";
+  }));
   root.querySelector("#ok").addEventListener("click", async () => {
     const tm = readTime(root, "c"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     const eggs = val(root,"cEggs");
     const id = await store.put("clutches", {...(c||{}), name:val(root,"cName"), speciesId:val(root,"cSp"), ...tm, collectedAt:val(root,"cCol"), eggs: eggs===""?null:Math.round(+eggs),
       mothers:picks("cMo"), fathers:picks("cFa"), containerId:val(root,"cCont")||null, notes:val(root,"cNotes")});
+    if(eggPhoto) await store.put("photos", {...(await store.uploadPhoto(eggPhoto.blob)), subjectType:"clutch", subjectId:id, view:"eier", takenAt:eggPhoto.taken});
     closeSheet(); if(!c) nav("clutch",{id});
   });
   if(c) wireConfirm(root, "#del", async () => { closeSheet(); for(const p of photosOf("clutch",c.id)){ await store.deletePhotoAsset(p); await store.del("photos",p.id); } await store.del("clutches", c.id); back(); toast("Gelege gelöscht"); });
