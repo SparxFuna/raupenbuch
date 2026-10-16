@@ -175,6 +175,7 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 
 /* chips/segmented */
 .seg{display:flex;gap:4px;background:var(--sunk);padding:3px;border-radius:999px;overflow-x:auto}
+[id$=precseg]{flex-wrap:wrap;border-radius:18px}
 .seg.sm button{padding:4px 10px;font-size:12px}
 .sortsel{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .sortsel select{flex:1;min-height:36px;padding:4px 10px;font-size:14px}
@@ -472,7 +473,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.16.2";
+const APP_VERSION = "5.16.3";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -539,6 +540,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "liegt seit 1 Tag":"incubating for 1 day","Tage liegend":"Days incubating","Die Eier wurden irgendwann zwischen Abend und nächstem Morgen gelegt (z. B. morgens im Behälter gefunden): das Datum des Abends wählen.":"The eggs were laid sometime between evening and the next morning (e.g. found in the container in the morning): pick the evening's date.","Wenn du nur weißt, dass die Eier irgendwann in diesen Tagen gelegt wurden, z. B. nach ein paar Tagen ohne Nachschauen.":"If you only know the eggs were laid sometime during these days, e.g. after not checking for a few days.",
   "Zoome hinein und tippe mitten auf ein Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of an egg. The app learns colour and size from it.","Drehen":"Rotate","+ Vorlage":"+ Reference","Neu antippen":"Start over","Tippe auf ein Ei, das anders aussieht (z. B. im Schatten). Es wird als weitere Vorlage genutzt.":"Tap an egg that looks different (e.g. in shade). It is used as an additional reference.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein Ei tippen.":"No egg found here. Please zoom in and tap the middle of an egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein Ei tippen.":"No egg found here. Please tap the middle of an egg.",
   "Eier auf Foto zählen":"Count eggs on photo","Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of a single egg. The app learns colour and size from it.","Anderes Ei antippen":"Tap another egg","Empfindlichkeit":"Sensitivity","Foto mit Markierungen speichern":"Save photo with markers","Übernehmen":"Apply","Tippe mitten auf ein einzelnes Ei.":"Tap the middle of a single egg.","Zähle …":"Counting …",
   "Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.":"Red = detected. Tap a missing egg to add it, tap a wrong marker to remove it.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen.":"No egg found here. Please zoom in and tap the middle of a single egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen.":"No egg found here. Please tap the middle of a single egg.","Das markierte Foto wird beim Speichern zum Gelege gelegt.":"The marked photo will be added to the clutch when you save.","Verkleinern":"Zoom out","Vergrößern":"Zoom in","Eier":"Eggs",
@@ -738,6 +740,8 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^liegt seit (\d+) Tagen$/, "incubating for $1 days"],
+  [/^Schlupf erwartet um den (.+) \(nach (\d+) Tagen, Median aus (\d+) Gelegen? dieser Art\)\.$/, "Hatching expected around $1 (after $2 days, median of $3 clutch(es) of this species)."],
   [/^(geschlüpft|unbefruchtet|vertrocknet|sonstige|offen) (\d+)$/, (m,a,n)=>`${({geschlüpft:"hatched",unbefruchtet:"infertile",vertrocknet:"dried up",sonstige:"other",offen:"open"})[a]} ${n}`],
   [/^Eier: (\d+) \(vorher (\d+)\)$/, "Eggs: $1 (before $2)"], [/^Eier: (\d+)$/, "Eggs: $1"], [/^Übernehmen \((\d+)\)$/, "Apply ($1)"], [/^(\d+) Eier$/, "$1 eggs"],
   [/^(\d+) gezählt – weniger als schon eingetragen \((\d+)\)\. Nicht übernommen\.$/, "$1 counted – fewer than already recorded ($2). Not applied."],
@@ -1250,7 +1254,8 @@ const fld = {
 const val = (root,id) => { const el = root.querySelector("#"+id); return el ? el.value.trim() : ""; };
 
 /* Zeit-Eingabe (Präzision) */
-function timeFields(pfx, e){
+function timeFields(pfx, e, hints){
+  const H = {nacht:"Für Schlüpfe über Nacht: das Datum des Abends wählen.", zeitraum:"", ...(hints||{})};
   const prec = e?.prec || "tag";
   const d0 = e?.t0 ? e.t0.slice(0,10) : todayISO();
   const tm = e?.t0 && e.prec==="exakt" ? e.t0.slice(11,16) : (nowLocal().slice(11,16));
@@ -1260,7 +1265,7 @@ function timeFields(pfx, e){
   <div class="frow2"><div class="f"><label for="${pfx}d0" id="${pfx}d0l">${prec==="nacht"?"Abend":prec==="zeitraum"?"Von":"Datum"}</label><input id="${pfx}d0" type="date" value="${d0}"></div>
   <div class="f" id="${pfx}tmw" ${prec==="exakt"?"":"hidden"}><label for="${pfx}tm">Uhrzeit</label><input id="${pfx}tm" type="time" value="${tm}"></div>
   <div class="f" id="${pfx}d1w" ${prec==="zeitraum"?"":"hidden"}><label for="${pfx}d1">Bis</label><input id="${pfx}d1" type="date" value="${d1}"></div></div>
-  <div class="hint" id="${pfx}hint">${prec==="nacht"?"Für Schlüpfe über Nacht: das Datum des Abends wählen.":""}</div>`;
+  <div class="hint" id="${pfx}hint" data-hn="${esc(H.nacht)}" data-hz="${esc(H.zeitraum)}">${prec==="nacht"?H.nacht:prec==="zeitraum"?H.zeitraum:""}</div>`;
 }
 function wireTime(root, pfx){
   root.querySelectorAll(`#${pfx}precseg [data-prec]`).forEach(b => b.addEventListener("click", () => {
@@ -1269,7 +1274,7 @@ function wireTime(root, pfx){
     root.querySelector(`#${pfx}tmw`).hidden = p!=="exakt";
     root.querySelector(`#${pfx}d1w`).hidden = p!=="zeitraum";
     root.querySelector(`#${pfx}d0l`).textContent = p==="nacht"?"Abend":p==="zeitraum"?"Von":"Datum";
-    root.querySelector(`#${pfx}hint`).textContent = p==="nacht"?"Für Schlüpfe über Nacht: das Datum des Abends wählen.":"";
+    const hn = root.querySelector(`#${pfx}hint`); hn.textContent = tr(p==="nacht"?hn.dataset.hn:p==="zeitraum"?hn.dataset.hz:"");
   }));
 }
 function readTime(root, pfx){
@@ -3070,6 +3075,10 @@ const clutchSum = c => { const n = k => Math.max(0, +c[k] || 0);
 const clutchDate = c => (c.t0 || c.collectedAt || "").slice(0,10);
 const clutchName = c => c.name || `Gelege ${dShort(clutchDate(c))}`;
 const clutchDev = c => c.hatchFirst && c.t0 ? Math.round((ms(c.hatchFirst+"T12:00") - evMid(c))/864e5) : null;
+const clutchAge = c => c.t0 ? Math.max(0, Math.round((Date.now() - evMid(c))/864e5)) : null;
+function clutchExpect(c){ // erwarteter Schlupf aus bisherigen Gelegen derselben Art (Median der Entwicklungsdauer)
+  if(!c.t0) return null; const ds = all("clutches").filter(x => x.id!==c.id && x.speciesId===c.speciesId).map(clutchDev).filter(d => d!=null && d>=0);
+  if(!ds.length) return null; const d = Math.round(median(ds)); return {date: dFromMs(evMid(c) + d*864e5), days: d, n: ds.length}; }
 const clutchesOfMother = id => all("clutches").filter(c => (c.mothers||[]).includes(id)).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
 const pctTxt = r => r == null ? "–" : `${fmtN(r*100,0)} %`;
 function parentsTxt(ids, none){ const n = (ids||[]).filter(id=>S.individuals[id]); if(!n.length) return none;
@@ -3078,7 +3087,8 @@ function clutchBar(c){ const s = clutchSum(c); const tot = s.eggs || (s.hatched 
   const seg = (v, cls, t) => v ? `<i class="${cls}" style="width:${v/tot*100}%" title="${t}: ${v}"></i>` : "";
   return `<span class="cbar">${seg(s.hatched,"h","geschlüpft")}${seg(s.infertile,"u","unbefruchtet")}${seg(s.dried,"d","vertrocknet")}${seg(s.other,"o","sonstige Ausfälle")}${s.open?seg(s.open,"x","offen"):""}</span>`; }
 function clutchRow(c){ const s = clutchSum(c);
-  const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : "liegt";
+  const age = clutchAge(c);
+  const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
   return `<button class="row" data-go="clutch:${c.id}"><span class="glyph-egg st-egg">${ic2("egg")}</span><span class="main"><span class="t">${esc(clutchName(c))}</span><span class="s">${s.eggs!=null?`${s.eggs} Eier · `:""}♀ ${esc(parentsTxt(c.mothers,"Mutter unbekannt"))}</span>${clutchBar(c)}</span><span class="end"><span class="pill ${s.done?"":"warn"}">${esc(st)}</span></span></button>`; }
 
 VIEWS.clutches = () => {
@@ -3096,7 +3106,9 @@ VIEWS.clutch = r => {
   let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(clutchName(c))}</h1>
     <div class="meta"><span class="pill">abgelegt ${esc(fmtTime(c))}</span>${c.collectedAt?`<span class="pill">gesammelt ${dShort(c.collectedAt)}</span>`:""}${ct?`<span class="pill">${esc(ct.name)}</span>`:""}<span class="pill ${s.done?"good":"warn"}">${s.done?"abgeschlossen":s.hatched?"schlüpft":"liegt"}</span></div>
     ${c.notes?`<p class="muted" style="margin:0">${esc(c.notes)}</p>`:""}</div>`;
-  h += `<div class="stats"><div class="stat"><b>${s.eggs ?? "?"}</b><span>Eier</span></div><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div><div class="stat"><b>${dev ?? "–"}</b><span>Tage bis Schlupf</span></div></div>`;
+  h += `<div class="stats"><div class="stat"><b>${s.eggs ?? "?"}</b><span>Eier</span></div><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div>${dev!=null||s.done?`<div class="stat"><b>${dev ?? "–"}</b><span>Tage bis Schlupf</span></div>`:`<div class="stat"><b>${clutchAge(c) ?? "–"}</b><span>Tage liegend</span></div>`}</div>`;
+  const ex = !s.hatched && !s.done ? clutchExpect(c) : null;
+  if(ex) h += `<p class="small muted" style="margin:0">Schlupf erwartet um den ${dShort(ex.date)} (nach ${ex.days} Tagen, Median aus ${ex.n} ${ex.n===1?"Gelege":"Gelegen"} dieser Art).</p>`;
   h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
     ${c.hatchFirst?`<p class="small muted" style="margin:8px 0 0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
   h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle zählen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:`<button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>Raupen weiterführen</button>`}</div>`;
@@ -3120,7 +3132,7 @@ ACTS.editClutch = d => {
     ${fld.text("cName","Name (optional)",c?.name||"","z. B. Gelege 1 Käfig A")}
     ${fld.sel("cSp","Art",speciesOpts(),spDef)}
     <span class="lab" style="font-weight:600">Abgelegt</span>
-    ${timeFields("c", c || {prec:"nacht", t0:yest+"T20:00", t1:todayISO()+"T08:00"})}
+    ${timeFields("c", c || {prec:"nacht", t0:yest+"T20:00", t1:todayISO()+"T08:00"}, {nacht:"Die Eier wurden irgendwann zwischen Abend und nächstem Morgen gelegt (z. B. morgens im Behälter gefunden): das Datum des Abends wählen.", zeitraum:"Wenn du nur weißt, dass die Eier irgendwann in diesen Tagen gelegt wurden, z. B. nach ein paar Tagen ohne Nachschauen."})}
     <div class="frow2">${fld.date("cCol","Eingesammelt am",c?.collectedAt||todayISO())}${fld.num("cEggs","Anzahl Eier",c?.eggs??"","1")}</div>
     <div class="f" style="margin-top:-6px"><button type="button" class="linkbtn" id="cCount">Eier auf Foto zählen</button><span class="hint" id="cCountH"></span></div>
     ${parentPicker("cMo","Mögliche Mutter",["f","u"],c?.mothers||pre,"Mehrere ankreuzen, wenn nicht klar ist, welches Weibchen gelegt hat. Keins = unbekannt.")}
