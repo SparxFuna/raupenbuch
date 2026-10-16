@@ -473,7 +473,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.16.3";
+const APP_VERSION = "5.16.4";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -540,6 +540,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Anzahl Eier noch offen":"Number of eggs not set yet",
   "liegt seit 1 Tag":"incubating for 1 day","Tage liegend":"Days incubating","Die Eier wurden irgendwann zwischen Abend und nächstem Morgen gelegt (z. B. morgens im Behälter gefunden): das Datum des Abends wählen.":"The eggs were laid sometime between evening and the next morning (e.g. found in the container in the morning): pick the evening's date.","Wenn du nur weißt, dass die Eier irgendwann in diesen Tagen gelegt wurden, z. B. nach ein paar Tagen ohne Nachschauen.":"If you only know the eggs were laid sometime during these days, e.g. after not checking for a few days.",
   "Zoome hinein und tippe mitten auf ein Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of an egg. The app learns colour and size from it.","Drehen":"Rotate","+ Vorlage":"+ Reference","Neu antippen":"Start over","Tippe auf ein Ei, das anders aussieht (z. B. im Schatten). Es wird als weitere Vorlage genutzt.":"Tap an egg that looks different (e.g. in shade). It is used as an additional reference.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein Ei tippen.":"No egg found here. Please zoom in and tap the middle of an egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein Ei tippen.":"No egg found here. Please tap the middle of an egg.",
   "Eier auf Foto zählen":"Count eggs on photo","Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of a single egg. The app learns colour and size from it.","Anderes Ei antippen":"Tap another egg","Empfindlichkeit":"Sensitivity","Foto mit Markierungen speichern":"Save photo with markers","Übernehmen":"Apply","Tippe mitten auf ein einzelnes Ei.":"Tap the middle of a single egg.","Zähle …":"Counting …",
@@ -3089,7 +3090,7 @@ function clutchBar(c){ const s = clutchSum(c); const tot = s.eggs || (s.hatched 
 function clutchRow(c){ const s = clutchSum(c);
   const age = clutchAge(c);
   const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
-  return `<button class="row" data-go="clutch:${c.id}"><span class="glyph-egg st-egg">${ic2("egg")}</span><span class="main"><span class="t">${esc(clutchName(c))}</span><span class="s">${s.eggs!=null?`${s.eggs} Eier · `:""}♀ ${esc(parentsTxt(c.mothers,"Mutter unbekannt"))}</span>${clutchBar(c)}</span><span class="end"><span class="pill ${s.done?"":"warn"}">${esc(st)}</span></span></button>`; }
+  return `<button class="row" data-go="clutch:${c.id}"><span class="glyph-egg st-egg">${ic2("egg")}</span><span class="main"><span class="t">${esc(clutchName(c))}</span><span class="s">${[s.eggs!=null?`${s.eggs} Eier`:"", (c.mothers||[]).some(id=>S.individuals[id]) ? `♀ ${esc(parentsTxt(c.mothers,""))}` : ""].filter(Boolean).join(" · ") || "Anzahl Eier noch offen"}</span>${clutchBar(c)}</span><span class="end"><span class="pill ${s.done?"":"warn"}">${esc(st)}</span></span></button>`; }
 
 VIEWS.clutches = () => {
   const cs = all("clutches").sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
