@@ -472,7 +472,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.16.1";
+const APP_VERSION = "5.16.2";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -539,6 +539,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Zoome hinein und tippe mitten auf ein Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of an egg. The app learns colour and size from it.","Drehen":"Rotate","+ Vorlage":"+ Reference","Neu antippen":"Start over","Tippe auf ein Ei, das anders aussieht (z. B. im Schatten). Es wird als weitere Vorlage genutzt.":"Tap an egg that looks different (e.g. in shade). It is used as an additional reference.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein Ei tippen.":"No egg found here. Please zoom in and tap the middle of an egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein Ei tippen.":"No egg found here. Please tap the middle of an egg.",
   "Eier auf Foto zählen":"Count eggs on photo","Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.":"Zoom in and tap the middle of a single egg. The app learns colour and size from it.","Anderes Ei antippen":"Tap another egg","Empfindlichkeit":"Sensitivity","Foto mit Markierungen speichern":"Save photo with markers","Übernehmen":"Apply","Tippe mitten auf ein einzelnes Ei.":"Tap the middle of a single egg.","Zähle …":"Counting …",
   "Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.":"Red = detected. Tap a missing egg to add it, tap a wrong marker to remove it.","An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen.":"No egg found here. Please zoom in and tap the middle of a single egg.","An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen.":"No egg found here. Please tap the middle of a single egg.","Das markierte Foto wird beim Speichern zum Gelege gelegt.":"The marked photo will be added to the clutch when you save.","Verkleinern":"Zoom out","Vergrößern":"Zoom in","Eier":"Eggs",
   // Navigation & allgemein
@@ -2826,8 +2827,8 @@ const EGG = {
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x; out[i] = -k*(g[i-1]+g[i+1]+g[i-w]+g[i+w]-4*g[i]); }
     return out;
   },
-  feat(px, n){ const F = new Float32Array(n*3); // Helligkeit (halb gewichtet), Rot-Grün, Gelb-Blau
-    for(let i=0;i<n;i++){ const r=px[i*4], g=px[i*4+1], b=px[i*4+2]; F[i*3]=0.5*(r+g+b)/3; F[i*3+1]=r-g; F[i*3+2]=(r+g)/2-b; } return F; },
+  feat(px, n){ const F = new Float32Array(n*3); // Helligkeit (schwach gewichtet), Rot-Grün und Gelb-Blau relativ zur Helligkeit (schattenunabhängig)
+    for(let i=0;i<n;i++){ const r=px[i*4], g=px[i*4+1], b=px[i*4+2], L=(r+g+b)/3, k=128/Math.max(L,30); F[i*3]=0.25*L; F[i*3+1]=(r-g)*k; F[i*3+2]=((r+g)/2-b)*k; } return F; },
   medianVec(F, idx){ const out=[0,0,0]; for(let c=0;c<3;c++) out[c] = median(idx.map(i=>F[i*3+c])); return out; },
   score(F, n, e, bg){ // Projektion auf die Richtung Hintergrund→Ei, minus Abweichung quer dazu (andere Farbtöne)
     const d = [e[0]-bg[0], e[1]-bg[1], e[2]-bg[2]], dd = d[0]*d[0]+d[1]*d[1]+d[2]*d[2] || 1, dl = Math.sqrt(dd), S = new Float32Array(n);
@@ -2837,17 +2838,18 @@ const EGG = {
     return S;
   },
   disk(F, w, h, x, y, r){ const out=[]; const R=Math.max(1,r); for(let yy=Math.max(0,Math.round(y-R)); yy<=Math.min(h-1,Math.round(y+R)); yy++) for(let xx=Math.max(0,Math.round(x-R)); xx<=Math.min(w-1,Math.round(x+R)); xx++) if((xx-x)**2+(yy-y)**2<=R*R) out.push(yy*w+xx); return out; },
-  tapRadius(S, w, h, x, y){ // Größe des angetippten Flecks: Maßstab mit der stärksten LoG-Antwort
+  sample(M, w, h, x, y){ // bilinear
+    if(x<0||y<0||x>w-2||y>h-2) return 0; const x0=x|0, y0=y|0, fx=x-x0, fy=y-y0, i=y0*w+x0;
+    return M[i]*(1-fx)*(1-fy) + M[i+1]*fx*(1-fy) + M[i+w]*(1-fx)*fy + M[i+w+1]*fx*fy; },
+  /* Größe des angetippten Eis: Radius, an dem es ringsum am deutlichsten dunkler bzw. weniger eifarben wird.
+     Funktioniert auch mitten in einem Haufen, weil zwischen den Eiern immer eine dunklere Fuge liegt. */
+  tapRadius(M, w, h, x, y){
+    const na = 48, cs = [], sn = []; for(let a=0;a<na;a++){ cs.push(Math.cos(a*2*Math.PI/na)); sn.push(Math.sin(a*2*Math.PI/na)); }
     let best = null;
-    for(let R=3; R<=32; R*=1.06){
-      const s = R/Math.SQRT2, r0 = Math.ceil(0.6*R + 3*s) + 5, x0 = Math.max(0, Math.round(x)-r0), y0 = Math.max(0, Math.round(y)-r0), x1 = Math.min(w, Math.round(x)+r0), y1 = Math.min(h, Math.round(y)+r0);
-      const pw = x1-x0, ph = y1-y0; if(pw<5||ph<5) continue;
-      const P = new Float32Array(pw*ph); for(let yy=0;yy<ph;yy++) for(let xx=0;xx<pw;xx++) P[yy*pw+xx] = S[(y0+yy)*w+x0+xx];
-      const L = this.log(P, pw, ph, s), rr = Math.round(R*0.6)+2; let v = -1e9;
-      for(let yy=Math.max(1,Math.round(y)-y0-rr); yy<=Math.min(ph-2,Math.round(y)-y0+rr); yy++) for(let xx=Math.max(1,Math.round(x)-x0-rr); xx<=Math.min(pw-2,Math.round(x)-x0+rr); xx++) v = Math.max(v, L[yy*pw+xx]);
-      if(!best || v > best.v) best = {R, v};
-    }
-    return best && best.v > 0.02 ? best.R*0.82 : null;
+    for(let r=2.5; r<=32; r+=0.5){ const d = [];
+      for(let a=0;a<na;a++) d.push((this.sample(M,w,h,x+cs[a]*(r-1),y+sn[a]*(r-1)) - this.sample(M,w,h,x+cs[a]*(r+1),y+sn[a]*(r+1)))/2);
+      const m = median(d); if(!best || m > best.m) best = {r, m}; }
+    return best && best.m > 0.004 ? best.r : null;
   },
   sobel(I, w, h){ const gx = new Float32Array(w*h), gy = new Float32Array(w*h);
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x;
@@ -2866,30 +2868,37 @@ const EGG = {
     for(let i=0;i<w*h;i++){ if(!sel[i] || g[i] <= gt) continue; const ux = gx[i]/g[i], uy = gy[i]/g[i], wt = Math.min(g[i]/gt, 4), x = i % w, y = (i/w)|0;
       for(const r of rs){ const cx = Math.round(x+ux*r), cy = Math.round(y+uy*r); if(cx>=0 && cx<w && cy>=0 && cy<h) A[cy*w+cx] += wt; } }
   },
-  /* px: RGBA-Daten, tx/ty: angetipptes Ei. Liefert Kandidaten (stärkste zuerst, schon ausgedünnt) mit relativer Stärke. */
-  detect(px, w, h, tx, ty){
+  /* px: RGBA-Daten, taps: angetippte Eier [{x,y}] (mehrere = mehrere Farbvorlagen, z. B. sonnig + schattig).
+     Liefert Kandidaten (stärkste zuerst, schon ausgedünnt) mit relativer Stärke. */
+  detect(px, w, h, taps){
     const n = w*h, F = this.feat(px, n);
-    const tap = this.disk(F, w, h, tx, ty, 2.5);
     const samp = []; for(let i=0;i<n;i+=Math.max(1, Math.floor(n/60000))) samp.push(i);
     const bg = this.medianVec(F, samp);
-    let e = this.medianVec(F, tap);
-    let S = this.blur(this.score(F, n, e, bg), w, h, 1);
-    const R = this.tapRadius(S, w, h, tx, ty);
-    if(!R) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein einzelnes Ei tippen."};
-    const core = this.disk(F, w, h, tx, ty, R*0.6);
-    e = this.medianVec(F, core);
-    S = this.blur(this.score(F, n, e, bg), w, h, 1);
     const lumRaw = new Float32Array(n); for(let i=0;i<n;i++) lumRaw[i] = (px[i*4]+px[i*4+1]+px[i*4+2])/3;
-    const lum = this.blur(lumRaw, w, h, 1), I = new Float32Array(n), m4 = new Float32Array(n), m3 = new Float32Array(n);
+    const lum = this.blur(lumRaw, w, h, 1), lum15 = this.blur(lumRaw, w, h, 1.5);
+    const S = new Float32Array(n), Rs = []; let S1st = null;
+    for(const t of taps){
+      const S0 = this.blur(this.score(F, n, this.medianVec(F, this.disk(F, w, h, t.x, t.y, 2.5)), bg), w, h, 1);
+      const M = new Float32Array(n); for(let i=0;i<n;i++) M[i] = Math.min(1, S0[i]) * lum15[i] / 255;
+      const R = this.tapRadius(M, w, h, t.x, t.y);
+      if(!R) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte näher heranzoomen und mitten auf ein Ei tippen."};
+      const S1 = this.blur(this.score(F, n, this.medianVec(F, this.disk(F, w, h, t.x, t.y, R*0.6)), bg), w, h, 1);
+      for(let i=0;i<n;i++) if(S1[i] > S[i]) S[i] = S1[i];
+      if(!Rs.length) S1st = S1;
+      Rs.push(R);
+    }
+    const R = median(Rs);
+    const I = new Float32Array(n), m4 = new Float32Array(n), m3 = new Float32Array(n);
     for(let i=0;i<n;i++){ I[i] = Math.min(1, S[i]); m4[i] = S[i] >= 0.4 ? 1 : 0; m3[i] = S[i] >= 0.3 ? 1 : 0; }
     const near = this.minmax(m4, w, h, Math.round(R*0.5)+1, true), inner = this.minmax(m3, w, h, 1, false);
     const A = new Float32Array(n);
     this.votes(I, w, h, R, near, A);   // Rand Ei ↔ Hintergrund (Farbe)
-    this.votes(lum, w, h, R, inner, A); // Ränder zwischen Eiern (Helligkeit)
+    this.votes(lum, w, h, R, inner, A); // Fugen zwischen Eiern (Helligkeit)
     const As = this.blur(A, w, h, Math.max(1, R*0.25));
-    const k = Math.floor(R*0.6)+2; let ref = 0;
-    for(let y=Math.max(0,Math.round(ty)-k); y<=Math.min(h-1,Math.round(ty)+k); y++) for(let x=Math.max(0,Math.round(tx)-k); x<=Math.min(w-1,Math.round(tx)+k); x++) ref = Math.max(ref, As[y*w+x]);
-    if(ref <= 0) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein einzelnes Ei tippen."};
+    const k = Math.floor(R*0.6)+2, refs = [];
+    for(const t of taps){ let m = 0; for(let y=Math.max(0,Math.round(t.y)-k); y<=Math.min(h-1,Math.round(t.y)+k); y++) for(let x=Math.max(0,Math.round(t.x)-k); x<=Math.min(w-1,Math.round(t.x)+k); x++) m = Math.max(m, As[y*w+x]); refs.push(m); }
+    const ref = Math.min(...refs);
+    if(ref <= 0) return {error:"An dieser Stelle ist kein Ei zu erkennen. Bitte mitten auf ein Ei tippen."};
     const cand = [];
     for(let y=1;y<h-1;y++) for(let x=1;x<w-1;x++){ const i=y*w+x, v=As[i];
       if(v < ref*0.06 || S[i] < 0.3) continue;
@@ -2901,6 +2910,14 @@ const EGG = {
     for(const c of cand){ const gx = Math.floor(c.x/cs), gy = Math.floor(c.y/cs); let ok = true;
       for(let a=-1;a<=1&&ok;a++) for(let b=-1;b<=1&&ok;b++) for(const q of grid.get(key(gx+a,gy+b))||[]) if((q.x-c.x)**2+(q.y-c.y)**2 < cs*cs){ ok=false; break; }
       if(ok){ keep.push(c); const kk = key(gx,gy); (grid.get(kk)||grid.set(kk,[]).get(kk)).push(c); } }
+    if(taps.length > 1){
+      // Treffer, die nur dank weiterer Vorlagen gefunden wurden (z. B. Eier im Schatten), zählen nur, wenn sie an
+      // erkannte Eier anschließen – sonst landen ähnlich gefärbte Dinge wie Finger oder Holz im Ergebnis.
+      const acc = keep.filter(c => S1st[c.y*w+c.x] >= 0.3).concat(taps.map(t=>({x:t.x, y:t.y, tap:true})));
+      const rest = keep.filter(c => S1st[c.y*w+c.x] < 0.3), lim = (2.6*R)**2; let grew = true;
+      while(grew){ grew = false; for(let i=rest.length-1;i>=0;i--){ const c = rest[i]; if(acc.some(q => (q.x-c.x)**2+(q.y-c.y)**2 < lim)){ acc.push(c); rest.splice(i,1); grew = true; } } }
+      return {R, pts: acc.filter(c=>!c.tap).sort((a,b)=>b.v-a.v)};
+    }
     return {R, pts: keep};
   }
 };
@@ -2925,70 +2942,91 @@ function eggCounter(onDone){
 }
 function eggCounterUI(img, taken, onDone){
   const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, sc = Math.min(1, 1600/Math.max(iw, ih));
-  const W = Math.round(iw*sc), H = Math.round(ih*sc);
-  const base = document.createElement("canvas"); base.width = W; base.height = H;
-  const bctx = base.getContext("2d", {willReadFrequently:true}); bctx.drawImage(img, 0, 0, W, H);
-  const px = bctx.getImageData(0, 0, W, H).data;
+  let W = Math.round(iw*sc), H = Math.round(ih*sc);
+  let base = document.createElement("canvas"); base.width = W; base.height = H;
+  base.getContext("2d").drawImage(img, 0, 0, W, H);
+  let px = base.getContext("2d", {willReadFrequently:true}).getImageData(0, 0, W, H).data;
+  const HINT0 = "Zoome hinein und tippe mitten auf ein Ei. Daran erkennt die App Farbe und Größe.";
   const v = document.createElement("div"); v.className = "viewer eggc"; v.id = "eggc";
-  v.innerHTML = `<div class="eggc-top"><b id="ecN">–</b><span id="ecHint" class="small">Zoome hinein und tippe mitten auf ein einzelnes Ei. Daran erkennt die App Farbe und Größe.</span></div>
+  v.innerHTML = `<div class="eggc-top"><b id="ecN">–</b><span id="ecHint" class="small">${HINT0}</span></div>
     <div class="eggc-wrap" id="ecWrap"><canvas id="ecCv"></canvas></div>
-    <div class="bar2"><div class="btns"><button class="btn" id="ecOut" aria-label="Verkleinern">−</button><button class="btn" id="ecIn" aria-label="Vergrößern">+</button><button class="btn" id="ecRe" hidden>Anderes Ei antippen</button></div>
+    <div class="bar2"><div class="btns"><button class="btn" id="ecOut" aria-label="Verkleinern">−</button><button class="btn" id="ecIn" aria-label="Vergrößern">+</button><button class="btn" id="ecRot">Drehen</button><button class="btn" id="ecAdd" hidden>+ Vorlage</button><button class="btn" id="ecRe" hidden>Neu antippen</button></div>
       <label class="eggc-sl small" id="ecSlW" hidden>Empfindlichkeit <input type="range" id="ecSl" min="0.08" max="0.6" step="0.01" value="${(0.68-EGG_THR).toFixed(2)}"></label>
       <label class="eggc-sl small"><input type="checkbox" id="ecSave" checked> Foto mit Markierungen speichern</label>
       <div class="btns"><button class="btn" id="ecX">Abbrechen</button><button class="btn primary" id="ecOk" disabled>Übernehmen</button></div></div>`;
   document.body.appendChild(v);
-  const wrap = v.querySelector("#ecWrap"), cv = v.querySelector("#ecCv"), ctx = cv.getContext("2d");
-  const sl = v.querySelector("#ecSl"), hint = v.querySelector("#ecHint"), nEl = v.querySelector("#ecN");
+  const $v = s => v.querySelector(s);
+  const wrap = $v("#ecWrap"), cv = $v("#ecCv"), ctx = cv.getContext("2d");
+  const sl = $v("#ecSl"), hint = $v("#ecHint"), nEl = $v("#ecN");
   sl.value = String(0.68 - EGG_THR); // Regler: rechts = empfindlicher (niedrigere Schwelle)
-  let zoom = 1, res = null, removed = new Set(), added = [], mode = "calib", tap = null;
+  let zoom = 1, res = null, removed = new Set(), added = [], mode = "calib", taps = [], busy = false;
   const fitW = () => Math.max(50, Math.min(wrap.clientWidth, wrap.clientHeight * W/H));
   const thr = () => 0.68 - (+sl.value);
   const shown = () => res ? res.pts.filter((p,i)=>p.v >= thr() && !removed.has(i)) : [];
   const count = () => shown().length + added.length;
   function draw(){
     const fw = fitW()*zoom, dpr = Math.min(2, window.devicePixelRatio||1);
-    cv.style.width = fw+"px"; cv.style.height = (fw*H/W)+"px"; cv.width = Math.round(fw*dpr); cv.height = Math.round(fw*H/W*dpr);
+    cv.style.transform = ""; cv.style.width = fw+"px"; cv.style.height = (fw*H/W)+"px";
+    const bw = Math.round(Math.min(fw*dpr, W*2)); // Zeichenfläche nicht größer als nötig – sonst ruckelt es
+    if(cv.width !== bw){ cv.width = bw; cv.height = Math.round(bw*H/W); }
     const k = cv.width / W; ctx.setTransform(k,0,0,k,0,0); ctx.drawImage(base, 0, 0);
-    if(res){ const r = Math.max(res.R*1.05, 3/zoom/k*dpr), lw = Math.max(1.2, 2/k*dpr);
+    const cssK = fw / W; // Bildpunkte je CSS-Pixel
+    if(res){ const r = Math.max(res.R*1.05, 4/cssK), lw = Math.max(1.5/cssK, W/900);
       ctx.lineWidth = lw; ctx.strokeStyle = "#ff3b30"; for(const p of shown()){ ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.stroke(); }
       ctx.strokeStyle = "#2ea8ff"; for(const p of added){ ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 7); ctx.stroke(); } }
-    if(tap){ ctx.fillStyle = "#2ea8ff"; ctx.beginPath(); ctx.arc(tap.x, tap.y, Math.max(2, 4/k*dpr), 0, 7); ctx.fill(); }
+    ctx.fillStyle = "#2ea8ff"; for(const t of taps){ ctx.beginPath(); ctx.arc(t.x, t.y, Math.max(2, 4/cssK), 0, 7); ctx.fill(); }
     nEl.textContent = res ? String(count()) : "–";
-    v.querySelector("#ecOk").disabled = !res;
-    v.querySelector("#ecOk").textContent = res ? `${tr("Übernehmen")} (${count()})` : tr("Übernehmen");
+    $v("#ecOk").disabled = !res;
+    $v("#ecOk").textContent = res ? `${tr("Übernehmen")} (${count()})` : tr("Übernehmen");
   }
-  function setZoom(z, cx, cy){
-    const old = zoom; zoom = Math.max(1, Math.min(10, z)); if(zoom===old) return;
-    const ax = cx ?? wrap.clientWidth/2, ay = cy ?? wrap.clientHeight/2;
-    const fx = (wrap.scrollLeft + ax)/old, fy = (wrap.scrollTop + ay)/old;
-    draw(); wrap.scrollLeft = fx*zoom - ax; wrap.scrollTop = fy*zoom - ay;
+  function setZoom(z, ax, ay, fx, fy){ // ax/ay: Bildschirmpunkt im Fenster, fx/fy: Anteil im Bild, der dort landen soll
+    const old = zoom; zoom = Math.max(1, Math.min(12, z));
+    ax ??= wrap.clientWidth/2; ay ??= wrap.clientHeight/2;
+    if(fx == null){ const ow = fitW()*old, oh = ow*H/W; fx = (wrap.scrollLeft + ax)/ow; fy = (wrap.scrollTop + ay)/oh; }
+    draw(); const nw = fitW()*zoom; wrap.scrollLeft = fx*nw - ax; wrap.scrollTop = fy*nw*H/W - ay;
   }
-  v.querySelector("#ecIn").onclick = () => setZoom(zoom*1.8);
-  v.querySelector("#ecOut").onclick = () => setZoom(zoom/1.8);
-  v.querySelector("#ecX").onclick = () => v.remove();
-  v.querySelector("#ecRe").onclick = () => { mode = "calib"; hint.textContent = tr("Tippe mitten auf ein einzelnes Ei."); };
+  function run(){
+    busy = true; hint.textContent = tr("Zähle …"); draw();
+    setTimeout(() => {
+      const out = EGG.detect(px, W, H, taps); busy = false;
+      if(out.error){ taps.pop(); hint.textContent = tr(out.error); draw(); if(!taps.length) mode = "calib"; return; }
+      res = out; removed = new Set(); mode = "edit";
+      $v("#ecRe").hidden = false; $v("#ecAdd").hidden = false; $v("#ecSlW").hidden = false;
+      hint.textContent = tr("Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.");
+      draw();
+    }, 30);
+  }
+  $v("#ecIn").onclick = () => setZoom(zoom*1.8);
+  $v("#ecOut").onclick = () => setZoom(zoom/1.8);
+  $v("#ecX").onclick = () => v.remove();
+  $v("#ecRe").onclick = () => { taps = []; res = null; removed = new Set(); added = []; mode = "calib"; $v("#ecAdd").hidden = true; $v("#ecSlW").hidden = true; hint.textContent = tr(HINT0); draw(); };
+  $v("#ecAdd").onclick = () => { mode = "addref"; hint.textContent = tr("Tippe auf ein Ei, das anders aussieht (z. B. im Schatten). Es wird als weitere Vorlage genutzt."); };
+  $v("#ecRot").onclick = () => { // 90° im Uhrzeigersinn; Markierungen drehen mit
+    const nb = document.createElement("canvas"); nb.width = H; nb.height = W; const c = nb.getContext("2d");
+    c.translate(H, 0); c.rotate(Math.PI/2); c.drawImage(base, 0, 0);
+    const rot = p => { const x = p.x; p.x = H - p.y; p.y = x; };
+    taps.forEach(rot); added.forEach(rot); if(res) res.pts.forEach(rot);
+    base = nb; [W, H] = [H, W]; px = base.getContext("2d", {willReadFrequently:true}).getImageData(0, 0, W, H).data;
+    zoom = 1; draw(); wrap.scrollLeft = 0; wrap.scrollTop = 0;
+  };
   sl.oninput = () => draw();
-  // Zwei-Finger-Zoom
-  let pinch = null;
-  wrap.addEventListener("touchstart", e => { if(e.touches.length===2){ const [a,b] = e.touches; pinch = {d: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY), z: zoom}; } }, {passive:true});
-  wrap.addEventListener("touchmove", e => { if(pinch && e.touches.length===2){ e.preventDefault(); const [a,b] = e.touches, r = wrap.getBoundingClientRect();
-    setZoom(pinch.z * Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY)/pinch.d, (a.clientX+b.clientX)/2-r.left, (a.clientY+b.clientY)/2-r.top); } }, {passive:false});
-  wrap.addEventListener("touchend", e => { if(e.touches.length<2) setTimeout(()=>{ pinch = null; }, 50); });
+  // Zwei-Finger-Zoom: während der Geste nur per CSS skalieren (flüssig), am Ende einmal sauber neu zeichnen
+  let pinch = null, pinchEnd = 0;
+  const mid = (a, b) => { const r = wrap.getBoundingClientRect(); return [(a.clientX+b.clientX)/2 - r.left, (a.clientY+b.clientY)/2 - r.top]; };
+  wrap.addEventListener("touchstart", e => { if(e.touches.length===2){ const [a,b] = e.touches, [mx,my] = mid(a,b), cr = cv.getBoundingClientRect(), wr = wrap.getBoundingClientRect();
+    pinch = {d: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY), mx, my, ox: mx + wr.left - cr.left, oy: my + wr.top - cr.top, cw: cr.width, ch: cr.height, s: 1, nx: mx, ny: my}; } }, {passive:true});
+  wrap.addEventListener("touchmove", e => { if(!pinch || e.touches.length!==2) return; e.preventDefault();
+    const [a,b] = e.touches, [mx,my] = mid(a,b);
+    pinch.s = Math.max(1/zoom, Math.min(12/zoom, Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY)/pinch.d)); pinch.nx = mx; pinch.ny = my;
+    cv.style.transformOrigin = `${pinch.ox}px ${pinch.oy}px`;
+    cv.style.transform = `translate(${mx-pinch.mx}px,${my-pinch.my}px) scale(${pinch.s})`; }, {passive:false});
+  const endPinch = e => { if(!pinch || e.touches.length >= 2) return; const p = pinch; pinch = null; pinchEnd = Date.now();
+    setZoom(zoom*p.s, p.nx, p.ny, p.ox/p.cw, p.oy/p.ch); };
+  wrap.addEventListener("touchend", endPinch); wrap.addEventListener("touchcancel", endPinch);
   cv.addEventListener("click", e => {
-    if(pinch) return;
+    if(pinch || Date.now() - pinchEnd < 350 || busy) return;
     const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width, y = (e.clientY - r.top) * H / r.height;
-    if(mode === "calib"){
-      tap = {x, y}; hint.textContent = tr("Zähle …"); draw();
-      setTimeout(() => {
-        const out = EGG.detect(px, W, H, x, y);
-        if(out.error){ hint.textContent = tr(out.error); tap = null; draw(); return; }
-        res = out; removed = new Set(); added = []; mode = "edit"; tap = null;
-        v.querySelector("#ecRe").hidden = false; v.querySelector("#ecSlW").hidden = false;
-        hint.textContent = tr("Rot = erkannt. Fehlt ein Ei, tippe es an. Falsche Markierung antippen zum Entfernen.");
-        draw();
-      }, 30);
-      return;
-    }
+    if(mode === "calib" || mode === "addref"){ taps.push({x, y}); run(); return; }
     const tol = Math.max(res.R*1.1, 16 * W / r.width);
     const ai = added.findIndex(p => (p.x-x)**2 + (p.y-y)**2 < tol*tol);
     if(ai >= 0){ added.splice(ai, 1); draw(); return; }
@@ -2996,9 +3034,9 @@ function eggCounterUI(img, taken, onDone){
     if(bi >= 0) removed.add(bi); else added.push({x, y});
     draw();
   });
-  v.querySelector("#ecOk").onclick = async () => {
+  $v("#ecOk").onclick = async () => {
     const n = count(); let blob = null;
-    if(v.querySelector("#ecSave").checked){
+    if($v("#ecSave").checked){
       const c = document.createElement("canvas"); c.width = W; c.height = H; const x = c.getContext("2d"); x.drawImage(base, 0, 0);
       x.lineWidth = Math.max(1.5, W/700); const r = res.R*1.15;
       x.strokeStyle = "#ff3b30"; for(const p of shown()){ x.beginPath(); x.arc(p.x, p.y, r, 0, 7); x.stroke(); }
