@@ -473,7 +473,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.17.1";
+const APP_VERSION = "5.17.2";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -743,6 +743,7 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^(.+) \(Nachzucht derselben Eltern\)$/, "$1 (offspring of the same parents)"],
   [/^Gleich als Raupen anlegen – in einem neuen Zuchtansatz \(Eltern aus „(.+)“\)$/, "Also create as larvae – in a new brood (parents from “$1”)"], [/^Eltern aus (.+)$/, "Parents from $1"],
   [/^(\d+) Raupen? geschlüpft$/, "$1 larva(e) hatched"], [/^Raupen hinzufügen \((\d+)\)$/, "Add larvae ($1)"], [/^(\d+) Raupen angelegt$/, "$1 larvae created"],
   [/^Gleich als Raupen in „(.+)“ anlegen$/, "Also create as larvae in “$1”"], [/^Eintrag vom (.+) \((\d+)\) löschen\?$/, "Delete entry from $1 ($2)?"],
@@ -3178,7 +3179,7 @@ ACTS.editClutch = d => {
   if(c) wireConfirm(root, "#del", async () => { closeSheet(); for(const p of photosOf("clutch",c.id)){ await store.deletePhotoAsset(p); await store.del("photos",p.id); } await store.del("clutches", c.id); back(); toast("Gelege gelöscht"); });
 };
 ACTS.clutchHatch = d => {
-  const c = S.clutches[d.id], s = clutchSum(c), br = S.broods[c.broodId];
+  const c = S.clutches[d.id], s = clutchSum(c), br = offspringBrood(c);
   const root = openSheet(`<h2>Schlupf eintragen</h2>
     <p class="muted" style="margin:0">Bisher ${s.hatched} geschlüpft${s.eggs!=null?` von ${s.eggs} Eiern, ${s.open} noch offen`:""}.</p>
     <div class="frow2">${fld.num("hN","Neu geschlüpft","","1")}${fld.date("hD","am",todayISO())}</div>
@@ -3242,12 +3243,20 @@ function parentBroodOf(c){
   if(mb.length) return mb[0];
   if(c.parentBroodId !== undefined) return S.broods[c.parentBroodId] ? c.parentBroodId : "";
   return guessParentBrood(c.speciesId); }
+/* Nachzucht-Ansatz, in den die Raupen eines Geleges gehören: der verknüpfte, sonst ein schon vorhandener Ansatz mit denselben Eltern
+   (mehrere Gelege derselben Falter landen so im selben Ansatz statt in je einem eigenen). */
+function offspringBrood(c){
+  if(S.broods[c.broodId]) return S.broods[c.broodId];
+  const pb = parentBroodOf(c); if(!pb) return null;
+  return all("broods").filter(b => b.parentBroodId===pb && b.speciesId===c.speciesId && !b.archived).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""))[0] || null; }
 const nextGen = pb => { const g = S.broods[pb]?.generation; return /^\d+$/.test(g||"") ? String(+g + 1) : ""; };
+function offspringName(c){ const pb = parentBroodOf(c), g = nextGen(pb);
+  return pb ? `${S.broods[pb].name} ${g ? "F"+g : "Nachzucht"}` : `${speciesShort(S.species[c.speciesId])} ${clutchName(c)}`; }
 async function newBroodFor(c, date, name, gen, start){
   let src = all("sources").find(x=>x.name==="Eigene Nachzucht");
   const srcId = src ? src.id : await store.put("sources", {name:"Eigene Nachzucht", type:"nachzucht"});
   const pb = parentBroodOf(c);
-  return store.put("broods", {name: name || `${speciesShort(S.species[c.speciesId])} ${clutchName(c)}`, speciesId:c.speciesId, sourceId:srcId, generation: gen ?? nextGen(pb), startDate: start || date, startStage:"L1", clutchId:c.id, parentBroodId: pb || null,
+  return store.put("broods", {name: name || offspringName(c), speciesId:c.speciesId, sourceId:srcId, generation: gen ?? nextGen(pb), startDate: start || date, startStage:"L1", clutchId:c.id, parentBroodId: pb || null,
     notes:`Aus ${clutchName(c)}${pb?` · Eltern aus ${S.broods[pb].name}`:""}${(c.mothers||[]).length?` · ♀ ${parentsTxt(c.mothers,"")}`:""}${(c.fathers||[]).length?` · ♂ ${parentsTxt(c.fathers,"")}`:""}`});
 }
 /* Raupen aus einem Gelege als Einzeltiere anlegen – mit „Aus dem Ei geschlüpft“ am Schlupftag, damit jedes Tier sein eigenes Alter hat */
@@ -3264,11 +3273,11 @@ ACTS.clutchBrood = d => {
   const gen = nextGen(parentBroodOf(c));
   const brs = all("broods").filter(b => !b.archived || b.id===c.broodId).sort((a,b) => (b.id===c.broodId)-(a.id===c.broodId) || (b.speciesId===c.speciesId)-(a.speciesId===c.speciesId) || (b.startDate||"").localeCompare(a.startDate||""));
   const log = clutchLog(c), last = log[log.length-1]?.d || todayISO(), open = Math.max(0, s.hatched - clutchLarvae(c));
-  const def = S.broods[c.broodId] ? c.broodId : "";
+  const def = offspringBrood(c)?.id || "";
   const root = openSheet(`<h2>${def?"Raupen hinzufügen":"Raupen weiterführen"}</h2>
-    ${fld.sel("rTo","In welchen Zuchtansatz?",[["","+ Neuer Zuchtansatz"],...brs.map(b=>[b.id, `${b.name}${b.id===c.broodId?" (aus diesem Gelege)":""}`])],def)}
+    ${fld.sel("rTo","In welchen Zuchtansatz?",[["","+ Neuer Zuchtansatz"],...brs.map(b=>[b.id, `${b.name}${b.id===c.broodId?" (aus diesem Gelege)":b.id===def?" (Nachzucht derselben Eltern)":""}`])],def)}
     <div id="rNew">
-      ${fld.text("rName","Name",`${speciesShort(sp)} ${clutchName(c)}`)}
+      ${fld.text("rName","Name",offspringName(c))}
       <div class="frow2">${fld.date("rStart","Startdatum",c.hatchFirst||todayISO())}${fld.text("rGen","Generation",gen,"z. B. 2")}</div>
     </div>
     <div class="frow2">${fld.num("rN","Raupen anlegen",open,"1")}${fld.date("rD","geschlüpft am",last)}</div>
