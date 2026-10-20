@@ -473,7 +473,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.17.0";
+const APP_VERSION = "5.17.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -540,6 +540,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Eltern stammen aus (Zuchtansatz)":"Parents come from (brood)","– unbekannt –":"– unknown –","Daraus ergeben sich Herkunft und Generation der Raupen. Ist eine Mutter angekreuzt, zählt deren Zuchtansatz.":"This sets origin and generation of the larvae. If a mother is ticked, her brood counts.","Gleich als Raupen anlegen – in einem neuen Zuchtansatz":"Also create as larvae – in a new brood",
   "Ausfälle & Zahlen":"Losses & numbers","Raupen hinzufügen":"Add larvae","Schlupf-Einträge":"Hatching entries","antippen zum Ändern":"tap to change","ändern":"edit","Schlupf-Eintrag":"Hatching entry","Anzahl":"Number","Eintrag löschen":"Delete entry","Geändert":"Changed","Eintrag gelöscht":"Entry deleted","In welchen Zuchtansatz?":"Which brood?","+ Neuer Zuchtansatz":"+ New brood","Raupen anlegen":"Create larvae","geschlüpft am":"hatched on","Trag ruhig mehrmals ein, z. B. jeden Tag die neuen Raupen. Jeder Eintrag lässt sich später einzeln ändern oder löschen.":"Feel free to record several times, e.g. each day's new larvae. Each entry can be changed or deleted later.",
   "Anzahl Eier noch offen":"Number of eggs not set yet",
   "liegt seit 1 Tag":"incubating for 1 day","Tage liegend":"Days incubating","Die Eier wurden irgendwann zwischen Abend und nächstem Morgen gelegt (z. B. morgens im Behälter gefunden): das Datum des Abends wählen.":"The eggs were laid sometime between evening and the next morning (e.g. found in the container in the morning): pick the evening's date.","Wenn du nur weißt, dass die Eier irgendwann in diesen Tagen gelegt wurden, z. B. nach ein paar Tagen ohne Nachschauen.":"If you only know the eggs were laid sometime during these days, e.g. after not checking for a few days.",
@@ -742,6 +743,7 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^Gleich als Raupen anlegen – in einem neuen Zuchtansatz \(Eltern aus „(.+)“\)$/, "Also create as larvae – in a new brood (parents from “$1”)"], [/^Eltern aus (.+)$/, "Parents from $1"],
   [/^(\d+) Raupen? geschlüpft$/, "$1 larva(e) hatched"], [/^Raupen hinzufügen \((\d+)\)$/, "Add larvae ($1)"], [/^(\d+) Raupen angelegt$/, "$1 larvae created"],
   [/^Gleich als Raupen in „(.+)“ anlegen$/, "Also create as larvae in “$1”"], [/^Eintrag vom (.+) \((\d+)\) löschen\?$/, "Delete entry from $1 ($2)?"],
   [/^(.+) \(aus diesem Gelege\)$/, "$1 (from this clutch)"],
@@ -1512,7 +1514,7 @@ VIEWS.brood = r => {
   const eclosed = inds.filter(i=>firstEv(i,"falterschlupf"));
   const dead = inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf"));
   let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}${spCommon(sp)?` · ${esc(spCommon(sp))}`:""}</span><h1>${esc(b.name)}</h1>
-    <div class="meta">${src?`<span class="pill">von ${esc(src.name)}</span>`:""}${b.generation?`<span class="pill">F${esc(b.generation)}</span>`:""}${b.startDate?`<span class="pill">seit ${dDE(b.startDate)}</span>`:""}<span class="pill stage">Start als ${stageLabel(b.startStage||"L1")}</span>${b.clutchId&&S.clutches[b.clutchId]?`<button class="pill" data-go="clutch:${b.clutchId}" style="border:0;cursor:pointer">aus ${esc(clutchName(S.clutches[b.clutchId]))}</button>`:""}</div>
+    <div class="meta">${src?`<span class="pill">von ${esc(src.name)}</span>`:""}${b.generation?`<span class="pill">F${esc(b.generation)}</span>`:""}${b.startDate?`<span class="pill">seit ${dDE(b.startDate)}</span>`:""}<span class="pill stage">Start als ${stageLabel(b.startStage||"L1")}</span>${b.clutchId&&S.clutches[b.clutchId]?`<button class="pill" data-go="clutch:${b.clutchId}" style="border:0;cursor:pointer">aus ${esc(clutchName(S.clutches[b.clutchId]))}</button>`:""}${b.parentBroodId&&S.broods[b.parentBroodId]?`<button class="pill" data-go="brood:${b.parentBroodId}" style="border:0;cursor:pointer">Eltern aus ${esc(S.broods[b.parentBroodId].name)}</button>`:""}</div>
     ${b.notes?`<p class="muted" style="margin:0">${esc(b.notes)}</p>`:""}</div>`;
   h += `<div class="stats"><div class="stat"><b>${inds.length}</b><span>Tiere</span></div><div class="stat"><b>${alive.length}</b><span>aktiv</span></div><div class="stat"><b>${eclosed.length}</b><span>Falter</span></div><div class="stat"><b>${dead.length}</b><span>Verluste</span></div></div>`;
   h += `<div class="btns"><button class="btn primary" data-act="addInds" data-id="${b.id}">Tiere hinzufügen</button><button class="btn" data-act="multiEvent" data-brood="${b.id}">Ereignis für mehrere</button><button class="btn" data-act="eclosion" data-brood="${b.id}">Falterschlupf</button></div>`;
@@ -3152,6 +3154,8 @@ ACTS.editClutch = d => {
     <div class="f" style="margin-top:-6px"><button type="button" class="linkbtn" id="cCount">Eier auf Foto zählen</button><span class="hint" id="cCountH"></span></div>
     ${parentPicker("cMo","Mögliche Mutter",["f","u"],c?.mothers||pre,"Mehrere ankreuzen, wenn nicht klar ist, welches Weibchen gelegt hat. Keins = unbekannt.")}
     ${parentPicker("cFa","Möglicher Vater (optional)",["m","u"],c?.fathers||[],"")}
+    ${fld.sel("cPar","Eltern stammen aus (Zuchtansatz)",[["","– unbekannt –"],...all("broods").sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||"")).map(b=>[b.id,b.name])], c ? parentBroodOf(c) : (d.mother ? S.individuals[d.mother]?.broodId : guessParentBrood(spDef)) || "")}
+    <span class="hint" style="margin-top:-8px">Daraus ergeben sich Herkunft und Generation der Raupen. Ist eine Mutter angekreuzt, zählt deren Zuchtansatz.</span>
     ${fld.sel("cCont","Behälter",[["","– keiner –"],...all("containers").sort(byName).map(x=>[x.id,x.name])],c?.containerId||"")}
     ${fld.area("cNotes","Notizen",c?.notes||"","z. B. an Kartoffelblatt, Netzkäfig")}
     <div class="btns"><button class="btn primary" id="ok">${c?"Speichern":"Anlegen"}</button>${c?`<button class="btn danger" id="del">Löschen</button>`:""}</div>
@@ -3167,7 +3171,7 @@ ACTS.editClutch = d => {
     const tm = readTime(root, "c"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     const eggs = val(root,"cEggs");
     const id = await store.put("clutches", {...(c||{}), name:val(root,"cName"), speciesId:val(root,"cSp"), ...tm, collectedAt:val(root,"cCol"), eggs: eggs===""?null:Math.round(+eggs),
-      mothers:picks("cMo"), fathers:picks("cFa"), containerId:val(root,"cCont")||null, notes:val(root,"cNotes")});
+      mothers:picks("cMo"), fathers:picks("cFa"), containerId:val(root,"cCont")||null, parentBroodId:val(root,"cPar")||"", notes:val(root,"cNotes")});
     if(eggPhoto) await store.put("photos", {...(await store.uploadPhoto(eggPhoto.blob)), subjectType:"clutch", subjectId:id, view:"eier", takenAt:eggPhoto.taken});
     closeSheet(); if(!c) nav("clutch",{id});
   });
@@ -3179,7 +3183,7 @@ ACTS.clutchHatch = d => {
     <p class="muted" style="margin:0">Bisher ${s.hatched} geschlüpft${s.eggs!=null?` von ${s.eggs} Eiern, ${s.open} noch offen`:""}.</p>
     <div class="frow2">${fld.num("hN","Neu geschlüpft","","1")}${fld.date("hD","am",todayISO())}</div>
     <span class="hint">Trag ruhig mehrmals ein, z. B. jeden Tag die neuen Raupen. Jeder Eintrag lässt sich später einzeln ändern oder löschen.</span>
-    ${br?`<label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="hInd" style="width:20px;height:20px;min-height:0" checked><span>Gleich als Raupen in „${esc(br.name)}“ anlegen</span></label>`:""}
+    <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="hInd" style="width:20px;height:20px;min-height:0" ${c.noAutoLarvae?"":"checked"}><span>${br?`Gleich als Raupen in „${esc(br.name)}“ anlegen`:`Gleich als Raupen anlegen – in einem neuen Zuchtansatz${parentBroodOf(c)?` (Eltern aus „${esc(S.broods[parentBroodOf(c)].name)}“)`:""}`}</span></label>
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="hDone" style="width:20px;height:20px;min-height:0" ${c.done?"checked":""}><span>Fertig: es schlüpft nichts mehr (Rest zählt als nicht geschlüpft)</span></label>
     <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
   root.querySelector("#ok").addEventListener("click", async () => {
@@ -3188,7 +3192,8 @@ ACTS.clutchHatch = d => {
     let x = n > 0 ? withLog(c, [...clutchLog(c), {id:uid(), d:dt, n}]) : {...c};
     x.done = root.querySelector("#hDone").checked;
     if(x.done && x.eggs != null){ const r = clutchSum(x); if(r.open) x.other = (+x.other||0) + r.open; }
-    if(n > 0 && br && root.querySelector("#hInd")?.checked){ await addLarvae(x, br.id, n, dt); x = S.clutches[c.id]; }
+    const auto = root.querySelector("#hInd").checked; x.noAutoLarvae = !auto;
+    if(n > 0 && auto){ const bid = br ? br.id : await newBroodFor(x, dt); await addLarvae(x, bid, n, dt); }
     else await store.put("clutches", x);
     closeSheet(); toast(n ? `${n} geschlüpft eingetragen` : "Gespeichert");
   });
@@ -3227,6 +3232,24 @@ ACTS.clutchLoss = d => {
     await store.put("clutches", x); closeSheet();
   });
 };
+/* Herkunft eines Geleges: Zuchtansatz der Eltern. Ausgewählte Mütter gehen vor, sonst die Angabe am Gelege,
+   sonst die naheliegende Vermutung: der Ansatz derselben Art mit den meisten geschlüpften Faltern. */
+function guessParentBrood(speciesId){
+  const n = {}; for(const i of all("individuals")){ const b = S.broods[i.broodId]; if(b && b.speciesId===speciesId && firstEv(i,"falterschlupf")) n[b.id] = (n[b.id]||0) + 1; }
+  return Object.entries(n).sort((a,b)=>b[1]-a[1])[0]?.[0] || ""; }
+function parentBroodOf(c){
+  const mb = (c.mothers||[]).map(id=>S.individuals[id]?.broodId).filter(id=>S.broods[id]);
+  if(mb.length) return mb[0];
+  if(c.parentBroodId !== undefined) return S.broods[c.parentBroodId] ? c.parentBroodId : "";
+  return guessParentBrood(c.speciesId); }
+const nextGen = pb => { const g = S.broods[pb]?.generation; return /^\d+$/.test(g||"") ? String(+g + 1) : ""; };
+async function newBroodFor(c, date, name, gen, start){
+  let src = all("sources").find(x=>x.name==="Eigene Nachzucht");
+  const srcId = src ? src.id : await store.put("sources", {name:"Eigene Nachzucht", type:"nachzucht"});
+  const pb = parentBroodOf(c);
+  return store.put("broods", {name: name || `${speciesShort(S.species[c.speciesId])} ${clutchName(c)}`, speciesId:c.speciesId, sourceId:srcId, generation: gen ?? nextGen(pb), startDate: start || date, startStage:"L1", clutchId:c.id, parentBroodId: pb || null,
+    notes:`Aus ${clutchName(c)}${pb?` · Eltern aus ${S.broods[pb].name}`:""}${(c.mothers||[]).length?` · ♀ ${parentsTxt(c.mothers,"")}`:""}${(c.fathers||[]).length?` · ♂ ${parentsTxt(c.fathers,"")}`:""}`});
+}
 /* Raupen aus einem Gelege als Einzeltiere anlegen – mit „Aus dem Ei geschlüpft“ am Schlupftag, damit jedes Tier sein eigenes Alter hat */
 async function addLarvae(c, broodId, n, date){
   const b = S.broods[broodId];
@@ -3238,8 +3261,7 @@ async function addLarvae(c, broodId, n, date){
 }
 ACTS.clutchBrood = d => {
   const c = S.clutches[d.id], s = clutchSum(c), sp = S.species[c.speciesId];
-  const mb = (c.mothers||[]).map(id=>S.broods[S.individuals[id]?.broodId]).filter(Boolean)[0];
-  const gen = mb && /^\d+$/.test(mb.generation||"") ? String(+mb.generation + 1) : "";
+  const gen = nextGen(parentBroodOf(c));
   const brs = all("broods").filter(b => !b.archived || b.id===c.broodId).sort((a,b) => (b.id===c.broodId)-(a.id===c.broodId) || (b.speciesId===c.speciesId)-(a.speciesId===c.speciesId) || (b.startDate||"").localeCompare(a.startDate||""));
   const log = clutchLog(c), last = log[log.length-1]?.d || todayISO(), open = Math.max(0, s.hatched - clutchLarvae(c));
   const def = S.broods[c.broodId] ? c.broodId : "";
@@ -3257,12 +3279,7 @@ ACTS.clutchBrood = d => {
   root.querySelector("#ok").addEventListener("click", async () => {
     const n = Math.max(0, Math.min(500, Math.round(+val(root,"rN")||0))), dt = val(root,"rD") || todayISO();
     let bid = val(root,"rTo");
-    if(!bid){
-      let src = all("sources").find(x=>x.name==="Eigene Nachzucht");
-      const srcId = src ? src.id : await store.put("sources", {name:"Eigene Nachzucht", type:"nachzucht"});
-      bid = await store.put("broods", {name:val(root,"rName")||clutchName(c), speciesId:c.speciesId, sourceId:srcId, generation:val(root,"rGen"), startDate:val(root,"rStart")||dt, startStage:"L1", clutchId:c.id,
-        notes:`Aus ${clutchName(c)}${(c.mothers||[]).length?` · ♀ ${parentsTxt(c.mothers,"")}`:""}${(c.fathers||[]).length?` · ♂ ${parentsTxt(c.fathers,"")}`:""}`});
-    }
+    if(!bid) bid = await newBroodFor(c, dt, val(root,"rName"), val(root,"rGen"), val(root,"rStart"));
     if(n) await addLarvae(S.clutches[c.id], bid, n, dt);
     else if(!S.broods[c.broodId]) await store.put("clutches", {...S.clutches[c.id], broodId:bid});
     closeSheet(); nav("brood",{id:bid}); toast(n ? `${n} Raupen angelegt` : "Zuchtansatz angelegt");
