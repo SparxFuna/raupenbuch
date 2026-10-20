@@ -473,7 +473,7 @@ button.pill.tag{cursor:pointer}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.17.2";
+const APP_VERSION = "5.17.3";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -1570,7 +1570,8 @@ function stageSegments(ind){
   const b = S.broods[ind.broodId]; const now = Date.now(); const pts = [];
   const st0 = startStageOf(ind);
   const ownHatch = evOf(ind.id).some(e => e.type==="schlupf_ei");
-  if(b?.startDate && st0!=="?" && !ownHatch) pts.push({k:st0, t:ms(b.startDate), est:false, src:"Start des Zuchtansatzes"});
+  const firstOwn = Math.min(...stageEventsOf(ind).map(e => ms(e.t0)));
+  if(b?.startDate && st0!=="?" && !ownHatch && !(ms(b.startDate+"T00:00") > firstOwn)) pts.push({k:st0, t:ms(b.startDate), est:false, src:"Start des Zuchtansatzes"});
   for(const e of evOf(ind.id)){
     const fn = ET[e.type]?.stage; const k = fn && fn(e.data||{}); if(!k) continue;
     if(!evIsDue(e)) continue;
@@ -1912,7 +1913,7 @@ function broodSheet(b){
     ${fld.sel("bSp","Art",sp,b?.speciesId||sp[0]?.[0])}
     <div class="frow2">${fld.sel("bSrc","Herkunft",[...sourceOpts(),["__new","+ neue Herkunft …"]],b?.sourceId||"")}${fld.text("bGen","Generation",b?.generation||"","z. B. 1")}</div>
     ${fld.text("bSrcNew","Name der neuen Herkunft","","z. B. Jana")}
-    <div class="frow2">${fld.date("bStart","Startdatum",b?.startDate||todayISO())}${fld.sel("bStage","Start als",stageOpts(),b?.startStage||"L1")}</div>
+    <div class="frow2">${fld.date("bStart","Startdatum",b ? (b.startDate||"") : todayISO())}${fld.sel("bStage","Start als",stageOpts(),b?.startStage||"L1")}</div>
     ${fld.area("bNotes","Notizen",b?.notes||"")}
     <div class="btns"><button class="btn primary" id="ok">${b?"Speichern":"Anlegen"}</button>${b?`<button class="btn danger" id="del">Löschen</button>`:""}</div>
     ${b?confirmBlock(`„${esc(b.name)}“ mit allen ${indsOf(b.id).length} Tieren und deren Einträgen löschen?`,"Endgültig löschen"):""}`);
@@ -2279,6 +2280,11 @@ ACTS.editImago = d => {
 let _migrated = false;
 async function migrateImagos(){
   if(_migrated || !store.ready()) return; _migrated = true;
+  for(const b of all("broods")){ if(!b.startDate) continue;
+    const inds = all("individuals").filter(i => i.broodId===b.id); if(!inds.length) continue;
+    const firsts = inds.map(i => Math.min(...stageEventsOf(i).map(e => ms(e.t0))));
+    if(firsts.every(t => Number.isFinite(t) && t < ms(b.startDate+"T00:00"))) await store.put("broods", {...b, startDate:""});
+  }
   const old = all("imagos").filter(m=>m.individualId);
   for(const m of old) await dissolveImago(m, m.individualId);
 }
