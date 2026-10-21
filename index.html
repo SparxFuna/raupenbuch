@@ -475,7 +475,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.18.2";
+const APP_VERSION = "5.18.3";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -542,6 +542,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Schlupf pro Tag":"Hatching per day","alle Gelege zusammen":"all clutches combined","heute":"today","Heute geschlüpft":"Hatched today","Raupe":"larva",
   "Eier insgesamt":"Eggs in total","Raupen geschlüpft":"Larvae hatched","Eier liegen noch":"Eggs still incubating","Ausfälle":"Losses",
   "Nur QR-Code, ohne Text":"QR code only, no text",
   "Raupen":"Larvae","Alle Zuchtansätze":"All broods","Zuchtansatz":"Brood","Tage im Ei":"Days in egg","Ablage bis 1. Schlupf":"laying to first hatch","Tage im Ei (Median)":"Days in egg (median)","Häutung eintragen":"Record moult","Häutung":"Moult","Wie viele?":"How many?","gehäutet zu":"moulted to","Welche Tiere? (automatisch gewählt)":"Which animals? (picked automatically)","Aktuell: ":"Now: ","Keine Tiere in":"No animals in","Keine Raupen gefunden":"No larvae found","Bitte eine Anzahl eintragen":"Please enter a number","QR-Etikett":"QR label","Gelege":"Clutches","abgelegt":"laid","Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":"Hold the QR code in the frame. The animal, clutch or container then opens by itself.",
@@ -1401,7 +1402,7 @@ VIEWS.home = () => {
   if(fcs.length && noData.length) h += `<p class="small muted" style="margin:0">${noData.length} weitere Puppe(n) ohne genug Vergleichsdaten.</p>`;
   h += `</section>`;
   const runC = all("clutches").filter(c=>!clutchSum(c).done).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
-  if(runC.length) h += `<section class="sec"><div class="sec-h"><h2>Gelege</h2><span><span class="small muted">${fmtN(clutchTotals().eggs)} Eier gesamt</span> <button class="btn ghost link" data-go="clutches">Alle</button></span></div><div class="list">${runC.slice(0,5).map(clutchRow).join("")}</div></section>`;
+  if(runC.length) h += `<section class="sec"><div class="sec-h"><h2>Gelege</h2><span><span class="small muted">${fmtN(clutchTotals().eggs)} Eier gesamt</span> <button class="btn ghost link" data-go="clutches">Alle</button></span></div>${(()=>{ const t = hatchByDay().find(x=>x.d===todayISO()); return t ? `<p class="small" style="margin:0 0 8px"><b>${tr("Heute geschlüpft")}: ${t.n}</b> <span class="muted">(${t.parts.map(p=>`${esc(clutchName(p.c))}: ${p.n}`).join(" · ")})</span></p>` : ""; })()}<div class="list">${runC.slice(0,5).map(clutchRow).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div><div class="list">${broods.map(broodRow).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Zuletzt eingetragen</h2><button class="btn ghost link" data-go="stats">Auswertung</button></div><div class="list">${recent.length? recent.map(e=>{
       const who = e.individualId? indName(e.individualId) : e.containerId? (S.containers[e.containerId]?.name||"Behälter") : (S.broods[e.broodId]?.name||"");
@@ -3171,6 +3172,11 @@ function clutchRow(c){ const s = clutchSum(c);
 function clutchTotals(cs = all("clutches")){ const T = {n:cs.length, withEggs:0, eggs:0, hatched:0, lost:0, open:0};
   for(const c of cs){ const s = clutchSum(c); T.hatched += s.hatched; T.lost += s.lost; if(s.eggs!=null){ T.withEggs++; T.eggs += s.eggs; if(!s.done) T.open += s.open; } }
   return T; }
+/* Schlupf pro Tag über alle Gelege: {d, n, parts:[{c, n}]} neueste zuerst */
+function hatchByDay(){ const M = new Map();
+  for(const c of all("clutches")) for(const e of clutchLog(c)){ const x = M.get(e.d) || {d:e.d, n:0, parts:[]}; x.n += e.n; x.parts.push({c, n:e.n}); M.set(e.d, x); }
+  return [...M.values()].sort((a,b)=>b.d.localeCompare(a.d)); }
+function hatchDayRows(days){ return days.map(x => `<div class="row" style="cursor:default"><span class="main"><span class="t">${dDE(x.d)}${x.d===todayISO()?` <span class="pill good">${esc(tr("heute"))}</span>`:""}</span><span class="s">${x.parts.map(p=>`${esc(clutchName(p.c))}: ${p.n}`).join(" · ")}</span></span><span class="end"><b style="font-size:20px">${x.n}</b>&nbsp;<span class="small muted">${x.n===1?"Raupe":"Raupen"}</span></span></div>`).join(""); }
 VIEWS.clutches = () => {
   const cs = all("clutches").sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
   const run = cs.filter(c=>!clutchSum(c).done), done = cs.filter(c=>clutchSum(c).done);
@@ -3178,6 +3184,8 @@ VIEWS.clutches = () => {
     <div class="btns"><button class="btn primary" data-act="editClutch">+ Gelege</button>${cs.length?`<button class="btn" data-go="stats">Auswertung</button>`:""}</div>`;
   if(cs.length){ const T = clutchTotals(cs);
     h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier insgesamt</span><span class="small">aus ${T.withEggs} ${T.withEggs===1?"Gelege":"Gelegen"}${T.withEggs<T.n?` (${T.n-T.withEggs} ohne Zahl)`:""}</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>Raupen geschlüpft</span>${T.eggs?`<span class="small">${pctTxt(T.hatched/T.eggs)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>Eier liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div></div>`; }
+  const hd = hatchByDay();
+  if(hd.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf pro Tag</h2><span class="small muted">alle Gelege zusammen</span></div><div class="list">${hatchDayRows(hd)}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Laufend</h2><span class="small muted">${run.length}</span></div><div class="list">${run.length?run.map(clutchRow).join(""):`<div class="empty">Keine laufenden Gelege.</div>`}</div></section>`;
   if(done.length) h += `<section class="sec"><div class="sec-h"><h2>Abgeschlossen</h2><span class="small muted">${done.length}</span></div><div class="list">${done.map(clutchRow).join("")}</div></section>`;
   return h;
