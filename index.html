@@ -475,7 +475,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.18.0";
+const APP_VERSION = "5.18.1";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -542,6 +542,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Nur QR-Code, ohne Text":"QR code only, no text",
   "Raupen":"Larvae","Alle Zuchtansätze":"All broods","Zuchtansatz":"Brood","Tage im Ei":"Days in egg","Ablage bis 1. Schlupf":"laying to first hatch","Tage im Ei (Median)":"Days in egg (median)","Häutung eintragen":"Record moult","Häutung":"Moult","Wie viele?":"How many?","gehäutet zu":"moulted to","Welche Tiere? (automatisch gewählt)":"Which animals? (picked automatically)","Aktuell: ":"Now: ","Keine Tiere in":"No animals in","Keine Raupen gefunden":"No larvae found","Bitte eine Anzahl eintragen":"Please enter a number","QR-Etikett":"QR label","Gelege":"Clutches","abgelegt":"laid","Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":"Hold the QR code in the frame. The animal, clutch or container then opens by itself.",
   "Eltern stammen aus (Zuchtansatz)":"Parents come from (brood)","– unbekannt –":"– unknown –","Daraus ergeben sich Herkunft und Generation der Raupen. Ist eine Mutter angekreuzt, zählt deren Zuchtansatz.":"This sets origin and generation of the larvae. If a mother is ticked, her brood counts.","Gleich als Raupen anlegen – in einem neuen Zuchtansatz":"Also create as larvae – in a new brood",
   "Ausfälle & Zahlen":"Losses & numbers","Raupen hinzufügen":"Add larvae","Schlupf-Einträge":"Hatching entries","antippen zum Ändern":"tap to change","ändern":"edit","Schlupf-Eintrag":"Hatching entry","Anzahl":"Number","Eintrag löschen":"Delete entry","Geändert":"Changed","Eintrag gelöscht":"Entry deleted","In welchen Zuchtansatz?":"Which brood?","+ Neuer Zuchtansatz":"+ New brood","Raupen anlegen":"Create larvae","geschlüpft am":"hatched on","Trag ruhig mehrmals ein, z. B. jeden Tag die neuen Raupen. Jeder Eintrag lässt sich später einzeln ändern oder löschen.":"Feel free to record several times, e.g. each day's new larvae. Each entry can be changed or deleted later.",
@@ -3582,6 +3583,7 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
     <div class="f"><span class="lab">Tiere</span><div class="checks">${I.map(i=>`<label><input type="checkbox" data-k="i" value="${i.id}" ${preI.has(i.id)?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)} <span class="small muted" style="margin-left:auto">${esc(S.broods[i.broodId]?.name||"")}</span></label>`).join("")||`<div class="empty">Keine Tiere.</div>`}</div></div>
     ${G.length?`<div class="f"><span class="lab">Gelege</span><div class="checks">${G.map(c=>`<label><input type="checkbox" data-k="g" value="${c.id}" ${preG.has(c.id)?"checked":""}> ${esc(clutchName(c))} <span class="small muted" style="margin-left:auto">${dShort(clutchDate(c))}</span></label>`).join("")}</div></div>`:""}
     ${C.length?`<div class="f"><span class="lab">Behälter</span><div class="checks">${C.map(c=>`<label><input type="checkbox" data-k="c" value="${c.id}" ${preC.has(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")}</div></div>`:""}
+    <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="lQr" style="width:20px;height:20px;min-height:0"><span>Nur QR-Code, ohne Text</span></label>
     <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.</div>
     <div class="btns"><button class="btn primary" id="ok">PDF speichern</button><button class="btn" id="pr">Direkt drucken</button></div><div id="lst" class="small muted"></div>
     <div class="hint">Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.</div>`);
@@ -3591,14 +3593,14 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
     const st = root.querySelector("#lst"); st.textContent = "Erstelle PDF …";
     try {
       await Promise.all([loadLib("jspdf"), loadLib("qrgen")]);
-      const blob = makeLabelPdf(it, val(root,"lFmt"));
+      const blob = makeLabelPdf(it, val(root,"lFmt"), root.querySelector("#lQr").checked);
       const ok = await store.save(`raupenbuch-etiketten-${todayISO()}.pdf`, blob);
       if(ok) closeSheet(); else st.textContent = "";
     } catch(e){ st.textContent = "PDF konnte nicht erstellt werden: " + (e.message||e); }
   };
   root.querySelector("#pr").onclick = async () => {
     const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
-    try { await loadLib("qrgen"); printLabels(it, val(root,"lFmt")); }
+    try { await loadLib("qrgen"); printLabels(it, val(root,"lFmt"), root.querySelector("#lQr").checked); }
     catch(e){ root.querySelector("#lst").textContent = "Drucken nicht möglich: " + (e.message||e); }
   };
 }
@@ -3608,14 +3610,14 @@ function qrSvg(code){
   for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(qr.isDark(r,c)) d += `M${c} ${r}h1v1h-1z`;
   return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="#000"/></svg>`;
 }
-function printLabels(items, fmt){
+function printLabels(items, fmt, qrOnly){
   const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7, per = cols*rows;
   const pd = fmt==="k"?2.5:3.5;
   const fs = fmt==="k"?{t:10,s:6.5,c:5}:{t:13,s:8,c:6};
   let html = "";
   for(let p=0; p<items.length; p+=per){
     html += `<div class="pp" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">`;
-    html += items.slice(p,p+per).map(it=>`<div class="lb" style="padding:${pd}mm">${qrSvg(it.code)}<div class="tx"><b style="font-size:${fs.t}pt">${esc(it.title)}</b>${it.l2?`<${it.it?"i":"span"} style="font-size:${fs.s}pt">${esc(it.l2)}</${it.it?"i":"span"}>`:""}${it.l3?`<span style="font-size:${fs.s}pt">${esc(it.l3)}</span>`:""}<code style="font-size:${fs.c}pt">${esc(it.code)}</code></div></div>`).join("");
+    html += items.slice(p,p+per).map(it=> qrOnly ? `<div class="lb" style="padding:${pd}mm;justify-content:center">${qrSvg(it.code)}</div>` : `<div class="lb" style="padding:${pd}mm">${qrSvg(it.code)}<div class="tx"><b style="font-size:${fs.t}pt">${esc(it.title)}</b>${it.l2?`<${it.it?"i":"span"} style="font-size:${fs.s}pt">${esc(it.l2)}</${it.it?"i":"span"}>`:""}${it.l3?`<span style="font-size:${fs.s}pt">${esc(it.l3)}</span>`:""}<code style="font-size:${fs.c}pt">${esc(it.code)}</code></div></div>`).join("");
     html += `</div>`;
   }
   $("#printArea").innerHTML = html;
@@ -3626,7 +3628,7 @@ function labelText(i){
   const b = S.broods[i.broodId]; const sp = speciesOfBrood(b);
   return {title:i.name, l2:sp?.sci||"", l3:`${b?.name||""}${i.sex&&i.sex!=="u"?" · "+tr(SEXL[i.sex]):""}`, it:true};
 }
-function makeLabelPdf(items, fmt){
+function makeLabelPdf(items, fmt, qrOnly){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:"mm", format:"a4"});
   const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7;
@@ -3639,7 +3641,9 @@ function makeLabelPdf(items, fmt){
     const qr = qrcode(0,"M"); qr.addData(it.code); qr.make();
     const cnt = qr.getModuleCount(), m = qs/cnt;
     doc.setFillColor(0,0,0);
-    for(let r=0;r<cnt;r++) for(let c=0;c<cnt;c++) if(qr.isDark(r,c)) doc.rect(x+pd+c*m, y+pd+r*m, m+0.02, m+0.02, "F");
+    const qx = qrOnly ? x + (W - qs)/2 : x+pd;
+    for(let r=0;r<cnt;r++) for(let c=0;c<cnt;c++) if(qr.isDark(r,c)) doc.rect(qx+c*m, y+pd+r*m, m+0.02, m+0.02, "F");
+    if(qrOnly) return;
     const tx = x+pd+qs+2.5, tw = W-(qs+pd*2+2.5);
     let ty = y+pd+ (fmt==="k"?3.6:4.6);
     doc.setTextColor(0); doc.setFont("helvetica","bold"); doc.setFontSize(fmt==="k"?10:13);
