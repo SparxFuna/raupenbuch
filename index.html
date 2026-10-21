@@ -475,7 +475,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.18.1";
+const APP_VERSION = "5.18.2";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -542,6 +542,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "Eier insgesamt":"Eggs in total","Raupen geschlüpft":"Larvae hatched","Eier liegen noch":"Eggs still incubating","Ausfälle":"Losses",
   "Nur QR-Code, ohne Text":"QR code only, no text",
   "Raupen":"Larvae","Alle Zuchtansätze":"All broods","Zuchtansatz":"Brood","Tage im Ei":"Days in egg","Ablage bis 1. Schlupf":"laying to first hatch","Tage im Ei (Median)":"Days in egg (median)","Häutung eintragen":"Record moult","Häutung":"Moult","Wie viele?":"How many?","gehäutet zu":"moulted to","Welche Tiere? (automatisch gewählt)":"Which animals? (picked automatically)","Aktuell: ":"Now: ","Keine Tiere in":"No animals in","Keine Raupen gefunden":"No larvae found","Bitte eine Anzahl eintragen":"Please enter a number","QR-Etikett":"QR label","Gelege":"Clutches","abgelegt":"laid","Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":"Hold the QR code in the frame. The animal, clutch or container then opens by itself.",
   "Eltern stammen aus (Zuchtansatz)":"Parents come from (brood)","– unbekannt –":"– unknown –","Daraus ergeben sich Herkunft und Generation der Raupen. Ist eine Mutter angekreuzt, zählt deren Zuchtansatz.":"This sets origin and generation of the larvae. If a mother is ticked, her brood counts.","Gleich als Raupen anlegen – in einem neuen Zuchtansatz":"Also create as larvae – in a new brood",
@@ -747,6 +748,7 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^([\d.]+) Eier gesamt$/, "$1 eggs in total"], [/^aus (\d+) Gelegen?( \((\d+) ohne Zahl\))?$/, (m,n,_,k)=>`from ${n} clutch${n==="1"?"":"es"}${k?` (${k} without count)`:""}`], [/^(\d+) % der Eier$/, "$1 % of eggs"],
   [/^(\d+) × Häutung zu (L\d) gespeichert$/, "$1 × moult to $2 saved"], [/^(L\d|Ei|Eingegraben|Puppe|Falter) · (\d+) Tage?$/, (m,k,n)=>`${({Ei:"Egg",Eingegraben:"Burrowed",Puppe:"Pupa",Falter:"Moth"})[k]||k} · ${n} day${n==="1"?"":"s"}`],
   [/^(.+) \(Nachzucht derselben Eltern\)$/, "$1 (offspring of the same parents)"],
   [/^Gleich als Raupen anlegen – in einem neuen Zuchtansatz \(Eltern aus „(.+)“\)$/, "Also create as larvae – in a new brood (parents from “$1”)"], [/^Eltern aus (.+)$/, "Parents from $1"],
@@ -1399,7 +1401,7 @@ VIEWS.home = () => {
   if(fcs.length && noData.length) h += `<p class="small muted" style="margin:0">${noData.length} weitere Puppe(n) ohne genug Vergleichsdaten.</p>`;
   h += `</section>`;
   const runC = all("clutches").filter(c=>!clutchSum(c).done).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
-  if(runC.length) h += `<section class="sec"><div class="sec-h"><h2>Gelege</h2><button class="btn ghost link" data-go="clutches">Alle</button></div><div class="list">${runC.slice(0,5).map(clutchRow).join("")}</div></section>`;
+  if(runC.length) h += `<section class="sec"><div class="sec-h"><h2>Gelege</h2><span><span class="small muted">${fmtN(clutchTotals().eggs)} Eier gesamt</span> <button class="btn ghost link" data-go="clutches">Alle</button></span></div><div class="list">${runC.slice(0,5).map(clutchRow).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div><div class="list">${broods.map(broodRow).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Zuletzt eingetragen</h2><button class="btn ghost link" data-go="stats">Auswertung</button></div><div class="list">${recent.length? recent.map(e=>{
       const who = e.individualId? indName(e.individualId) : e.containerId? (S.containers[e.containerId]?.name||"Behälter") : (S.broods[e.broodId]?.name||"");
@@ -1466,7 +1468,7 @@ VIEWS.animals = () => {
         return indRow(i, SK==="name"||SK==="stadium" ? "" : `${m.label ? `<b>${esc(m.label)}</b>` : `<span class="muted">${esc(m.none)}</span>`} · ${esc(b?.name||"")}`); }).join("")}</div>`}</section>
   <section class="sec"><div class="sec-h"><h2>Zuchtansätze</h2><button class="btn ghost link" data-act="newBrood">+ Neu</button></div>
   <div class="list">${broods.length? broods.map(broodRow).join("") : `<div class="empty">Noch kein Zuchtansatz.</div>`}</div></section>
-  <section class="sec"><div class="sec-h"><h2>Gelege</h2><span><button class="btn ghost link" data-act="editClutch">+ Neu</button>${all("clutches").length>3?` <button class="btn ghost link" data-go="clutches">Alle</button>`:""}</span></div>
+  <section class="sec"><div class="sec-h"><h2>Gelege</h2><span>${all("clutches").length?`<span class="small muted">${fmtN(clutchTotals().eggs)} Eier gesamt</span> `:""}<button class="btn ghost link" data-act="editClutch">+ Neu</button>${all("clutches").length>3?` <button class="btn ghost link" data-go="clutches">Alle</button>`:""}</span></div>
   <div class="list">${all("clutches").length ? all("clutches").sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a))).slice(0,3).map(clutchRow).join("") : `<div class="empty">Noch keine Gelege. Wenn deine Falter Eier legen, trag sie hier mit Datum ein.</div>`}</div></section>`;
 };
 document.addEventListener("input", e => { if(e.target.id==="aq"){ R.q = e.target.value; scheduleRender(); } });
@@ -3165,11 +3167,17 @@ function clutchRow(c){ const s = clutchSum(c);
   const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
   return `<button class="row" data-go="clutch:${c.id}"><span class="glyph-egg st-egg">${ic2("egg")}</span><span class="main"><span class="t">${esc(clutchName(c))}</span><span class="s">${[s.eggs!=null?`${s.eggs} Eier`:"", (c.mothers||[]).some(id=>S.individuals[id]) ? `♀ ${esc(parentsTxt(c.mothers,""))}` : ""].filter(Boolean).join(" · ") || "Anzahl Eier noch offen"}</span>${clutchBar(c)}</span><span class="end"><span class="pill ${s.done?"":"warn"}">${esc(st)}</span></span></button>`; }
 
+/* Summen über alle Gelege */
+function clutchTotals(cs = all("clutches")){ const T = {n:cs.length, withEggs:0, eggs:0, hatched:0, lost:0, open:0};
+  for(const c of cs){ const s = clutchSum(c); T.hatched += s.hatched; T.lost += s.lost; if(s.eggs!=null){ T.withEggs++; T.eggs += s.eggs; if(!s.done) T.open += s.open; } }
+  return T; }
 VIEWS.clutches = () => {
   const cs = all("clutches").sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
   const run = cs.filter(c=>!clutchSum(c).done), done = cs.filter(c=>clutchSum(c).done);
   let h = `<div class="pagehead"><h1>Gelege</h1><p class="muted" style="margin:0">Halte fest, wann die Eier abgelegt wurden, von wem sie (vermutlich) stammen und wie viele schlüpfen. Daraus ergeben sich Schlupfrate und Entwicklungsdauer der Eier.</p></div>
     <div class="btns"><button class="btn primary" data-act="editClutch">+ Gelege</button>${cs.length?`<button class="btn" data-go="stats">Auswertung</button>`:""}</div>`;
+  if(cs.length){ const T = clutchTotals(cs);
+    h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier insgesamt</span><span class="small">aus ${T.withEggs} ${T.withEggs===1?"Gelege":"Gelegen"}${T.withEggs<T.n?` (${T.n-T.withEggs} ohne Zahl)`:""}</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>Raupen geschlüpft</span>${T.eggs?`<span class="small">${pctTxt(T.hatched/T.eggs)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>Eier liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div></div>`; }
   h += `<section class="sec"><div class="sec-h"><h2>Laufend</h2><span class="small muted">${run.length}</span></div><div class="list">${run.length?run.map(clutchRow).join(""):`<div class="empty">Keine laufenden Gelege.</div>`}</div></section>`;
   if(done.length) h += `<section class="sec"><div class="sec-h"><h2>Abgeschlossen</h2><span class="small muted">${done.length}</span></div><div class="list">${done.map(clutchRow).join("")}</div></section>`;
   return h;
