@@ -488,7 +488,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.19.1";
+const APP_VERSION = "5.20.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -555,6 +555,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
   "Jeder Zuchtansatz ist die Zentrale für seine Tiere, Gelege und Auswertung.":"Each brood is the hub for its animals, clutches and stats.","+ Zuchtansatz":"+ Brood","Alle Gelege":"All clutches","Archiviert":"Archived","archiviert":"archived","Eltern aus":"Parents from","Stammt aus Gelege":"Comes from clutch","Nachzucht":"Offspring","Tot / beendet":"Dead / ended","Gelege dieser Falter":"Clutches of these moths","liegen noch":"still incubating","Bei welchem Gelege?":"Which clutch?","Auswertung":"Stats","noch keine Tiere":"no animals yet",
@@ -767,6 +768,7 @@ const I18N_EN = {
   "Speicher ist jetzt dauerhaft":"Storage is now persistent","Chrome hat abgelehnt. Installieren hilft meist.":"Chrome declined. Installing usually helps.","Gespeichert":"Saved"
 };
 const I18N_RX = [
+  [/^(\d+) umgesetzt( → (.+))?$/, (m,n,_,b)=>`${n} moved${b?` → ${b}`:""}`], [/^ohne Box: (\d+)$/, "no box: $1"], [/^ohne Box \((\d+)\)$/, "no box ($1)"],
   [/^Stammt aus (\d+) Gelegen$/, "Comes from $1 clutches"],
   [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`],
   [/^(\d+) Raupen?$/, (m,n)=>`${n} larva${n==="1"?"":"e"}`], [/^(\d+) Puppen?$/, (m,n)=>`${n} pupa${n==="1"?"":"e"}`], [/^([\d.]+) Eier liegen$/, "$1 eggs incubating"], [/^(\d+) Gelege (läuft|laufen)$/, "$1 clutch(es) running"],
@@ -1422,8 +1424,11 @@ VIEWS.home = () => {
   const toBrood = list => { const bs = broodsOf(list); return bs.length===1 ? `data-go="brood:${bs[0]}"` : `data-tab="zucht"`; };
   const dist = list => { const c = {}; list.forEach(i => { const k = currentStage(i); c[k] = (c[k]||0)+1; }); return Object.entries(c).sort((a,b)=>(SIDX[a[0]]??99)-(SIDX[b[0]]??99)).map(([k,n])=>`${n} × ${stageLabel(k)}`).join(" · "); };
   const where = list => broodsOf(list).map(id=>S.broods[id].name).join(", ");
-  if(larvae.length) cards.push(`<div class="now st-larva"><div class="hd"><span class="ic">${ic2("larva")}</span><span><b>${larvae.length} ${larvae.length===1?"Raupe":"Raupen"}</b><span class="small muted">${esc(dist(larvae))} · ${esc(where(larvae))}</span></span></div>
-    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
+  const boxLine = list => { const c = {}; list.forEach(i => { if(i.containerId && S.containers[i.containerId]) c[i.containerId] = (c[i.containerId]||0)+1; }); const e = Object.entries(c).sort((a,b)=>S.containers[a[0]].name.localeCompare(S.containers[b[0]].name, undefined, {numeric:true}));
+    if(!e.length) return ""; const none = list.filter(i => !(i.containerId && S.containers[i.containerId])).length;
+    return `<div class="small">${e.map(([k,n])=>`<b>${esc(S.containers[k].name)}:</b> ${n}`).join(" · ")}${none?` · <span class="muted">ohne Box: ${none}</span>`:""}</div>`; };
+  if(larvae.length) cards.push(`<div class="now st-larva"><div class="hd"><span class="ic">${ic2("larva")}</span><span><b>${larvae.length} ${larvae.length===1?"Raupe":"Raupen"}</b><span class="small muted">${esc(dist(larvae))} · ${esc(where(larvae))}</span></span></div>${boxLine(larvae)}
+    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
   if(pupae.length) cards.push(`<div class="now st-pupa"><div class="hd"><span class="ic">${ic2("pupa")}</span><span><b>${pupae.length} ${pupae.length===1?"Puppe":"Puppen"}</b><span class="small muted">${esc(dist(pupae))} · ${esc(where(pupae))}</span></span></div>
     ${fcs.length ? `<div class="list">${fcs.slice(0,4).map(([i,f])=>forecastRow(i,f)).join("")}</div>${fcs.length>4?`<span class="small muted">${fcs.length-4} weitere im Zuchtansatz</span>`:""}` : `<span class="small muted">Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.</span>`}
     <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" ${toBrood(pupae)}>Zum Zuchtansatz</button></div></div>`);
@@ -1502,6 +1507,8 @@ VIEWS.zucht = () => {
   return h;
 };
 ACTS.btab = d => { cur().t = d.k; render(); };
+ACTS.bgroup = d => { cur().g = d.k; render(); };
+const stageSummary = L => { const c = {}; L.forEach(i => { const k = currentStage(i); c[k] = (c[k]||0)+1; }); return Object.entries(c).sort((a,b)=>(SIDX[a[0]]??99)-(SIDX[b[0]]??99)).map(([k,n])=>`${n} × ${stageLabel(k)}`).join(", "); };
 ACTS.grpMore = d => { const r = cur(); r.open = {...(r.open||{}), [d.k]:true}; render(); };
 
 /* ---- Tiere ---- */
@@ -1622,7 +1629,20 @@ VIEWS.brood = r => {
   acts.push(`data-act="addInds" data-id="${b.id}">Tiere hinzufügen`);
   h += `<div class="btns">${acts.map((a,k)=>`<button class="btn${k===0?" primary":""}" ${a}</button>`).join("")}</div>`;
   h += `<div class="seg" role="group" aria-label="Bereich" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">${[["tiere",`Tiere (${inds.length})`],["gelege",`Gelege${cs.length+origin.length?` (${cs.length+origin.length})`:""}`],["ausw","Auswertung"]].map(([k,l])=>`<button data-act="btab" data-k="${k}" aria-pressed="${tb===k}">${l}</button>`).join("")}</div>`;
-  if(tb==="tiere"){
+  if(tb==="tiere" && inds.length){
+    const gb = r.g || (alive.some(i=>i.containerId && S.containers[i.containerId]) ? "box" : "stage");
+    h += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div class="seg sm" role="group" aria-label="Gruppieren">${[["stage","nach Stadium"],["box","nach Box"]].map(([k,l])=>`<button data-act="bgroup" data-k="${k}" aria-pressed="${gb===k}">${l}</button>`).join("")}</div><button class="btn ghost link" data-act="moveMany" data-brood="${b.id}">Umsetzen</button></div>`;
+    if(gb==="box"){
+      const G = {}; alive.forEach(i => { const k = i.containerId && S.containers[i.containerId] ? i.containerId : "_n"; (G[k] ||= []).push(i); });
+      const dead = inds.filter(i=>!isAlive(i));
+      const keys = Object.keys(G).sort((a,b)=> a==="_n" ? 1 : b==="_n" ? -1 : S.containers[a].name.localeCompare(S.containers[b].name, undefined, {numeric:true}));
+      for(const k of keys){ const L = G[k], open = r.open?.["b"+k], show = open ? L : L.slice(0,8);
+        h += `<section><div class="grp-h"><b style="color:var(--ink)">${k==="_n" ? "Ohne Box" : esc(S.containers[k].name)}</b><span class="small muted">${L.length} ${L.length===1?"Tier":"Tiere"} · ${esc(stageSummary(L))} · <button class="btn ghost link" style="min-height:0;padding:0" data-act="moveMany" data-brood="${b.id}" data-from="${k==="_n"?"_none":k}">umsetzen</button></span></div>
+          <div class="list">${show.map(i=>indRow(i, indSubline(i))).join("")}${L.length>show.length?`<button class="row" data-act="grpMore" data-k="b${esc(k)}"><span class="main"><span class="t" style="color:var(--accent)">${L.length-show.length} weitere anzeigen</span></span></button>`:""}</div></section>`; }
+      if(dead.length) h += `<section class="st-dead"><div class="grp-h"><b>Tot / beendet</b><span class="small muted">${dead.length}</span></div><div class="list">${dead.slice(0,8).map(i=>indRow(i, indSubline(i))).join("")}</div></section>`;
+    }
+  }
+  if(tb==="tiere" && (r.g||(alive.some(i=>i.containerId && S.containers[i.containerId]) ? "box" : "stage"))!=="box" || tb==="tiere" && !inds.length){
     if(!inds.length) h += `<div class="list"><div class="empty">Noch keine Tiere. Tippe auf <b>Tiere hinzufügen</b>. Du kannst dort auch deine Notizen zeilenweise einfügen.</div></div>`;
     const groups = {}; inds.forEach(i => { const k = isAlive(i) ? currentStage(i) : "_x"; (groups[k] ||= []).push(i); });
     const keys = Object.keys(groups).sort((a,b)=> a==="_x" ? 1 : b==="_x" ? -1 : (SIDX[b]??-1)-(SIDX[a]??-1));
@@ -2275,6 +2295,43 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
   });
   if(editing) wireConfirm(root,"#del", async () => { await store.del("events",ev.id); closeSheet(); toast("Eintrag gelöscht"); });
 }
+/* Umsetzen: „8 aus Box A in Box B“ – optional nur Tiere eines Schlupftags */
+ACTS.moveMany = d => {
+  const bid = d.brood || null;
+  const pool = () => all("individuals").filter(i => isAlive(i) && (!bid || i.broodId===bid)).sort(byName);
+  const fromKeys = [...new Set(pool().map(i => i.containerId && S.containers[i.containerId] ? i.containerId : ""))];
+  const fromOpts = fromKeys.map(k => [k||"_none", `${k ? S.containers[k].name : "ohne Box"} (${pool().filter(i => (i.containerId && S.containers[i.containerId] ? i.containerId : "")===k).length})`]);
+  const def = d.from ?? (fromKeys.includes("") ? "_none" : (fromKeys[0]||"_none"));
+  const root = openSheet(`<h2>Raupen umsetzen</h2>
+    ${fld.sel("mvFrom","Aus",fromOpts, def)}
+    ${fld.sel("mvDay","Nur Tiere vom Schlupftag",[["","alle"]],"")}
+    <div class="frow2">${fld.num("mvN","Wie viele?","","1")}<div class="f"><span class="lab">&nbsp;</span><button type="button" class="btn" id="mvAll">alle</button></div></div>
+    ${boxField("mvTo","In",  "__new", `Box ${dShort(todayISO())}`)}
+    <details class="f"><summary class="small">Welche Tiere? (automatisch gewählt)</summary><div class="checks" id="mvList"></div></details>
+    <div class="btns"><button class="btn primary" id="ok">Umsetzen</button></div>`);
+  wireBox(root,"mvTo");
+  const src = () => { const f = val(root,"mvFrom"), dd = val(root,"mvDay");
+    return pool().filter(i => (f==="_none" ? !(i.containerId && S.containers[i.containerId]) : i.containerId===f) && (!dd || (firstEv(i,"schlupf_ei")?.t0||"").slice(0,10)===dd)); };
+  const days = () => { const f = val(root,"mvFrom"); const L = pool().filter(i => f==="_none" ? !(i.containerId && S.containers[i.containerId]) : i.containerId===f);
+    return [...new Set(L.map(i => (firstEv(i,"schlupf_ei")?.t0||"").slice(0,10)).filter(Boolean))].sort().reverse(); };
+  const fillDays = () => { const ds = days(); root.querySelector("#mvDay").innerHTML = [["","alle"],...ds.map(x=>[x, dDE(x)])].map(([k,t])=>`<option value="${k}">${esc(tr(t))}</option>`).join(""); root.querySelector("#mvDay").closest(".f").hidden = ds.length < 2; };
+  const fill = () => { const L = src(), n = Math.round(+val(root,"mvN")||0);
+    root.querySelector("#mvList").innerHTML = L.map((i,k)=>`<label><input type="checkbox" value="${i.id}" ${k<n?"checked":""}> ${esc(i.name)} <span class="small muted" style="margin-left:auto">${esc(stageNowTxt(i))}</span></label>`).join("") || `<div class="empty">${esc(tr("Keine Tiere"))}</div>`; };
+  fillDays(); fill();
+  root.querySelector("#mvFrom").addEventListener("change", () => { fillDays(); fill(); });
+  root.querySelector("#mvDay").addEventListener("change", fill);
+  root.querySelector("#mvN").addEventListener("input", fill);
+  root.querySelector("#mvAll").addEventListener("click", () => { root.querySelector("#mvN").value = src().length; fill(); });
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const ids = [...root.querySelectorAll("#mvList input:checked")].map(x=>x.value);
+    if(!ids.length){ toast("Bitte eine Anzahl eintragen"); return; }
+    const to = await readBox(root,"mvTo");
+    if(to && to===val(root,"mvFrom")){ toast("Das ist dieselbe Box"); return; }
+    const tm = makeTime("tag", todayISO());
+    for(const id of ids){ const i = S.individuals[id]; await store.put("events", {type:"umgesetzt", individualId:id, broodId:i.broodId, ...tm, data:{containerId:to}, note:""}); await store.put("individuals", {...S.individuals[id], containerId:to}); }
+    closeSheet(); toast(`${ids.length} umgesetzt${to?` → ${S.containers[to]?.name||""}`:""}`);
+  });
+};
 /* Häutung für viele: „5 Tiere zu L2“ – die App wählt Tiere aus dem Stadium davor, Auswahl lässt sich anpassen */
 ACTS.moultMany = d => {
   const LAR = ["L1","L2","L3","L4","L5","L6","L7"];
@@ -3364,8 +3421,12 @@ ACTS.clutchHatch = d => {
     <div class="frow2">${fld.num("hN","Neu geschlüpft","","1")}${fld.date("hD","am",todayISO())}</div>
     <span class="hint">Trag ruhig mehrmals ein, z. B. jeden Tag die neuen Raupen. Jeder Eintrag lässt sich später einzeln ändern oder löschen.</span>
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="hInd" style="width:20px;height:20px;min-height:0" ${c.noAutoLarvae?"":"checked"}><span>${br?`Gleich als Raupen in „${esc(br.name)}“ anlegen`:`Gleich als Raupen anlegen – in einem neuen Zuchtansatz${parentBroodOf(c)?` (Eltern aus „${esc(S.broods[parentBroodOf(c)].name)}“)`:""}`}</span></label>
+    <div id="hBoxW">${boxField("hBox","In welche Box?", br ? boxGuess(br.id, todayISO()) : "__new", `Box ${dShort(todayISO())}`)}</div>
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="hDone" style="width:20px;height:20px;min-height:0" ${c.done?"checked":""}><span>Fertig: es schlüpft nichts mehr (Rest zählt als nicht geschlüpft)</span></label>
     <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  wireBox(root,"hBox");
+  const hi = root.querySelector("#hInd"), syncB = () => { root.querySelector("#hBoxW").hidden = !hi.checked; }; hi.addEventListener("change", syncB); syncB();
+  root.querySelector("#hD").addEventListener("change", () => { const d2 = val(root,"hD"); if(br){ const g = boxGuess(br.id, d2); root.querySelector("#hBox").value = g; root.querySelector("#hBoxNewW").hidden = g!=="__new"; } root.querySelector("#hBoxNew").value = `Box ${dShort(d2)}`; });
   root.querySelector("#ok").addEventListener("click", async () => {
     const n = Math.round(+val(root,"hN") || 0), dt = val(root,"hD") || todayISO();
     if(n < 0){ toast("Bitte eine Zahl ab 0"); return; }
@@ -3373,7 +3434,7 @@ ACTS.clutchHatch = d => {
     x.done = root.querySelector("#hDone").checked;
     if(x.done && x.eggs != null){ const r = clutchSum(x); if(r.open) x.other = (+x.other||0) + r.open; }
     const auto = root.querySelector("#hInd").checked; x.noAutoLarvae = !auto;
-    if(n > 0 && auto){ const bid = br ? br.id : await newBroodFor(x, dt); await addLarvae(x, bid, n, dt); }
+    if(n > 0 && auto){ const bid = br ? br.id : await newBroodFor(x, dt); const box = await readBox(root,"hBox"); await addLarvae(x, bid, n, dt, box); }
     else await store.put("clutches", x);
     closeSheet(); toast(n ? `${n} geschlüpft eingetragen` : "Gespeichert");
   });
@@ -3439,10 +3500,21 @@ async function newBroodFor(c, date, name, gen, start){
     notes:""});
 }
 /* Raupen aus einem Gelege als Einzeltiere anlegen – mit „Aus dem Ei geschlüpft“ am Schlupftag, damit jedes Tier sein eigenes Alter hat */
-async function addLarvae(c, broodId, n, date){
+/* ---- Boxen (Behälter) für Raupen: Auswahl mit „+ Neue Box“, Vorschlag = Box, in die am selben Tag schon Raupen kamen ---- */
+function boxField(id, label, def, newName){
+  return `<div class="f"><label for="${id}">${label}</label><select id="${id}">${[["","– keine Box –"],...all("containers").sort(byName).map(c=>[c.id, `${c.name} (${aliveIn(c.id)})`]),["__new","+ Neue Box …"]].map(([k,t])=>`<option value="${k}" ${k===def?"selected":""}>${esc(t)}</option>`).join("")}</select></div>
+    <div class="f" id="${id}NewW" ${def==="__new"?"":"hidden"}><label for="${id}New">Name der neuen Box</label><input id="${id}New" value="${esc(newName)}" autocomplete="off"></div>`;
+}
+function wireBox(root, id){ const sel = root.querySelector("#"+id); sel.addEventListener("change", () => { root.querySelector(`#${id}NewW`).hidden = sel.value!=="__new"; }); }
+async function readBox(root, id){ const v = val(root,id); if(v!=="__new") return v || null; const nm = val(root,id+"New") || "Box"; return await store.put("containers", {name:nm, locationId:null}); }
+const aliveIn = cid => all("individuals").filter(i => i.containerId===cid && isAlive(i)).length;
+function boxGuess(broodId, date){ // Box, in die an diesem Tag schon Raupen dieses Ansatzes gekommen sind
+  for(const i of all("individuals")){ if(i.broodId!==broodId || !i.containerId || !S.containers[i.containerId]) continue; const e = firstEv(i,"schlupf_ei"); if(e && e.t0.slice(0,10)===date) return i.containerId; }
+  return "__new"; }
+async function addLarvae(c, broodId, n, date, box){
   const b = S.broods[broodId];
   for(const nm of nextAutoNames(b?.speciesId || c.speciesId, n)){
-    const iid = await store.put("individuals", {name:nm, broodId, sex:"u", containerId:c.containerId||null});
+    const iid = await store.put("individuals", {name:nm, broodId, sex:"u", containerId:box===undefined ? (c.containerId||null) : box});
     await store.put("events", {type:"schlupf_ei", individualId:iid, broodId, ...makeTime("tag", date), data:{}, note:`aus ${clutchName(c)}`});
   }
   await store.put("clutches", {...c, broodId: c.broodId && S.broods[c.broodId] ? c.broodId : broodId, larvaeAdded: clutchLarvae(c) + n});
@@ -3460,15 +3532,17 @@ ACTS.clutchBrood = d => {
       <div class="frow2">${fld.date("rStart","Startdatum",c.hatchFirst||todayISO())}${fld.text("rGen","Generation",gen,"z. B. 2")}</div>
     </div>
     <div class="frow2">${fld.num("rN","Raupen anlegen",open,"1")}${fld.date("rD","geschlüpft am",last)}</div>
+    ${boxField("rBox","In welche Box?", def ? boxGuess(def, last) : "__new", `Box ${dShort(last)}`)}
     <span class="hint">${s.hatched} geschlüpft, ${clutchLarvae(c)} davon schon angelegt. Namen fortlaufend wie „${esc(nextAutoNames(c.speciesId,1)[0]||"")}“. Jede Raupe bekommt „Aus dem Ei geschlüpft“ am gewählten Tag – so stimmt ihr Alter, auch wenn sie später als andere schlüpft.</span>
     <div class="btns"><button class="btn primary" id="ok">Anlegen</button></div>`);
+  wireBox(root,"rBox");
   const sync = () => { root.querySelector("#rNew").hidden = !!val(root,"rTo"); };
   root.querySelector("#rTo").addEventListener("change", sync); sync();
   root.querySelector("#ok").addEventListener("click", async () => {
     const n = Math.max(0, Math.min(500, Math.round(+val(root,"rN")||0))), dt = val(root,"rD") || todayISO();
     let bid = val(root,"rTo");
     if(!bid) bid = await newBroodFor(c, dt, val(root,"rName"), val(root,"rGen"), val(root,"rStart"));
-    if(n) await addLarvae(S.clutches[c.id], bid, n, dt);
+    if(n) await addLarvae(S.clutches[c.id], bid, n, dt, await readBox(root,"rBox"));
     else if(!S.broods[c.broodId]) await store.put("clutches", {...S.clutches[c.id], broodId:bid});
     closeSheet(); nav("brood",{id:bid}); toast(n ? `${n} Raupen angelegt` : "Zuchtansatz angelegt");
   });
