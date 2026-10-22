@@ -475,7 +475,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.18.3";
+const APP_VERSION = "5.18.4";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -542,6 +542,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
    jeden neu eingefügten Text (exakte Treffer aus I18N_EN, sonst Muster aus I18N_RX). */
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
+  "liegt seit heute":"incubating since today",
   "Schlupf pro Tag":"Hatching per day","alle Gelege zusammen":"all clutches combined","heute":"today","Heute geschlüpft":"Hatched today","Raupe":"larva",
   "Eier insgesamt":"Eggs in total","Raupen geschlüpft":"Larvae hatched","Eier liegen noch":"Eggs still incubating","Ausfälle":"Losses",
   "Nur QR-Code, ohne Text":"QR code only, no text",
@@ -3165,7 +3166,7 @@ function clutchBar(c){ const s = clutchSum(c); const tot = s.eggs || (s.hatched 
   return `<span class="cbar">${seg(s.hatched,"h","geschlüpft")}${seg(s.infertile,"u","unbefruchtet")}${seg(s.dried,"d","vertrocknet")}${seg(s.other,"o","sonstige Ausfälle")}${s.open?seg(s.open,"x","offen"):""}</span>`; }
 function clutchRow(c){ const s = clutchSum(c);
   const age = clutchAge(c);
-  const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
+  const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===0 ? "liegt seit heute" : age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
   return `<button class="row" data-go="clutch:${c.id}"><span class="glyph-egg st-egg">${ic2("egg")}</span><span class="main"><span class="t">${esc(clutchName(c))}</span><span class="s">${[s.eggs!=null?`${s.eggs} Eier`:"", (c.mothers||[]).some(id=>S.individuals[id]) ? `♀ ${esc(parentsTxt(c.mothers,""))}` : ""].filter(Boolean).join(" · ") || "Anzahl Eier noch offen"}</span>${clutchBar(c)}</span><span class="end"><span class="pill ${s.done?"":"warn"}">${esc(st)}</span></span></button>`; }
 
 /* Summen über alle Gelege */
@@ -3174,7 +3175,7 @@ function clutchTotals(cs = all("clutches")){ const T = {n:cs.length, withEggs:0,
   return T; }
 /* Schlupf pro Tag über alle Gelege: {d, n, parts:[{c, n}]} neueste zuerst */
 function hatchByDay(){ const M = new Map();
-  for(const c of all("clutches")) for(const e of clutchLog(c)){ const x = M.get(e.d) || {d:e.d, n:0, parts:[]}; x.n += e.n; x.parts.push({c, n:e.n}); M.set(e.d, x); }
+  for(const c of all("clutches")) for(const e of clutchLog(c)){ const x = M.get(e.d) || {d:e.d, n:0, parts:[]}; x.n += e.n; const pt = x.parts.find(q => q.c.id===c.id); if(pt) pt.n += e.n; else x.parts.push({c, n:e.n}); M.set(e.d, x); }
   return [...M.values()].sort((a,b)=>b.d.localeCompare(a.d)); }
 function hatchDayRows(days){ return days.map(x => `<div class="row" style="cursor:default"><span class="main"><span class="t">${dDE(x.d)}${x.d===todayISO()?` <span class="pill good">${esc(tr("heute"))}</span>`:""}</span><span class="s">${x.parts.map(p=>`${esc(clutchName(p.c))}: ${p.n}`).join(" · ")}</span></span><span class="end"><b style="font-size:20px">${x.n}</b>&nbsp;<span class="small muted">${x.n===1?"Raupe":"Raupen"}</span></span></div>`).join(""); }
 VIEWS.clutches = () => {
