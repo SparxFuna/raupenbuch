@@ -490,7 +490,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.21.0";
+const APP_VERSION = "5.22.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -519,7 +519,7 @@ const ET = {
   freigelassen: {l:"Freigelassen"},
   notiz:        {l:"Notiz"}
 };
-const GIVE_HOW = [["verkauft","Verkauft"],["verschenkt","Verschenkt"],["getauscht","Getauscht"],["abgegeben","Abgegeben"]];
+const GIVE_HOW = [["verkauft","Verkauft"],["verschenkt","Verschenkt"],["getauscht","Getauscht"],["eingefroren","Eingefroren"],["abgegeben","Abgegeben"]];
 const HOWL = Object.fromEntries(GIVE_HOW);
 const CAUSES = {
   tachinen:"Parasitoid: Raupenfliege (Tachinidae)",
@@ -560,6 +560,7 @@ const byName = (a,b) => (a.name||a.label||"").localeCompare(b.name||b.label||"",
 let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().startsWith("de") ? "de" : "en"; try { return localStorage.getItem("rb-lang") || nav0; } catch(e){ return nav0; } })();
 const I18N_EN = {
   "Boxen":"Boxes","Boxen & Behälter":"Boxes & containers","Wie viele Tiere wo sind, umsetzen, abgeben":"How many animals are where, move, give away","Wie viele Tiere in welcher Box sind. Tippe eine Box an, um Tiere umzusetzen oder abzugeben.":"How many animals are in which box. Tap a box to move animals or give them away.","+ Box":"+ Box","Abgeben":"Give away","in Boxen":"in boxes","Box belegt":"box in use","Boxen belegt":"boxes in use","ohne Box":"no box","Mit einem Tipp in Boxen je Schlupftag einsortieren – du kannst vorher für jeden Tag die Box wählen.":"Sort them into one box per hatch day with one tap – you can pick the box for each day first.","Nach Schlupftag einsortieren":"Sort by hatch day","Leer":"Empty","leer":"empty","Box":"Box","Tiere drin":"animals inside","Tier drin":"animal inside","nicht mehr drin":"no longer inside","Tiere hierher":"Move animals here","Die Box ist leer.":"The box is empty.","Box bearbeiten":"Edit box","Ohne Zuchtansatz":"No brood","Diese Box existiert nicht mehr.":"This box no longer exists.","Noch keine Tiere in Boxen.":"No animals in boxes yet.","Einsortieren":"Sort in","Tiere abgeben":"Give away animals","Z. B. verkauft oder gestorben. Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten.":"E.g. sold or died. The animals no longer count in the box afterwards, but they are kept with their history.","An wen? (optional)":"To whom? (optional)","z. B. Name oder Börse":"e.g. name or fair","Notiz (optional)":"Note (optional)","z. B. Preis":"e.g. price","Eintragen":"Record","Verkauft":"Sold","Verschenkt":"Given away for free","Getauscht":"Swapped","verkauft":"sold","verschenkt":"given away","getauscht":"swapped","gestorben":"died","Wie?":"How?","Eier abgeben":"Give away eggs","Abgabe ändern":"Edit entry","Eier abgegeben":"Eggs given away","Diese leere Box löschen?":"Delete this empty box?","Box gelöscht":"Box deleted","Alle Boxen":"All boxes","Nach Schlupftag":"By hatch day",
+  "Eingefroren":"Frozen","eingefroren":"frozen","Entfernen":"Remove","Tiere entfernen":"Remove animals","Eier entfernen":"Remove eggs","Entfernt":"Removed","entfernt":"removed","Eier entfernt":"Eggs removed","Eintrag ändern":"Edit entry","drin":"inside","Nicht mehr da":"No longer here","Verkauft, eingefroren, gestorben … Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten. Eier entfernst du beim jeweiligen Gelege.":"Sold, frozen, died … The animals no longer count in the box afterwards, but they are kept with their history. Eggs are removed in the respective clutch.","Verkauft, verschenkt oder eingefroren – diese Eier zählen nicht in die Schlupfrate.":"Sold, given away or frozen – these eggs don't count towards the hatch rate.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -774,10 +775,11 @@ const I18N_EN = {
 };
 const I18N_RX = [
   [/^(\d+) (Tiere?) ohne Box$/, (m,n,t)=>`${n} ${t==="Tier"?"animal":"animals"} without a box`], [/^(\d+) ohne Schlupfdatum bleiben ohne Box\.$/, "$1 without a hatch date stay without a box."], [/^Es liegen noch (\d+) Eier\.$/, "$1 eggs are still lying."], [/^Höchstens (\d+)$/, "At most $1"],
-  [/^(Verkauft|Verschenkt|Getauscht|Abgegeben|Gestorben|Freigelassen): (\d+)(?: (Eier|Ei))?$/, (m,a,n,e)=>`${({Verkauft:"Sold",Verschenkt:"Given away",Getauscht:"Swapped",Abgegeben:"Given away",Gestorben:"Died",Freigelassen:"Released"})[a]}: ${n}${e?` ${e==="Ei"?"egg":"eggs"}`:""}`],
-  [/^\d+ (verkauft|verschenkt|getauscht|abgegeben|gestorben|freigelassen|präpariert)(, \d+ (verkauft|verschenkt|getauscht|abgegeben|gestorben|freigelassen|präpariert))*$/, m=>m.replace(/verkauft|verschenkt|getauscht|abgegeben|gestorben|freigelassen|präpariert/g, w=>({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",abgegeben:"given away",gestorben:"died",freigelassen:"released",präpariert:"mounted"})[w])],
-  [/^geschlüpft (\d\d\.\d\d\.)(?: – (\d\d\.\d\d\.))?$/, (m,a,b)=>`hatched ${a}${b?` – ${b}`:""}`], [/^(\d+) (Eier|Ei) (verkauft|verschenkt|getauscht|abgegeben)( an .+)?$/, (m,n,e,h,t)=>`${n} ${e==="Ei"?"egg":"eggs"} ${({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",abgegeben:"given away"})[h]}${t?" to"+t.slice(3):""}`],
+  [/^(Verkauft|Verschenkt|Getauscht|Eingefroren|Abgegeben|Gestorben|Freigelassen): (\d+)(?: (Eier|Ei))?$/, (m,a,n,e)=>`${({Verkauft:"Sold",Verschenkt:"Given away",Getauscht:"Swapped",Abgegeben:"Given away",Gestorben:"Died",Freigelassen:"Released",Eingefroren:"Frozen"})[a]}: ${n}${e?` ${e==="Ei"?"egg":"eggs"}`:""}`],
+  [/^\d+ (verkauft|verschenkt|getauscht|eingefroren|abgegeben|gestorben|freigelassen|präpariert)(, \d+ (verkauft|verschenkt|getauscht|eingefroren|abgegeben|gestorben|freigelassen|präpariert))*$/, m=>m.replace(/verkauft|verschenkt|getauscht|eingefroren|abgegeben|gestorben|freigelassen|präpariert/g, w=>({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",abgegeben:"given away",gestorben:"died",freigelassen:"released",eingefroren:"frozen",präpariert:"mounted"})[w])],
+  [/^geschlüpft (\d\d\.\d\d\.)(?: – (\d\d\.\d\d\.))?$/, (m,a,b)=>`hatched ${a}${b?` – ${b}`:""}`], [/^(\d+) (Eier|Ei) (verkauft|verschenkt|getauscht|eingefroren|abgegeben)( an .+)?$/, (m,n,e,h,t)=>`${n} ${e==="Ei"?"egg":"eggs"} ${({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",eingefroren:"frozen",abgegeben:"given away"})[h]}${t?" to"+t.slice(3):""}`],
   [/^(Verkauft|Verschenkt|Getauscht) an (.+)$/, (m,a,b)=>`${({Verkauft:"Sold",Verschenkt:"Given away",Getauscht:"Swapped"})[a]} to ${b}`], [/^Davon abgegeben: (\d+) \(unter „Abgegeben“ änderbar\)$/, "Of these given away: $1 (editable under “Given away”)"],
+  [/^(\d+) Tiere in (\d+) (Box|Boxen)(?: · (\d+) ohne Box)?$/, (m,a,b,c,d)=>`${a} animals in ${b} ${c==="Box"?"box":"boxes"}${d?` · ${d} without a box`:""}`], [/^(\d+) leere (Box|Boxen) anzeigen$/, (m,n,b)=>`Show ${n} empty ${b==="Box"?"box":"boxes"}`], [/^(\d+) nicht mehr da \(tot, verkauft …\) anzeigen$/, "Show $1 no longer here (dead, sold …)"], [/^Davon entfernt: (\d+) \(unter „Entfernt“ änderbar\)$/, "Of these removed: $1 (editable under “Removed”)"],
   [/^(\d+) umgesetzt( → (.+))?$/, (m,n,_,b)=>`${n} moved${b?` → ${b}`:""}`], [/^ohne Box: (\d+)$/, "no box: $1"], [/^ohne Box \((\d+)\)$/, "no box ($1)"],
   [/^Stammt aus (\d+) Gelegen$/, "Comes from $1 clutches"],
   [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`],
@@ -793,7 +795,7 @@ const I18N_RX = [
   [/^(.+) \(aus diesem Gelege\)$/, "$1 (from this clutch)"],
   [/^liegt seit (\d+) Tagen$/, "incubating for $1 days"],
   [/^Schlupf erwartet um den (.+) \(nach (\d+) Tagen, Median aus (\d+) Gelegen? dieser Art\)\.$/, "Hatching expected around $1 (after $2 days, median of $3 clutch(es) of this species)."],
-  [/^(geschlüpft|unbefruchtet|vertrocknet|sonstige|offen|abgegeben) (\d+)$/, (m,a,n)=>`${({geschlüpft:"hatched",unbefruchtet:"infertile",vertrocknet:"dried up",sonstige:"other",offen:"open",abgegeben:"given away"})[a]} ${n}`],
+  [/^(geschlüpft|unbefruchtet|vertrocknet|sonstige|offen|abgegeben|entfernt) (\d+)$/, (m,a,n)=>`${({geschlüpft:"hatched",unbefruchtet:"infertile",vertrocknet:"dried up",sonstige:"other",offen:"open",abgegeben:"given away",entfernt:"removed"})[a]} ${n}`],
   [/^Eier: (\d+) \(vorher (\d+)\)$/, "Eggs: $1 (before $2)"], [/^Eier: (\d+)$/, "Eggs: $1"], [/^Übernehmen \((\d+)\)$/, "Apply ($1)"], [/^(\d+) Eier$/, "$1 eggs"],
   [/^(\d+) gezählt – weniger als schon eingetragen \((\d+)\)\. Nicht übernommen\.$/, "$1 counted – fewer than already recorded ($2). Not applied."],
   [/^(\d+) Tiere$/, "$1 animals"], [/^Falter ([A-Z])$/, "Moth $1"], [/^1 Tier$/, "1 animal"], [/^(\d+) Ansätze$/, "$1 broods"], [/^(\d+) Zuchtansätze?$/, "$1 brood(s)"], [/^(\d+) im Katalog$/, "$1 in catalogue"],
@@ -1367,7 +1369,7 @@ function stagePill(ind){
   const st = statusOf(ind);
   if(st==="tot") return `<span class="pill st st-dead"><i></i>tot</span>`;
   if(st==="praepariert") return `<span class="pill st st-imago"><i></i>präpariert</span>`;
-  if(st==="abgegeben"){ const h = evOf(ind.id).find(e=>e.type==="abgegeben")?.data?.how; return `<span class="pill st st-neutral"><i></i>${h==="verkauft"?"verkauft":h==="verschenkt"?"verschenkt":h==="getauscht"?"getauscht":"abgegeben"}</span>`; }
+  if(st==="abgegeben"){ const h = evOf(ind.id).find(e=>e.type==="abgegeben")?.data?.how; return `<span class="pill st st-neutral"><i></i>${["verkauft","verschenkt","getauscht","eingefroren"].includes(h)?h:"abgegeben"}</span>`; }
   if(st==="freigelassen") return `<span class="pill st st-imago"><i></i>freigelassen</span>`;
   const s = currentStage(ind);
   return `<span class="pill st st-${STG(s)}"><i></i>${s==="?"?"Stadium ?":stageLabel(s)}</span>`;
@@ -1438,7 +1440,7 @@ VIEWS.home = () => {
     if(!e.length) return ""; const none = list.filter(i => !(i.containerId && S.containers[i.containerId])).length;
     return `<div class="small boxline">${e.map(([k,n])=>`<button class="linkbtn" data-go="box:${k}">${esc(S.containers[k].name)}: ${n}</button>`).join(" · ")}${none?` · <button class="linkbtn muted" data-go="box:_none">ohne Box: ${none}</button>`:""} · <button class="linkbtn" data-go="containers">Alle Boxen</button></div>`; };
   if(larvae.length) cards.push(`<div class="now st-larva"><div class="hd"><span class="ic">${ic2("larva")}</span><span><b>${larvae.length} ${larvae.length===1?"Raupe":"Raupen"}</b><span class="small muted">${esc(dist(larvae))} · ${esc(where(larvae))}</span></span></div>${boxLine(larvae)}
-    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" data-act="giveMany">Abgeben</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
+    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" data-act="giveMany">Entfernen</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
   if(pupae.length) cards.push(`<div class="now st-pupa"><div class="hd"><span class="ic">${ic2("pupa")}</span><span><b>${pupae.length} ${pupae.length===1?"Puppe":"Puppen"}</b><span class="small muted">${esc(dist(pupae))} · ${esc(where(pupae))}</span></span></div>
     ${fcs.length ? `<div class="list">${fcs.slice(0,4).map(([i,f])=>forecastRow(i,f)).join("")}</div>${fcs.length>4?`<span class="small muted">${fcs.length-4} weitere im Zuchtansatz</span>`:""}` : `<span class="small muted">Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.</span>`}
     <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" ${toBrood(pupae)}>Zum Zuchtansatz</button></div></div>`);
@@ -1486,7 +1488,7 @@ function evTitle(e){
     case "futter": return `Futter: ${d.plant||"–"}`;
     case "umgesetzt": return `Umgesetzt → ${S.containers[d.containerId]?.name||"?"}`;
     case "tod": return `Gestorben: ${CAUSES[d.cause]||"Unbekannt"}${d.certainty==="vermutet"?" (Verdacht)":""}`;
-    case "abgegeben": return `${HOWL[d.how]||"Abgegeben"}${d.to?` an ${d.to}`:""}`;
+    case "abgegeben": return `${HOWL[d.how]||"Abgegeben"}${d.to&&d.how!=="eingefroren"?` an ${d.to}`:""}`;
     default: return ET[e.type]?.l || e.type;
   }
 }
@@ -1641,15 +1643,13 @@ VIEWS.brood = r => {
   h += `<div class="seg" role="group" aria-label="Bereich" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">${[["tiere",`Tiere (${inds.length})`],["gelege",`Gelege${cs.length+origin.length?` (${cs.length+origin.length})`:""}`],["ausw","Auswertung"]].map(([k,l])=>`<button data-act="btab" data-k="${k}" aria-pressed="${tb===k}">${l}</button>`).join("")}</div>`;
   if(tb==="tiere" && inds.length){
     const gb = r.g || (alive.some(i=>i.containerId && S.containers[i.containerId]) ? "box" : "stage");
-    h += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div class="seg sm" role="group" aria-label="Gruppieren">${[["stage","nach Stadium"],["box","nach Box"]].map(([k,l])=>`<button data-act="bgroup" data-k="${k}" aria-pressed="${gb===k}">${l}</button>`).join("")}</div><span><button class="btn ghost link" data-act="moveMany" data-brood="${b.id}">Umsetzen</button><button class="btn ghost link" data-act="giveMany" data-brood="${b.id}">Abgeben</button></span></div>`;
+    h += `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><div class="seg sm" role="group" aria-label="Gruppieren">${[["stage","nach Stadium"],["box","nach Box"]].map(([k,l])=>`<button data-act="bgroup" data-k="${k}" aria-pressed="${gb===k}">${l}</button>`).join("")}</div><span><button class="btn ghost link" data-act="moveMany" data-brood="${b.id}">Umsetzen</button><button class="btn ghost link" data-act="giveMany" data-brood="${b.id}">Entfernen</button></span></div>`;
     if(gb==="box"){
-      const G = {}; alive.forEach(i => { const k = i.containerId && S.containers[i.containerId] ? i.containerId : "_n"; (G[k] ||= []).push(i); });
-      const dead = inds.filter(i=>!isAlive(i));
-      const keys = Object.keys(G).sort((a,b)=> a==="_n" ? 1 : b==="_n" ? -1 : S.containers[a].name.localeCompare(S.containers[b].name, undefined, {numeric:true}));
-      for(const k of keys){ const L = G[k], open = r.open?.["b"+k], show = open ? L : L.slice(0,8);
-        h += `<section><div class="grp-h"><button class="linkbtn" style="color:var(--ink)" data-go="box:${k==="_n"?"_none":k}">${k==="_n" ? "Ohne Box" : esc(S.containers[k].name)}</button><span class="small muted">${L.length} ${L.length===1?"Tier":"Tiere"} · ${esc(stageSummary(L))} · <button class="btn ghost link" style="min-height:0;padding:0" data-act="moveMany" data-brood="${b.id}" data-from="${k==="_n"?"_none":k}">umsetzen</button></span></div>
-          <div class="list">${show.map(i=>indRow(i, indSubline(i))).join("")}${L.length>show.length?`<button class="row" data-act="grpMore" data-k="b${esc(k)}"><span class="main"><span class="t" style="color:var(--accent)">${L.length-show.length} weitere anzeigen</span></span></button>`:""}</div></section>`; }
-      if(dead.length) h += `<section class="st-dead"><div class="grp-h"><b>Tot / beendet</b><span class="small muted">${dead.length}</span></div><div class="list">${dead.slice(0,8).map(i=>indRow(i, indSubline(i))).join("")}</div></section>`;
+      const G = {}; alive.forEach(i => (G[boxKey(i)] ||= []).push(i));
+      const dead = inds.filter(i=>!isAlive(i)), keys = Object.keys(G).sort(boxSort);
+      h += `<div class="list">${keys.map(k => `<button class="row" data-go="box:${k}"><span class="main"><span class="t">${k==="_none" ? "Ohne Box" : esc(S.containers[k].name)}</span><span class="s">${esc(stageSummary(G[k]))}</span></span><span class="end"><b style="font-size:22px">${G[k].length}</b>&nbsp;<span class="small muted">drin</span></span></button>`).join("")}</div>`;
+      if(dead.length){ const op = r.open?.bdead;
+        h += `<section class="st-dead"><button class="row" data-act="grpMore" data-k="bdead" ${op?"hidden":""}><span class="main"><span class="t" style="color:var(--accent)">${dead.length} nicht mehr da (tot, verkauft …) anzeigen</span></span></button>${op?`<div class="grp-h"><b>Nicht mehr da</b><span class="small muted">${dead.length}</span></div><div class="list">${dead.map(i=>indRow(i, indSubline(i))).join("")}</div>`:""}</section>`; }
     }
   }
   if(tb==="tiere" && (r.g||(alive.some(i=>i.containerId && S.containers[i.containerId]) ? "box" : "stage"))!=="box" || tb==="tiere" && !inds.length){
@@ -1666,7 +1666,7 @@ VIEWS.brood = r => {
       h += `<section class="sec"><div class="sec-h"><h2>Herkunft der Tiere</h2><span class="small muted">${origin.length} ${origin.length===1?"Gelege":"Gelege"}</span></div>
         ${hd.length?`<div class="list" style="margin-bottom:10px">${hatchDayRows(hd)}</div>`:""}<div class="list">${origin.map(clutchRow).join("")}</div></section>`; }
     if(cs.length){ const T = clutchTotals(cs), hd = hatchByDay(cs);
-      h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier gesamt</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>geschlüpft</span>${T.kept?`<span class="small">${pctTxt(T.hatched/T.kept)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div>${T.given?`<div class="stat"><b>${fmtN(T.given)}</b><span>abgegeben</span></div>`:""}</div>`;
+      h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier gesamt</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>geschlüpft</span>${T.kept?`<span class="small">${pctTxt(T.hatched/T.kept)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div>${T.given?`<div class="stat"><b>${fmtN(T.given)}</b><span>entfernt</span></div>`:""}</div>`;
       if(hd.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf pro Tag</h2></div><div class="list">${hatchDayRows(hd)}</div></section>`;
       h += `<section class="sec"><div class="sec-h"><h2>Gelege dieser Falter</h2><button class="btn ghost link" data-act="editClutch" data-pb="${b.id}">+ Gelege</button></div><div class="list">${cs.map(clutchRow).join("")}</div></section>`;
     } else h += `<section class="sec"><div class="sec-h"><h2>Gelege dieser Falter</h2></div><div class="list"><div class="empty">Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.</div></div><div class="btns"><button class="btn" data-act="editClutch" data-pb="${b.id}">+ Gelege</button></div></section>`;
@@ -2019,19 +2019,17 @@ VIEWS.containers = () => {
   const C = all("containers").sort((a,b)=>a.name.localeCompare(b.name, undefined, {numeric:true})), alive = all("individuals").filter(isAlive);
   const G = {}; alive.forEach(i => (G[boxKey(i)] ||= []).push(i));
   const full = C.filter(c => G[c.id]), empty = C.filter(c => !G[c.id]), none = G._none || [];
-  const inBoxes = alive.length - none.length, noneDays = [...new Set(none.map(hatchDay).filter(Boolean))];
-  let h = `<div class="pagehead"><h1>Boxen</h1><p class="muted" style="margin:0">Wie viele Tiere in welcher Box sind. Tippe eine Box an, um Tiere umzusetzen oder abzugeben.</p></div>
-    <div class="btns"><button class="btn primary" data-act="editContainer">+ Box</button>${alive.length?`<button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" data-act="giveMany">Abgeben</button>`:""}</div>`;
-  if(alive.length) h += `<div class="stats"><div class="stat"><b>${inBoxes}</b><span>in Boxen</span></div><div class="stat"><b>${full.length}</b><span>${full.length===1?"Box belegt":"Boxen belegt"}</span></div><div class="stat"><b>${none.length}</b><span>ohne Box</span></div></div>`;
-  if(noneDays.length) h += `<div class="note"><b>${none.length} ${none.length===1?"Tier":"Tiere"} ohne Box</b><br><span class="small">Mit einem Tipp in Boxen je Schlupftag einsortieren – du kannst vorher für jeden Tag die Box wählen.</span><div class="btns" style="margin-bottom:0"><button class="btn" data-act="autoBox">Nach Schlupftag einsortieren</button></div></div>`;
+  const noneDays = [...new Set(none.map(hatchDay).filter(Boolean))];
+  let h = `<div class="pagehead"><h1>Boxen</h1><p class="muted" style="margin:0">${alive.length-none.length} Tiere in ${full.length} ${full.length===1?"Box":"Boxen"}${none.length?` · ${none.length} ohne Box`:""}</p></div>
+    <div class="btns"><button class="btn primary" data-act="editContainer">+ Box</button>${alive.length?`<button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" data-act="giveMany">Entfernen</button>`:""}</div>`;
+  if(noneDays.length) h += `<div class="note"><b>${none.length} ${none.length===1?"Tier":"Tiere"} ohne Box</b><div class="btns" style="margin-bottom:0"><button class="btn" data-act="autoBox">Nach Schlupftag einsortieren</button></div></div>`;
   h += `<div class="list">${full.map(c=>boxRow(c, G[c.id])).join("")}${none.length?boxRow(null, none):""}${!full.length&&!none.length?`<div class="empty">Noch keine Tiere in Boxen.</div>`:""}</div>`;
-  if(empty.length) h += `<section class="sec"><div class="sec-h"><h2>Leer</h2><span class="small muted">${empty.length}</span></div><div class="list">${empty.map(c=>boxRow(c, [])).join("")}</div></section>`;
+  if(empty.length){ const op = cur().open?.empty;
+    h += `<section class="sec"><button class="row" data-act="grpMore" data-k="empty" ${op?"hidden":""}><span class="main"><span class="t" style="color:var(--accent)">${empty.length} leere ${empty.length===1?"Box":"Boxen"} anzeigen</span></span></button>${op?`<div class="sec-h"><h2>Leer</h2><span class="small muted">${empty.length}</span></div><div class="list">${empty.map(c=>boxRow(c, [])).join("")}</div>`:""}</section>`; }
   return h;
 };
 function boxRow(c, L){
-  const bs = [...new Set(L.map(i=>i.broodId))].filter(id=>S.broods[id]).map(id=>S.broods[id].name), loc = c && S.locations[c.locationId]?.name;
-  const days = [...new Set(L.map(hatchDay).filter(Boolean))].sort(), dTxt = days.length ? `geschlüpft ${dShort(days[0])}${days.length>1?` – ${dShort(days[days.length-1])}`:""}` : "";
-  return `<button class="row" data-go="box:${c?c.id:"_none"}"><span class="main"><span class="t">${c?esc(c.name):"Ohne Box"}</span><span class="s">${esc([L.length?stageSummary(L):"leer", dTxt, bs.join(", "), loc].filter(Boolean).join(" · "))}</span></span><span class="end"><b style="font-size:20px">${L.length}</b>&nbsp;<span class="small muted">${L.length===1?"Tier":"Tiere"}</span></span></button>`;
+  return `<button class="row" data-go="box:${c?c.id:"_none"}"><span class="main"><span class="t">${c?esc(c.name):"Ohne Box"}</span>${L.length?`<span class="s">${esc(stageSummary(L))}</span>`:""}</span><span class="end"><b style="font-size:22px">${L.length}</b>&nbsp;<span class="small muted">drin</span></span></button>`;
 }
 VIEWS.box = r => {
   const c = r.id==="_none" ? null : S.containers[r.id]; if(r.id!=="_none" && !c) return `<div class="empty">Diese Box existiert nicht mehr.</div>`;
@@ -2039,12 +2037,12 @@ VIEWS.box = r => {
   const L = all("individuals").filter(i => isAlive(i) && boxKey(i)===key).sort(byName);
   const gone = c ? all("individuals").filter(i => i.containerId===c.id && !isAlive(i)) : [];
   const out = {}; gone.forEach(i => { const st = statusOf(i), h = st==="abgegeben" ? (evOf(i.id).find(e=>e.type==="abgegeben")?.data?.how || "abgegeben") : st; out[h] = (out[h]||0) + 1; });
-  const OUTL = {verkauft:"verkauft", verschenkt:"verschenkt", getauscht:"getauscht", abgegeben:"abgegeben", tot:"gestorben", freigelassen:"freigelassen", praepariert:"präpariert"};
+  const OUTL = {verkauft:"verkauft", verschenkt:"verschenkt", getauscht:"getauscht", eingefroren:"eingefroren", abgegeben:"abgegeben", tot:"gestorben", freigelassen:"freigelassen", praepariert:"präpariert"};
   const loc = c && S.locations[c.locationId];
   let h = `<div class="pagehead"><span class="muted small">Box</span><h1>${c?esc(c.name):"Ohne Box"}</h1>${loc?`<div class="meta"><span class="pill">${esc(loc.name)}</span></div>`:""}</div>`;
   h += `<div class="stats"><div class="stat"><b>${L.length}</b><span>${L.length===1?"Tier drin":"Tiere drin"}</span></div>${gone.length?`<div class="stat"><b>${gone.length}</b><span>nicht mehr drin</span><span class="small">${esc(Object.entries(out).map(([k,n])=>`${n} ${OUTL[k]||k}`).join(", "))}</span></div>`:""}</div>`;
   if(L.length) h += `<div style="display:flex;flex-wrap:wrap;gap:6px">${stageChips(L)}</div>`;
-  h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Abgeben</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}</div>`;
+  h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}</div>`;
   const bs = [...new Set(L.map(i=>i.broodId))];
   for(const bid of bs){ const M = L.filter(i=>i.broodId===bid), open = r.open?.["x"+bid], show = open ? M : M.slice(0,30);
     h += `<section class="sec"><div class="sec-h"><h2>${esc(S.broods[bid]?.name||"Ohne Zuchtansatz")}</h2><span class="small muted">${M.length}</span></div><div class="list">${show.map(i=>indRow(i, indSubline(i))).join("")}${M.length>show.length?`<button class="row" data-act="grpMore" data-k="x${esc(bid)}"><span class="main"><span class="t" style="color:var(--accent)">${M.length-show.length} weitere anzeigen</span></span></button>`:""}</div></section>`; }
@@ -2406,11 +2404,11 @@ ACTS.moveMany = d => {
 async function moveInds(ids, to){ const tm = makeTime("tag", todayISO());
   for(const id of ids){ const i = S.individuals[id]; if(!i) continue; await store.put("events", {type:"umgesetzt", individualId:id, broodId:i.broodId, ...tm, data:{containerId:to}, note:""}); await store.put("individuals", {...S.individuals[id], containerId:to}); } }
 /* Abgeben: verkauft, verschenkt, gestorben … – die Tiere zählen danach nicht mehr in der Box, ihre Geschichte bleibt */
-const GIVE = [...GIVE_HOW.slice(0,3), ["tod","Gestorben"], ["freigelassen","Freigelassen"]];
+const GIVE = [...GIVE_HOW.slice(0,4), ["tod","Gestorben"], ["freigelassen","Freigelassen"]];
 ACTS.giveMany = d => {
   const pool = alivePool(d.brood);
   if(!pool.length){ toast("Keine Tiere"); return; }
-  const root = openSheet(`<h2>Tiere abgeben</h2><p class="small muted" style="margin:0">Z. B. verkauft oder gestorben. Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten.</p>
+  const root = openSheet(`<h2>Tiere entfernen</h2><p class="small muted" style="margin:0">Verkauft, eingefroren, gestorben … Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten. Eier entfernst du beim jeweiligen Gelege.</p>
     ${pickerHtml(pool, d.from)}
     ${fld.sel("gvHow","Was ist passiert?",GIVE,"verkauft")}
     <div id="gvToW">${fld.text("gvTo","An wen? (optional)","","z. B. Name oder Börse")}</div>
@@ -2419,13 +2417,13 @@ ACTS.giveMany = d => {
     ${pickerList()}
     <div class="btns"><button class="btn primary" id="ok">Eintragen</button></div>`);
   const P = wirePicker(root, pool), hw = root.querySelector("#gvHow");
-  const sy = () => { root.querySelector("#gvToW").hidden = ["tod","freigelassen"].includes(hw.value); }; hw.addEventListener("change", sy); sy();
+  const sy = () => { root.querySelector("#gvToW").hidden = ["tod","freigelassen","eingefroren"].includes(hw.value); }; hw.addEventListener("change", sy); sy();
   root.querySelector("#ok").addEventListener("click", async () => {
     const ids = P.ids(); if(!ids.length){ toast("Bitte eine Anzahl eintragen"); return; }
     const how = hw.value, tm = makeTime("tag", val(root,"gvD") || todayISO()), note = val(root,"gvNote");
     for(const id of ids){ const i = S.individuals[id]; if(!i) continue;
       const type = how==="tod" ? "tod" : how==="freigelassen" ? "freigelassen" : "abgegeben";
-      const data = type==="abgegeben" ? {how, to:val(root,"gvTo")} : type==="tod" ? {cause:"unbekannt", certainty:"vermutet", stage:currentStage(i)} : {};
+      const data = type==="abgegeben" ? {how, to: how==="eingefroren" ? "" : val(root,"gvTo")} : type==="tod" ? {cause:"unbekannt", certainty:"vermutet", stage:currentStage(i)} : {};
       await store.put("events", {type, individualId:id, broodId:i.broodId, ...tm, data, note}); }
     closeSheet(); toast(`${GIVE.find(x=>x[0]===how)[1]}: ${ids.length}`);
   });
@@ -3423,7 +3421,7 @@ function parentsTxt(ids, none){ const n = (ids||[]).filter(id=>S.individuals[id]
   return n.length===1 ? indName(n[0]) : `${n.map(indName).join(" / ")} (unsicher)`; }
 function clutchBar(c){ const s = clutchSum(c); const tot = s.eggs || (s.hatched + s.lost) || 1;
   const seg = (v, cls, t) => v ? `<i class="${cls}" style="width:${v/tot*100}%" title="${t}: ${v}"></i>` : "";
-  return `<span class="cbar">${seg(s.given,"g","abgegeben")}${seg(s.hatched,"h","geschlüpft")}${seg(s.infertile,"u","unbefruchtet")}${seg(s.dried,"d","vertrocknet")}${seg(s.other,"o","sonstige Ausfälle")}${s.open?seg(s.open,"x","offen"):""}</span>`; }
+  return `<span class="cbar">${seg(s.given,"g","entfernt")}${seg(s.hatched,"h","geschlüpft")}${seg(s.infertile,"u","unbefruchtet")}${seg(s.dried,"d","vertrocknet")}${seg(s.other,"o","sonstige Ausfälle")}${s.open?seg(s.open,"x","offen"):""}</span>`; }
 function clutchRow(c){ const s = clutchSum(c);
   const age = clutchAge(c);
   const st = s.done ? (s.rate!=null ? `${pctTxt(s.rate)} geschlüpft` : "abgeschlossen") : s.hatched ? `schlüpft · ${s.hatched}${s.eggs!=null?" von "+s.eggs:""}` : age!=null ? (age===0 ? "liegt seit heute" : age===1 ? "liegt seit 1 Tag" : `liegt seit ${age} Tagen`) : "liegt";
@@ -3444,7 +3442,7 @@ VIEWS.clutches = () => {
   let h = `<div class="pagehead"><h1>Gelege</h1><p class="muted" style="margin:0">Halte fest, wann die Eier abgelegt wurden, von wem sie (vermutlich) stammen und wie viele schlüpfen. Daraus ergeben sich Schlupfrate und Entwicklungsdauer der Eier.</p></div>
     <div class="btns"><button class="btn primary" data-act="editClutch">+ Gelege</button>${cs.length?`<button class="btn" data-go="stats">Auswertung</button>`:""}</div>`;
   if(cs.length){ const T = clutchTotals(cs);
-    h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier insgesamt</span><span class="small">aus ${T.withEggs} ${T.withEggs===1?"Gelege":"Gelegen"}${T.withEggs<T.n?` (${T.n-T.withEggs} ohne Zahl)`:""}</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>Raupen geschlüpft</span>${T.kept?`<span class="small">${pctTxt(T.hatched/T.kept)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>Eier liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div>${T.given?`<div class="stat"><b>${fmtN(T.given)}</b><span>Eier abgegeben</span></div>`:""}</div>`; }
+    h += `<div class="stats"><div class="stat"><b>${fmtN(T.eggs)}</b><span>Eier insgesamt</span><span class="small">aus ${T.withEggs} ${T.withEggs===1?"Gelege":"Gelegen"}${T.withEggs<T.n?` (${T.n-T.withEggs} ohne Zahl)`:""}</span></div><div class="stat"><b>${fmtN(T.hatched)}</b><span>Raupen geschlüpft</span>${T.kept?`<span class="small">${pctTxt(T.hatched/T.kept)} der Eier</span>`:""}</div><div class="stat"><b>${fmtN(T.open)}</b><span>Eier liegen noch</span></div><div class="stat"><b>${fmtN(T.lost)}</b><span>Ausfälle</span></div>${T.given?`<div class="stat"><b>${fmtN(T.given)}</b><span>Eier entfernt</span></div>`:""}</div>`; }
   const hd = hatchByDay();
   if(hd.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf pro Tag</h2><span class="small muted">alle Gelege zusammen</span></div><div class="list">${hatchDayRows(hd)}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Laufend</h2><span class="small muted">${run.length}</span></div><div class="list">${run.length?run.map(clutchRow).join(""):`<div class="empty">Keine laufenden Gelege.</div>`}</div></section>`;
@@ -3460,14 +3458,14 @@ VIEWS.clutch = r => {
   h += `<div class="stats"><div class="stat"><b>${s.eggs ?? "?"}</b><span>Eier</span></div><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div>${dev!=null||s.done?`<div class="stat"><b>${dev ?? "–"}</b><span>Tage im Ei</span><span class="small">Ablage bis 1. Schlupf</span></div>`:`<div class="stat"><b>${clutchAge(c) ?? "–"}</b><span>Tage liegend</span></div>`}</div>`;
   const ex = !s.hatched && !s.done ? clutchExpect(c) : null;
   if(ex) h += `<p class="small muted" style="margin:0">Schlupf erwartet um den ${dShort(ex.date)} (nach ${ex.days} Tagen, Median aus ${ex.n} ${ex.n===1?"Gelege":"Gelegen"} dieser Art).</p>`;
-  h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["g","abgegeben",s.given],["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
+  h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["g","entfernt",s.given],["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
     ${c.hatchFirst?`<p class="small muted" style="margin:8px 0 0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
   const open = Math.max(0, s.hatched - clutchLarvae(c));
-  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle &amp; Zahlen</button><button class="btn" data-act="clutchGive" data-id="${c.id}" ${s.open===0?"disabled":""}>Eier abgeben</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:""}</div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle &amp; Zahlen</button><button class="btn" data-act="clutchGive" data-id="${c.id}" ${s.open===0?"disabled":""}>Eier entfernen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:""}</div>`;
   const log = clutchLog(c);
   if(log.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf-Einträge</h2><span class="small muted">antippen zum Ändern</span></div><div class="list">${log.map(e=>`<button class="row" data-act="clutchLogEdit" data-id="${c.id}" data-k="${esc(e.id)}"><span class="main"><span class="t">${dDE(e.d)}</span><span class="s">${e.n} ${e.n===1?"Raupe":"Raupen"} geschlüpft</span></span><span class="end small muted">ändern</span></button>`).join("")}</div></section>`;
   const out = clutchOut(c);
-  if(out.length) h += `<section class="sec"><div class="sec-h"><h2>Abgegeben</h2><span class="small muted">${s.given} ${s.given===1?"Ei":"Eier"}</span></div><div class="list">${out.map(e=>`<button class="row" data-act="clutchGive" data-id="${c.id}" data-k="${esc(e.id)}"><span class="main"><span class="t">${dDE(e.d)}</span><span class="s">${esc(`${e.n} ${e.n===1?"Ei":"Eier"} ${(HOWL[e.how]||"Abgegeben").toLowerCase()}${e.to?` an ${e.to}`:""}${e.note?` · ${e.note}`:""}`)}</span></span><span class="end small muted">ändern</span></button>`).join("")}</div></section>`;
+  if(out.length) h += `<section class="sec"><div class="sec-h"><h2>Entfernt</h2><span class="small muted">${s.given} ${s.given===1?"Ei":"Eier"}</span></div><div class="list">${out.map(e=>`<button class="row" data-act="clutchGive" data-id="${c.id}" data-k="${esc(e.id)}"><span class="main"><span class="t">${dDE(e.d)}</span><span class="s">${esc(`${e.n} ${e.n===1?"Ei":"Eier"} ${(HOWL[e.how]||"Abgegeben").toLowerCase()}${e.to?` an ${e.to}`:""}${e.note?` · ${e.note}`:""}`)}</span></span><span class="end small muted">ändern</span></button>`).join("")}</div></section>`;
   h += `<section class="sec"><div class="sec-h"><h2>Eltern</h2></div><div class="list">
     ${(c.mothers||[]).filter(id=>S.individuals[id]).map(id=>indRow(S.individuals[id], (c.mothers.length>1?"mögliche Mutter":"Mutter"))).join("") || `<div class="empty">Mutter unbekannt</div>`}
     ${(c.fathers||[]).filter(id=>S.individuals[id]).map(id=>indRow(S.individuals[id], (c.fathers.length>1?"möglicher Vater":"Vater"))).join("")}</div></section>`;
@@ -3545,17 +3543,19 @@ ACTS.clutchHatch = d => {
 ACTS.clutchGive = d => {
   const c = S.clutches[d.id]; if(!c) return; const s = clutchSum(c), log = clutchOut(c), e = d.k ? log.find(x => x.id===d.k) : null;
   const max = s.open == null ? null : s.open + (e?.n || 0);
-  const root = openSheet(`<h2>${e?"Abgabe ändern":"Eier abgeben"}</h2>
+  const root = openSheet(`<h2>${e?"Eintrag ändern":"Eier entfernen"}</h2>
+    <p class="small muted" style="margin:0">Verkauft, verschenkt oder eingefroren – diese Eier zählen nicht in die Schlupfrate.</p>
     ${max!=null?`<p class="muted" style="margin:0">Es liegen noch ${s.open} Eier.</p>`:""}
     <div class="frow2">${fld.num("gN","Anzahl Eier",e?.n??"","1")}${fld.date("gD","am",e?.d||todayISO())}</div>
-    <div class="frow2">${fld.sel("gHow","Wie?",GIVE_HOW,e?.how||"verkauft")}${fld.text("gTo","An wen? (optional)",e?.to||"")}</div>
+    <div class="frow2">${fld.sel("gHow","Wie?",GIVE_HOW,e?.how||"verkauft")}<div id="gToW">${fld.text("gTo","An wen? (optional)",e?.to||"")}</div></div>
     ${fld.text("gNote","Notiz (optional)",e?.note||"","z. B. Preis")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${e?`<button class="btn danger" id="del">Eintrag löschen</button>`:""}</div>
     ${e?confirmBlock("Diesen Eintrag löschen?","Löschen"):""}`);
+  const gh = root.querySelector("#gHow"), gsy = () => { root.querySelector("#gToW").hidden = gh.value==="eingefroren"; }; gh.addEventListener("change", gsy); gsy();
   root.querySelector("#ok").addEventListener("click", async () => {
     const n = Math.round(+val(root,"gN") || 0); if(n <= 0){ toast("Bitte eine Anzahl eintragen"); return; }
     if(max != null && n > max){ toast(`Höchstens ${max}`); return; }
-    const x = {id: e?.id || uid(), d: val(root,"gD") || todayISO(), n, how: val(root,"gHow"), to: val(root,"gTo"), note: val(root,"gNote")};
+    const x = {id: e?.id || uid(), d: val(root,"gD") || todayISO(), n, how: val(root,"gHow"), to: gh.value==="eingefroren" ? "" : val(root,"gTo"), note: val(root,"gNote")};
     const L = (e ? log.map(y => y.id===e.id ? x : y) : [...log, x]).sort((a,b)=>a.d.localeCompare(b.d));
     await store.put("clutches", {...c, outLog:L}); closeSheet(); toast(`${HOWL[x.how]}: ${n} ${n===1?"Ei":"Eier"}`);
   });
@@ -3582,7 +3582,7 @@ ACTS.clutchLoss = d => {
     <div class="frow2">${fld.num("lE","Eier gesamt",c.eggs??"","1")}${fld.num("lH","Geschlüpft",c.hatched||0,"1")}</div>
     <div class="frow2">${fld.num("lU","Unbefruchtet",c.infertile||"","1")}${fld.num("lD","Vertrocknet",c.dried||"","1")}</div>
     ${fld.num("lO","Sonstige Ausfälle (z. B. verschimmelt, Raupe tot im Ei)",c.other||"","1")}
-    ${clutchSum(c).given?`<span class="hint">Davon abgegeben: ${clutchSum(c).given} (unter „Abgegeben“ änderbar)</span>`:""}
+    ${clutchSum(c).given?`<span class="hint">Davon entfernt: ${clutchSum(c).given} (unter „Entfernt“ änderbar)</span>`:""}
     <div class="frow2">${fld.date("lF","Erster Schlupf",c.hatchFirst||"")}${fld.date("lL","Letzter Schlupf",c.hatchLast||"")}</div>
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="lDone" style="width:20px;height:20px;min-height:0" ${c.done?"checked":""}><span>Gelege abgeschlossen</span></label>
     <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
@@ -3682,7 +3682,7 @@ function clutchStats(){
   h += `<div class="stats"><div class="stat"><b>${pctTxt(T.h/T.e)}</b><span>Schlupfrate gesamt</span><span class="small">${T.h} von ${T.e} Eiern</span></div><div class="stat"><b>${pctTxt(T.u/T.e)}</b><span>unbefruchtet</span></div><div class="stat"><b>${pctTxt(T.d/T.e)}</b><span>vertrocknet</span></div>${devs.length?`<div class="stat"><b>${fmtN(median(devs),1)}</b><span>Tage im Ei (Median)</span><span class="small">${Math.min(...devs)}–${Math.max(...devs)}, n=${devs.length}</span></div>`:""}</div>`;
   const rows = cs.sort((a,b)=>clutchDate(a).localeCompare(clutchDate(b))).map(c=>{ const s = clutchSum(c);
     return `<div class="bar"><span class="lbl"><button class="linkbtn" data-go="clutch:${c.id}">${esc(clutchName(c))}</button><span class="small muted">♀ ${esc(parentsTxt(c.mothers,"?"))}</span></span>${clutchBar(c)}<span class="v">${pctTxt(s.rate)}${s.done?"":"*"}</span></div>`; }).join("");
-  h += `<div class="card"><div class="bars cbars">${rows}</div><div class="legend" style="margin-top:8px">${[["h","geschlüpft"],["u","unbefruchtet"],["d","vertrocknet"],["o","sonstige"],["x","offen"],...(all("clutches").some(c=>clutchSum(c).given)?[["g","abgegeben"]]:[])].map(([k,l])=>`<span><i class="cl-${k}"></i>${l}</span>`).join("")}<span class="muted">* läuft noch</span></div></div>`;
+  h += `<div class="card"><div class="bars cbars">${rows}</div><div class="legend" style="margin-top:8px">${[["h","geschlüpft"],["u","unbefruchtet"],["d","vertrocknet"],["o","sonstige"],["x","offen"],...(all("clutches").some(c=>clutchSum(c).given)?[["g","entfernt"]]:[])].map(([k,l])=>`<span><i class="cl-${k}"></i>${l}</span>`).join("")}<span class="muted">* läuft noch</span></div></div>`;
   // je Mutter (nur Gelege mit eindeutiger Mutter)
   const M = {}; let unsure = 0;
   for(const c of fin){ const ms_ = (c.mothers||[]).filter(id=>S.individuals[id]); if(ms_.length!==1){ unsure++; continue; } const s = clutchSum(c); (M[ms_[0]] ||= {n:0,e:0,h:0}); M[ms_[0]].n++; M[ms_[0]].e+=s.kept; M[ms_[0]].h+=s.hatched; }
