@@ -490,7 +490,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.23.0";
+const APP_VERSION = "5.24.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -561,6 +561,7 @@ let LANG = (() => { const nav0 = (navigator.language||"de").toLowerCase().starts
 const I18N_EN = {
   "Boxen":"Boxes","Boxen & Behälter":"Boxes & containers","Wie viele Tiere wo sind, umsetzen, abgeben":"How many animals are where, move, give away","Wie viele Tiere in welcher Box sind. Tippe eine Box an, um Tiere umzusetzen oder abzugeben.":"How many animals are in which box. Tap a box to move animals or give them away.","+ Box":"+ Box","Abgeben":"Give away","in Boxen":"in boxes","Box belegt":"box in use","Boxen belegt":"boxes in use","ohne Box":"no box","Mit einem Tipp in Boxen je Schlupftag einsortieren – du kannst vorher für jeden Tag die Box wählen.":"Sort them into one box per hatch day with one tap – you can pick the box for each day first.","Nach Schlupftag einsortieren":"Sort by hatch day","Leer":"Empty","leer":"empty","Box":"Box","Tiere drin":"animals inside","Tier drin":"animal inside","nicht mehr drin":"no longer inside","Tiere hierher":"Move animals here","Die Box ist leer.":"The box is empty.","Box bearbeiten":"Edit box","Ohne Zuchtansatz":"No brood","Diese Box existiert nicht mehr.":"This box no longer exists.","Noch keine Tiere in Boxen.":"No animals in boxes yet.","Einsortieren":"Sort in","Tiere abgeben":"Give away animals","Z. B. verkauft oder gestorben. Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten.":"E.g. sold or died. The animals no longer count in the box afterwards, but they are kept with their history.","An wen? (optional)":"To whom? (optional)","z. B. Name oder Börse":"e.g. name or fair","Notiz (optional)":"Note (optional)","z. B. Preis":"e.g. price","Eintragen":"Record","Verkauft":"Sold","Verschenkt":"Given away for free","Getauscht":"Swapped","verkauft":"sold","verschenkt":"given away","getauscht":"swapped","gestorben":"died","Wie?":"How?","Eier abgeben":"Give away eggs","Abgabe ändern":"Edit entry","Eier abgegeben":"Eggs given away","Diese leere Box löschen?":"Delete this empty box?","Box gelöscht":"Box deleted","Alle Boxen":"All boxes","Nach Schlupftag":"By hatch day",
   "Eingefroren":"Frozen","eingefroren":"frozen","Entfernen":"Remove","Tiere entfernen":"Remove animals","Eier entfernen":"Remove eggs","Entfernt":"Removed","entfernt":"removed","Eier entfernt":"Eggs removed","Eintrag ändern":"Edit entry","drin":"inside","Nicht mehr da":"No longer here","Verkauft, eingefroren, gestorben … Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten. Eier entfernst du beim jeweiligen Gelege.":"Sold, frozen, died … The animals no longer count in the box afterwards, but they are kept with their history. Eggs are removed in the respective clutch.","Verkauft, verschenkt oder eingefroren – diese Eier zählen nicht in die Schlupfrate.":"Sold, given away or frozen – these eggs don't count towards the hatch rate.",
+  "2 × 5 groß, 105 × 59 mm – von weiter weg scanbar":"2 × 5 large, 105 × 59 mm – scannable from further away","Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.":"Hold the QR code inside the frame … From further away: zoom instead of moving closer.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -3898,7 +3899,7 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
   const G = all("clutches").sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a))), preG = new Set(clutches || []);
   const preC = new Set(conts || []);
   const root = openSheet(`<h2>Etiketten drucken</h2>
-    ${fld.sel("lFmt","Format (A4)",[["g","3 × 7 Etiketten, 70 × 42 mm"],["k","4 × 10 Etiketten, 52 × 30 mm"]],"g")}
+    ${fld.sel("lFmt","Format (A4)",[["g","3 × 7 Etiketten, 70 × 42 mm"],["k","4 × 10 Etiketten, 52 × 30 mm"],["x","2 × 5 groß, 105 × 59 mm – von weiter weg scanbar"]],"g")}
     <div class="f"><span class="lab">Tiere</span><div class="checks">${I.map(i=>`<label><input type="checkbox" data-k="i" value="${i.id}" ${preI.has(i.id)?"checked":""}> ${SEXS[i.sex||"u"]} ${esc(i.name)} <span class="small muted" style="margin-left:auto">${esc(S.broods[i.broodId]?.name||"")}</span></label>`).join("")||`<div class="empty">Keine Tiere.</div>`}</div></div>
     ${G.length?`<div class="f"><span class="lab">Gelege</span><div class="checks">${G.map(c=>`<label><input type="checkbox" data-k="g" value="${c.id}" ${preG.has(c.id)?"checked":""}> ${esc(clutchName(c))} <span class="small muted" style="margin-left:auto">${dShort(clutchDate(c))}</span></label>`).join("")}</div></div>`:""}
     ${C.length?`<div class="f"><span class="lab">Behälter</span><div class="checks">${C.map(c=>`<label><input type="checkbox" data-k="c" value="${c.id}" ${preC.has(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")}</div></div>`:""}
@@ -3929,14 +3930,15 @@ function qrSvg(code){
   for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(qr.isDark(r,c)) d += `M${c} ${r}h1v1h-1z`;
   return `<svg viewBox="0 0 ${n} ${n}" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="#000"/></svg>`;
 }
+const LFMT = {g:{cols:3, rows:7, pd:3.5, t:13, s:8, c:6, ty:4.6, lh:5}, k:{cols:4, rows:10, pd:2.5, t:10, s:6.5, c:5, ty:3.6, lh:4}, x:{cols:2, rows:5, pd:4, t:17, s:10, c:6, ty:6.5, lh:7}};
 function printLabels(items, fmt, qrOnly){
-  const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7, per = cols*rows;
-  const pd = fmt==="k"?2.5:3.5;
-  const fs = fmt==="k"?{t:10,s:6.5,c:5}:{t:13,s:8,c:6};
+  const F = LFMT[fmt] || LFMT.g, cols = F.cols, rows = F.rows, per = cols*rows;
+  const pd = F.pd;
+  const fs = {t:F.t, s:F.s, c:F.c};
   let html = "";
   for(let p=0; p<items.length; p+=per){
     html += `<div class="pp" style="grid-template-columns:repeat(${cols},1fr);grid-template-rows:repeat(${rows},1fr)">`;
-    html += items.slice(p,p+per).map(it=> qrOnly ? `<div class="lb" style="padding:${pd}mm;justify-content:center">${qrSvg(it.code)}</div>` : `<div class="lb" style="padding:${pd}mm">${qrSvg(it.code)}<div class="tx"><b style="font-size:${fs.t}pt">${esc(it.title)}</b>${it.l2?`<${it.it?"i":"span"} style="font-size:${fs.s}pt">${esc(it.l2)}</${it.it?"i":"span"}>`:""}${it.l3?`<span style="font-size:${fs.s}pt">${esc(it.l3)}</span>`:""}<code style="font-size:${fs.c}pt">${esc(it.code)}</code></div></div>`).join("");
+    html += items.slice(p,p+per).map(it=> qrOnly ? `<div class="lb" style="padding:${pd}mm;justify-content:center">${qrSvg(it.code)}</div>` : `<div class="lb" style="padding:${pd}mm">${qrSvg(it.code)}<div class="tx"><b style="font-size:${fs.t}pt">${esc(it.title)}</b>${it.l2?`<${it.it?"i":"span"} style="font-size:${fs.s}pt">${esc(it.l2)}</${it.it?"i":"span"}>`:""}${it.l3?`<span style="font-size:${fs.s}pt">${esc(it.l3)}</span>`:""}<code style="font-size:${fs.c}pt">${esc(it.code.replace(/^.*#/,""))}</code></div></div>`).join("");
     html += `</div>`;
   }
   $("#printArea").innerHTML = html;
@@ -3950,13 +3952,13 @@ function labelText(i){
 function makeLabelPdf(items, fmt, qrOnly){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({unit:"mm", format:"a4"});
-  const cols = fmt==="k"?4:3, rows = fmt==="k"?10:7;
+  const F = LFMT[fmt] || LFMT.g, cols = F.cols, rows = F.rows;
   const W = 210/cols, H = 297/rows, per = cols*rows;
   items.forEach((it, n) => {
     if(n && n%per===0) doc.addPage();
     const k = n%per, x = (k%cols)*W, y = Math.floor(k/cols)*H;
     doc.setDrawColor(200); doc.setLineWidth(0.1); doc.setLineDashPattern([1,1.5],0); doc.rect(x, y, W, H); doc.setLineDashPattern([],0);
-    const pd = fmt==="k"?2.5:3.5, qs = H - 2*pd;
+    const pd = F.pd, qs = H - 2*pd;
     const qr = qrcode(0,"M"); qr.addData(it.code); qr.make();
     const cnt = qr.getModuleCount(), m = qs/cnt;
     doc.setFillColor(0,0,0);
@@ -3964,15 +3966,15 @@ function makeLabelPdf(items, fmt, qrOnly){
     for(let r=0;r<cnt;r++) for(let c=0;c<cnt;c++) if(qr.isDark(r,c)) doc.rect(qx+c*m, y+pd+r*m, m+0.02, m+0.02, "F");
     if(qrOnly) return;
     const tx = x+pd+qs+2.5, tw = W-(qs+pd*2+2.5);
-    let ty = y+pd+ (fmt==="k"?3.6:4.6);
-    doc.setTextColor(0); doc.setFont("helvetica","bold"); doc.setFontSize(fmt==="k"?10:13);
-    doc.splitTextToSize(it.title, tw).slice(0,2).forEach(t=>{ doc.text(t, tx, ty); ty += fmt==="k"?4:5; });
-    doc.setFont("helvetica", it.it?"italic":"normal"); doc.setFontSize(fmt==="k"?6.5:8);
+    let ty = y+pd+F.ty;
+    doc.setTextColor(0); doc.setFont("helvetica","bold"); doc.setFontSize(F.t);
+    doc.splitTextToSize(it.title, tw).slice(0,2).forEach(t=>{ doc.text(t, tx, ty); ty += F.lh; });
+    doc.setFont("helvetica", it.it?"italic":"normal"); doc.setFontSize(F.s);
     if(it.l2){ doc.splitTextToSize(it.l2, tw).slice(0,1).forEach(t=>{ doc.text(t, tx, ty); ty += 3.4; }); }
     doc.setFont("helvetica","normal");
     if(it.l3){ doc.splitTextToSize(it.l3, tw).slice(0,2).forEach(t=>{ doc.text(t, tx, ty); ty += 3.4; }); }
-    doc.setFont("courier","normal"); doc.setFontSize(fmt==="k"?5:6); doc.setTextColor(90);
-    doc.text(it.code, tx, y+H-pd);
+    doc.setFont("courier","normal"); doc.setFontSize(F.c); doc.setTextColor(90);
+    doc.text(it.code.replace(/^.*#/,""), tx, y+H-pd);
   });
   return doc.output("blob");
 }
@@ -3982,12 +3984,13 @@ ACTS.scan = () => {
   const canLive = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   const root = openSheet(`<h2>Etikett scannen</h2>
     ${canLive?`<div class="scanbox" id="sbox" hidden><video id="sv" playsinline muted></video><div class="aim"></div></div>
+    <div class="f" id="szW" hidden><label for="sz">Zoom</label><input type="range" id="sz" min="1" max="1" step="0.1" value="1"></div>
     <button class="btn primary block" id="live">Kamera starten</button>`:""}
     <div id="sst" class="small muted">${canLive?"Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":""}</div>
     <label class="btn block filebtn">Stattdessen Foto vom Etikett<input type="file" id="sf" accept="image/*" capture="environment" class="vh"></label>
     ${fld.text("sCode","Oder Code eintippen","","RB:i:…")}<div class="btns"><button class="btn" id="go">Öffnen</button></div>`);
   const st = root.querySelector("#sst");
-  let stream = null, timer = null, busy = false, det = null, cnv = null;
+  let stream = null, timer = null, busy = false, det = null, cnv = null, pass = 0;
   const stop = () => { clearTimeout(timer); timer = null; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; } };
   _sheetCleanup = stop;
   const found = code => { if(openCode(code)) return true; st.textContent = `Code „${code}“ gehört zu keinem Eintrag.`; return false; };
@@ -3996,29 +3999,36 @@ ACTS.scan = () => {
     if(!busy && v.readyState >= 2 && v.videoWidth){
       busy = true;
       try {
-        let code = null;
-        if(det){ try { const r = await det.detect(v); if(r[0]) code = r[0].rawValue; } catch(e){ det = null; } }
+        let code = null; pass++;
+        // abwechselnd: ganzes Bild, dann die Mitte (Rahmen) in voller Auflösung, vergrößert – kleine/entfernte Codes
+        const crop = pass % 2 === 0, vw = v.videoWidth, vh = v.videoHeight;
+        const cw = crop ? Math.round(vw*0.6) : vw, ch = crop ? Math.round(vh*0.6) : vh, cx = crop ? Math.round((vw-cw)/2) : 0, cy = crop ? Math.round((vh-ch)/2) : 0;
+        const max = det ? 1600 : 1000, sc = crop ? Math.min(2, max/Math.max(cw,ch)) : Math.min(1, max/Math.max(cw,ch));
+        cnv ||= document.createElement("canvas"); cnv.width = Math.round(cw*sc); cnv.height = Math.round(ch*sc);
+        const ctx = cnv.getContext("2d",{willReadFrequently:true}); ctx.imageSmoothingEnabled = true; ctx.drawImage(v, cx, cy, cw, ch, 0, 0, cnv.width, cnv.height);
+        if(det){ try { const r = await det.detect(cnv); if(r[0]) code = r[0].rawValue; } catch(e){ det = null; } }
         if(!code && !det){
           await loadLib("jsqr");
-          const sc = Math.min(1, 720/Math.max(v.videoWidth, v.videoHeight));
-          cnv ||= document.createElement("canvas"); cnv.width = Math.round(v.videoWidth*sc); cnv.height = Math.round(v.videoHeight*sc);
-          const ctx = cnv.getContext("2d",{willReadFrequently:true}); ctx.drawImage(v,0,0,cnv.width,cnv.height);
-          const r = jsQR(ctx.getImageData(0,0,cnv.width,cnv.height).data, cnv.width, cnv.height, {inversionAttempts:"dontInvert"});
+          const r = jsQR(ctx.getImageData(0,0,cnv.width,cnv.height).data, cnv.width, cnv.height, {inversionAttempts:"attemptBoth"});
           if(r) code = r.data;
         }
         if(code && /RB:[icg]:/.test(code)){ if(navigator.vibrate) navigator.vibrate(60); if(found(code)) { stop(); return; } }
       } finally { busy = false; }
     }
-    timer = setTimeout(tick, 200);
+    timer = setTimeout(tick, 120);
   }
   const lb = root.querySelector("#live");
   if(lb) lb.onclick = async () => {
     try {
       st.textContent = "Starte Kamera …";
-      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1280}, height:{ideal:960}}, audio:false});
+      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1440}}, audio:false});
       const v = root.querySelector("#sv"); v.srcObject = stream; await v.play();
+      const trk = stream.getVideoTracks()[0], cap = trk.getCapabilities ? trk.getCapabilities() : {};
+      if(cap.focusMode && cap.focusMode.includes("continuous")) trk.applyConstraints({advanced:[{focusMode:"continuous"}]}).catch(()=>{});
+      if(cap.zoom && cap.zoom.max > 1){ const z = root.querySelector("#sz"); z.min = cap.zoom.min || 1; z.max = Math.min(cap.zoom.max, 8); z.step = cap.zoom.step || 0.1; z.value = z.min; root.querySelector("#szW").hidden = false;
+        z.oninput = () => trk.applyConstraints({advanced:[{zoom:+z.value}]}).catch(()=>{}); }
       root.querySelector("#sbox").hidden = false; lb.hidden = true;
-      st.textContent = "Halte den QR-Code in den Rahmen …";
+      st.textContent = "Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.";
       if("BarcodeDetector" in window){ try { const f = await BarcodeDetector.getSupportedFormats(); if(f.includes("qr_code")) det = new BarcodeDetector({formats:["qr_code"]}); } catch(e){} }
       tick();
     } catch(e){
