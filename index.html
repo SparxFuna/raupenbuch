@@ -378,6 +378,15 @@ button.pill.tag{cursor:pointer}
 .hnt:first-child{border-top:0}
 .hnt .dot{width:9px;height:9px;border-radius:50%;background:var(--c);margin-top:6px;flex:none}
 .hnt p{margin:0;flex:1;font-size:14.5px;line-height:1.45} .hnt p small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.iconbtn.bell{position:relative}
+.iconbtn.bell .bdot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--crit);color:var(--bg);font:600 11px/18px var(--f-data);text-align:center}
+.iconbtn.bell.new{color:var(--crit)}
+@media (prefers-reduced-motion:no-preference){
+  .iconbtn.bell.new svg{animation:bellwig 2.4s ease-in-out infinite;transform-origin:50% 15%}
+  .iconbtn.bell.new .bdot{animation:bellpulse 1.2s ease-in-out infinite}
+  @keyframes bellwig{0%,70%,100%{transform:rotate(0)}76%{transform:rotate(14deg)}84%{transform:rotate(-12deg)}92%{transform:rotate(6deg)}}
+  @keyframes bellpulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--crit) 70%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+}
 .hnt .x{appearance:none;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:0 4px;cursor:pointer}
 .clhero{display:flex;flex-direction:column;gap:10px}
 .clhero .big{display:flex;align-items:baseline;gap:10px} .clhero .big b{font-family:var(--f-name);font-size:44px;line-height:1;color:var(--egg)} .clhero .big span{font-size:15px;font-weight:600}
@@ -512,7 +521,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.28.0";
+const APP_VERSION = "5.29.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -587,7 +596,7 @@ const I18N_EN = {
   "Becher / Dose":"Cup / tub","Netzkäfig":"Mesh cage","Glas":"Jar","Puppenkasten":"Pupation box",
   "Schärfe":"Focus","(nach links = nah)":"(left = near)","Auto":"Auto","Andere Kamera":"Other camera","Foto aufnehmen – stellt zuverlässiger scharf":"Take a photo – focuses more reliably","Halte den QR-Code in den Rahmen. Unscharf? Aufs Bild tippen, Kamera wechseln oder ein Foto aufnehmen.":"Hold the QR code inside the frame. Blurry? Tap the image, switch camera or take a photo.",
   "korrigieren":"correct","Anzahl korrigieren":"Correct count","Eier-Anzahl korrigieren":"Correct egg count","Wie viele sind wirklich drin?":"How many are really inside?","Zuchtansatz der neuen Tiere":"Brood of the new animals","Keine Änderung.":"No change.","Wie viele Eier waren es insgesamt?":"How many eggs were there in total?","Auf Foto zählen":"Count on photo","Bitte einen Zuchtansatz wählen":"Please choose a brood",
-  "Hinweise":"Hints","Alle Hinweise":"All hints","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
+  "Hinweise":"Hints","Alle Hinweise":"All hints","Gerade keine Hinweise.":"No hints right now.","Ausgeblendete wieder zeigen":"Show hidden again","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -1253,6 +1262,7 @@ const IC = {
   temp:'<path d="M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0z"/><path d="M12 9v7"/>',
   more:'<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
   search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+  bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
   scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 8h3v3H8zM13 13h3v3h-3zM13 8h3M8 16h3"/>',
   back:'<path d="M15 5l-7 7 7 7"/>',
   brood:'<rect x="4" y="4" width="16" height="6" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/><path d="M8 7h4M8 17h6"/>'
@@ -1282,6 +1292,7 @@ function render(){
   top.innerHTML = (isRoot
       ? `<div class="brand">Raupenbuch${store.mode==="mem"?'<small>ohne Speicher</small>':''}</div>`
       : `<button class="backbtn" data-act="back">${svg("back")}Zurück</button><div class="brand"></div>`)
+    + hintBell()
     + `<button class="iconbtn" data-act="search" aria-label="Suchen">${svg("search")}</button>`
     + `<button class="iconbtn" data-act="scan" aria-label="QR-Etikett scannen">${svg("scan")}</button>`;
   const active = TAB_OF[r.v] ?? "";
@@ -1465,7 +1476,6 @@ VIEWS.home = () => {
       <button class="kpi st-dead" data-act="kpi" data-k="tot">${ic2("dead")}<b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></button>
     </div></section>`;
   if(unresolved.length) h += `<section class="uncertain"><b>${unresolved.length} Falter noch nicht zugeordnet</b><span class="small muted">Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.</span><div><button class="btn" data-go="imagos">Zuordnen</button></div></section>`;
-  h += hintsCard();
   h += `<section class="sec"><div class="sec-h"><h2>Jetzt dran</h2><span class="small muted">richtet sich nach deinen Stadien</span></div>`;
   const cards = [];
   const broodsOf = list => [...new Set(list.map(i=>i.broodId))].filter(id=>S.broods[id]);
@@ -1543,21 +1553,36 @@ function insights(){
     if(bx && bx[1] >= 3 && bx[1]/deaths.length >= 0.5) out.push({id:`loss-bx:${bx[0]}:${deaths.length}`, c:"dead", p:4, t:E_?`${bx[1]} of ${deaths.length} losses were in ${S.containers[bx[0]].name}.`:`${bx[1]} von ${deaths.length} Verlusten gab es in ${S.containers[bx[0]].name}.`, n:E_?`from ${deaths.length} losses`:`aus ${deaths.length} Verlusten`}); }
   // 6) Generationen vergleichen (Nachzucht vs. Elternansatz)
   for(const b of all("broods")){ const pb = S.broods[b.parentBroodId]; if(!pb || pb.speciesId!==b.speciesId) continue;
-    const dur = (bid, k) => indsOf(bid).flatMap(i => stageSegments(i).filter(sg => sg.k===k && !sg.open && !sg.est).map(sg => sg.days));
+    const dur = (bid, k) => indsOf(bid).flatMap(i => stageSegments(i).filter(sg => sg.k===k && !sg.open && !sg.cut && !sg.est).map(sg => sg.days));
     let best = null; for(const k of ["L1","L2","L3","L4","L5","puppe"]){ const a = dur(b.id,k), z = dur(pb.id,k); if(a.length<3 || z.length<3) continue; const df = median(a)-median(z); if(Math.abs(df) >= 1.5 && (!best || Math.abs(df) > Math.abs(best.df))) best = {k, df, a:median(a), z:median(z), n:a.length+z.length}; }
     if(best) out.push({id:`gen:${b.id}:${best.k}`, c:"accent", p:2, t:E_?`${b.name} needs ${fmtN(Math.abs(best.df),0)} days ${best.df<0?"less":"more"} for ${tr(stageLabel(best.k))} than ${pb.name} (${fmtN(best.a,0)} instead of ${fmtN(best.z,0)} days).`:`${b.name} braucht für ${stageLabel(best.k)} ${fmtN(Math.abs(best.df),0)} Tage ${best.df<0?"weniger":"mehr"} als ${pb.name} (${fmtN(best.a,0)} statt ${fmtN(best.z,0)} Tage).`, n:E_?`from ${best.n} animals`:`aus ${best.n} Tieren`}); }
   return out.sort((a,b)=>b.p-a.p);
 }
 const daysBetweenIso = (a, b) => Math.round((ms(b.slice(0,10)+"T12:00") - ms(a.slice(0,10)+"T12:00"))/864e5);
 const hintRow = (x, off) => `<div class="hnt st-${x.c}"><span class="dot"></span><p>${esc(x.t)}<small>${esc(x.n)}</small></p>${off?"":`<button class="x" data-act="hintOff" data-k="${esc(x.id)}" aria-label="Ausblenden">×</button>`}</div>`;
-function hintsCard(){
-  let all_; try { all_ = insights(); } catch(e){ console.warn(e); return ""; }
-  const off = store.meta.hintsOff || {}, show = all_.filter(x => !off[x.id]);
-  if(!show.length) return "";
-  return `<section class="sec"><div class="sec-h"><h2>Hinweise</h2>${all_.length>3||show.length<all_.length?`<button class="btn ghost link" data-act="allHints">Alle Hinweise</button>`:""}</div><div class="card hints" style="padding:0">${show.slice(0,3).map(x=>hintRow(x)).join("")}</div></section>`;
+/* Hinweise: Glocke in der Kopfzeile. Blinkt, solange es Hinweise gibt, die noch nicht im Popup gesehen wurden. */
+function visibleHints(){ let a; try { a = insights(); } catch(e){ console.warn(e); return []; } const off = store.meta.hintsOff || {}; return a.filter(x => !off[x.id]); }
+function hintBell(){
+  if(!store.ready()) return "";
+  const show = visibleHints(); if(!show.length) return "";
+  const seen = store.meta.hintsSeen || {}, fresh = show.filter(x => !seen[x.id]).length;
+  return `<button class="iconbtn bell${fresh?" new":""}" data-act="hintsOpen" aria-label="${fresh?`${fresh} neue Hinweise`:"Hinweise"}">${svg("bell")}${fresh?`<span class="bdot">${fresh}</span>`:""}</button>`;
 }
-ACTS.hintOff = async d => { await store.setMeta("hintsOff", {...(store.meta.hintsOff||{}), [d.k]:todayISO()}); render(); };
-ACTS.allHints = () => { nav("stats"); };
+function hintsSheetHtml(){
+  const show = visibleHints(), off = store.meta.hintsOff || {};
+  const body = show.length ? `<div class="card hints" style="padding:0">${show.map(x=>hintRow(x)).join("")}</div>` : `<p class="muted">Gerade keine Hinweise.</p>`;
+  return `<div class="sec-h"><h2>Hinweise</h2><span class="small muted">aus deinen Einträgen</span></div>${body}
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap">${Object.keys(off).length?`<button class="btn ghost" data-act="hintsReset">Ausgeblendete wieder zeigen</button>`:"<span></span>"}<button class="btn ghost link" data-act="allHints">Alle Hinweise</button></div>`;
+}
+const refreshHintsSheet = () => { const el = document.getElementById("hintsSheet"); if(el) el.innerHTML = hintsSheetHtml(); };
+ACTS.hintsOpen = async () => {
+  openSheet(`<div id="hintsSheet">${hintsSheetHtml()}</div>`);
+  const seen = {...(store.meta.hintsSeen||{})}; visibleHints().forEach(x => seen[x.id] ||= todayISO());
+  await store.setMeta("hintsSeen", seen); render();
+};
+ACTS.hintOff = async d => { await store.setMeta("hintsOff", {...(store.meta.hintsOff||{}), [d.k]:todayISO()}); render(); refreshHintsSheet(); };
+ACTS.hintsReset = async () => { await store.setMeta("hintsOff", {}); render(); refreshHintsSheet(); };
+ACTS.allHints = () => { closeSheet(); nav("stats"); };
 /* Schlupf eintragen von der Übersicht: bei mehreren laufenden Gelegen erst eins wählen */
 ACTS.hatchPick = () => {
   const run = all("clutches").filter(c=>!clutchSum(c).done).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
@@ -1838,12 +1863,12 @@ function stageSegments(ind){
        sofern keine genaue Uhrzeit angegeben ist. Abgeschlossene Stadien: Differenz der Daten. */
     const inclusive = (open || p.k==="falter") && !p.exact;
     const days = inclusive ? dayNo(to) - dayNo(p.t) + 1 : Math.max(0,(to-p.t)/864e5);
-    return {k:p.k, from:p.t, to, days, open, inclusive, exact:p.exact, est:p.est || !!nx?.est}; });
+    return {k:p.k, from:p.t, to, days, open, cut: !nx && !!endT, inclusive, exact:p.exact, est:p.est || !!nx?.est}; });
 }
 function speciesStageDays(spId, k, exceptId){
   const v = [];
   for(const ind of all("individuals")){ if(ind.id===exceptId || speciesOfInd(ind)?.id!==spId) continue;
-    for(const sg of stageSegments(ind)) if(sg.k===k && !sg.open && !sg.est) v.push(sg.days); }
+    for(const sg of stageSegments(ind)) if(sg.k===k && !sg.open && !sg.cut && !sg.est) v.push(sg.days); }
   return v;
 }
 function animalStats(i){
