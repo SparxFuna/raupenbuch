@@ -240,6 +240,11 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 .linkbtn{appearance:none;border:0;background:none;padding:0;font:inherit;color:var(--accent);text-align:left;cursor:pointer;font-weight:600}
 .glyph-egg{width:40px;height:40px;border-radius:50%;background:var(--cs);color:var(--c);display:grid;place-items:center;flex:none}
 .glyph-egg svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+.glyph-egg svg{stroke-linecap:round;stroke-linejoin:round}
+.kindpick{display:flex;gap:8px;flex-wrap:wrap}
+.kindpick button{appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;font:inherit;font-size:12px;cursor:pointer;min-width:72px}
+.kindpick button svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.kindpick button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .bar{display:grid;grid-template-columns:minmax(0,1.3fr) 2fr 28px;gap:8px;align-items:center;font-size:13px}
 .bar .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bar .track2{height:12px;background:var(--sunk);border-radius:3px;overflow:hidden;display:flex}
@@ -490,7 +495,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.24.0";
+const APP_VERSION = "5.25.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -562,6 +567,7 @@ const I18N_EN = {
   "Boxen":"Boxes","Boxen & Behälter":"Boxes & containers","Wie viele Tiere wo sind, umsetzen, abgeben":"How many animals are where, move, give away","Wie viele Tiere in welcher Box sind. Tippe eine Box an, um Tiere umzusetzen oder abzugeben.":"How many animals are in which box. Tap a box to move animals or give them away.","+ Box":"+ Box","Abgeben":"Give away","in Boxen":"in boxes","Box belegt":"box in use","Boxen belegt":"boxes in use","ohne Box":"no box","Mit einem Tipp in Boxen je Schlupftag einsortieren – du kannst vorher für jeden Tag die Box wählen.":"Sort them into one box per hatch day with one tap – you can pick the box for each day first.","Nach Schlupftag einsortieren":"Sort by hatch day","Leer":"Empty","leer":"empty","Box":"Box","Tiere drin":"animals inside","Tier drin":"animal inside","nicht mehr drin":"no longer inside","Tiere hierher":"Move animals here","Die Box ist leer.":"The box is empty.","Box bearbeiten":"Edit box","Ohne Zuchtansatz":"No brood","Diese Box existiert nicht mehr.":"This box no longer exists.","Noch keine Tiere in Boxen.":"No animals in boxes yet.","Einsortieren":"Sort in","Tiere abgeben":"Give away animals","Z. B. verkauft oder gestorben. Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten.":"E.g. sold or died. The animals no longer count in the box afterwards, but they are kept with their history.","An wen? (optional)":"To whom? (optional)","z. B. Name oder Börse":"e.g. name or fair","Notiz (optional)":"Note (optional)","z. B. Preis":"e.g. price","Eintragen":"Record","Verkauft":"Sold","Verschenkt":"Given away for free","Getauscht":"Swapped","verkauft":"sold","verschenkt":"given away","getauscht":"swapped","gestorben":"died","Wie?":"How?","Eier abgeben":"Give away eggs","Abgabe ändern":"Edit entry","Eier abgegeben":"Eggs given away","Diese leere Box löschen?":"Delete this empty box?","Box gelöscht":"Box deleted","Alle Boxen":"All boxes","Nach Schlupftag":"By hatch day",
   "Eingefroren":"Frozen","eingefroren":"frozen","Entfernen":"Remove","Tiere entfernen":"Remove animals","Eier entfernen":"Remove eggs","Entfernt":"Removed","entfernt":"removed","Eier entfernt":"Eggs removed","Eintrag ändern":"Edit entry","drin":"inside","Nicht mehr da":"No longer here","Verkauft, eingefroren, gestorben … Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten. Eier entfernst du beim jeweiligen Gelege.":"Sold, frozen, died … The animals no longer count in the box afterwards, but they are kept with their history. Eggs are removed in the respective clutch.","Verkauft, verschenkt oder eingefroren – diese Eier zählen nicht in die Schlupfrate.":"Sold, given away or frozen – these eggs don't count towards the hatch rate.",
   "2 × 5 groß, 105 × 59 mm – von weiter weg scanbar":"2 × 5 large, 105 × 59 mm – scannable from further away","Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.":"Hold the QR code inside the frame … From further away: zoom instead of moving closer.",
+  "Becher / Dose":"Cup / tub","Netzkäfig":"Mesh cage","Glas":"Jar","Puppenkasten":"Pupation box",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -1648,7 +1654,7 @@ VIEWS.brood = r => {
     if(gb==="box"){
       const G = {}; alive.forEach(i => (G[boxKey(i)] ||= []).push(i));
       const dead = inds.filter(i=>!isAlive(i)), keys = Object.keys(G).sort(boxSort);
-      h += `<div class="list">${keys.map(k => `<button class="row" data-go="box:${k}"><span class="main"><span class="t">${k==="_none" ? "Ohne Box" : esc(S.containers[k].name)}</span><span class="s">${esc(stageSummary(G[k]))}</span></span><span class="end"><b style="font-size:22px">${G[k].length}</b>&nbsp;<span class="small muted">drin</span></span></button>`).join("")}</div>`;
+      h += `<div class="list">${keys.map(k => `<button class="row" data-go="box:${k}">${boxGlyph(k==="_none"?null:S.containers[k], G[k])}<span class="main"><span class="t">${k==="_none" ? "Ohne Box" : esc(S.containers[k].name)}</span><span class="s">${esc(stageSummary(G[k]))}</span></span><span class="end"><b style="font-size:22px">${G[k].length}</b>&nbsp;<span class="small muted">drin</span></span></button>`).join("")}</div>`;
       if(dead.length){ const op = r.open?.bdead;
         h += `<section class="st-dead"><button class="row" data-act="grpMore" data-k="bdead" ${op?"hidden":""}><span class="main"><span class="t" style="color:var(--accent)">${dead.length} nicht mehr da (tot, verkauft …) anzeigen</span></span></button>${op?`<div class="grp-h"><b>Nicht mehr da</b><span class="small muted">${dead.length}</span></div><div class="list">${dead.map(i=>indRow(i, indSubline(i))).join("")}</div>`:""}</section>`; }
     }
@@ -2030,7 +2036,7 @@ VIEWS.containers = () => {
   return h;
 };
 function boxRow(c, L){
-  return `<button class="row" data-go="box:${c?c.id:"_none"}"><span class="main"><span class="t">${c?esc(c.name):"Ohne Box"}</span>${L.length?`<span class="s">${esc(stageSummary(L))}</span>`:""}</span><span class="end"><b style="font-size:22px">${L.length}</b>&nbsp;<span class="small muted">drin</span></span></button>`;
+  return `<button class="row" data-go="box:${c?c.id:"_none"}">${boxGlyph(c, L)}<span class="main"><span class="t">${c?esc(c.name):"Ohne Box"}</span>${L.length?`<span class="s">${esc(stageSummary(L))}</span>`:""}</span><span class="end"><b style="font-size:22px">${L.length}</b>&nbsp;<span class="small muted">drin</span></span></button>`;
 }
 VIEWS.box = r => {
   const c = r.id==="_none" ? null : S.containers[r.id]; if(r.id!=="_none" && !c) return `<div class="empty">Diese Box existiert nicht mehr.</div>`;
@@ -2040,7 +2046,7 @@ VIEWS.box = r => {
   const out = {}; gone.forEach(i => { const st = statusOf(i), h = st==="abgegeben" ? (evOf(i.id).find(e=>e.type==="abgegeben")?.data?.how || "abgegeben") : st; out[h] = (out[h]||0) + 1; });
   const OUTL = {verkauft:"verkauft", verschenkt:"verschenkt", getauscht:"getauscht", eingefroren:"eingefroren", abgegeben:"abgegeben", tot:"gestorben", freigelassen:"freigelassen", praepariert:"präpariert"};
   const loc = c && S.locations[c.locationId];
-  let h = `<div class="pagehead"><span class="muted small">Box</span><h1>${c?esc(c.name):"Ohne Box"}</h1>${loc?`<div class="meta"><span class="pill">${esc(loc.name)}</span></div>`:""}</div>`;
+  let h = `<div class="pagehead"><span class="muted small">${c?esc(BOXK[boxKind(c)].l):"Box"}</span><div style="display:flex;align-items:center;gap:12px">${boxGlyph(c, L)}<h1 style="margin:0">${c?esc(c.name):"Ohne Box"}</h1></div>${loc?`<div class="meta"><span class="pill">${esc(loc.name)}</span></div>`:""}</div>`;
   h += `<div class="stats"><div class="stat"><b>${L.length}</b><span>${L.length===1?"Tier drin":"Tiere drin"}</span></div>${gone.length?`<div class="stat"><b>${gone.length}</b><span>nicht mehr drin</span><span class="small">${esc(Object.entries(out).map(([k,n])=>`${n} ${OUTL[k]||k}`).join(", "))}</span></div>`:""}</div>`;
   if(L.length) h += `<div style="display:flex;flex-wrap:wrap;gap:6px">${stageChips(L)}</div>`;
   h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}</div>`;
@@ -2360,6 +2366,21 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
     closeSheet(); toast(targets.length>1?`${targets.length} Einträge gespeichert`:"Gespeichert");
   });
   if(editing) wireConfirm(root,"#del", async () => { await store.del("events",ev.id); closeSheet(); toast("Eintrag gelöscht"); });
+}
+/* Box-Arten mit Icon; ohne Angabe wird aus dem Namen geraten */
+const BOXK = {
+  box:{l:"Box", svg:'<path d="M2.8 5.2h18.4v3.3H2.8z"/><path d="M4 8.5h16v10.8a1.4 1.4 0 0 1-1.4 1.4H5.4A1.4 1.4 0 0 1 4 19.3z"/><path d="M9.5 12.3h5"/>'},
+  becher:{l:"Becher / Dose", svg:'<path d="M4 4h16v2.6H4z"/><path d="M5.3 6.6h13.4l-1.5 12.7a1.4 1.4 0 0 1-1.4 1.2H8.2a1.4 1.4 0 0 1-1.4-1.2z"/>'},
+  kaefig:{l:"Netzkäfig", svg:'<rect x="4" y="3.5" width="16" height="17" rx="1.6"/><path d="M4 9.2h16M4 14.8h16M9.3 3.5v17M14.7 3.5v17"/>'},
+  glas:{l:"Glas", svg:'<path d="M8 3.5h8v2.6l2.2 2.6v10.8a1.5 1.5 0 0 1-1.5 1.5H7.3a1.5 1.5 0 0 1-1.5-1.5V8.7L8 6.1z"/><path d="M8 6.1h8"/>'},
+  puppe:{l:"Puppenkasten", svg:'<path d="M3.5 9h17v10.5a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1z"/><path d="M3.5 9 6 4.5h12L20.5 9"/><path d="M7 15.5c1.5-1.4 3-1.4 4.5 0s3 1.4 4.5 0"/>'}
+};
+const boxKind = c => c && BOXK[c.kind] ? c.kind : !c ? "box" : /netz|käfig|kaefig|gaze/i.test(c.name) ? "kaefig" : /becher|dose|cup/i.test(c.name) ? "becher" : /glas/i.test(c.name) ? "glas" : /pupp|torf|erde/i.test(c.name) ? "puppe" : "box";
+function boxGlyph(c, L){ // Farbe nach dem häufigsten Stadium darin
+  const n = {}; (L||[]).forEach(i => { const g = STG(currentStage(i)); n[g] = (n[g]||0)+1; });
+  const g = Object.entries(n).sort((a,b)=>b[1]-a[1])[0]?.[0] || "neutral";
+  const svg = c ? BOXK[boxKind(c)].svg : `<g stroke-dasharray="2.4 2.2">${BOXK.box.svg}</g>`;
+  return `<span class="glyph-egg st-${g}"><svg viewBox="0 0 24 24" aria-hidden="true">${svg}</svg></span>`;
 }
 /* Tiere aus einer Box auswählen: Box, optional Schlupftag, Anzahl → automatisch angekreuzt (für Umsetzen und Abgeben) */
 const boxKey = i => i.containerId && S.containers[i.containerId] ? i.containerId : "_none";
@@ -3879,11 +3900,16 @@ ACTS.editSource = d => {
 ACTS.editContainer = d => {
   const c = d.id && S.containers[d.id];
   const n = c ? all("individuals").filter(i=>i.containerId===c.id) : [];
-  const root = openSheet(`<h2>${c?"Behälter bearbeiten":"Neuer Behälter"}</h2>${fld.text("cName","Name",c?.name||"","z. B. Box 2, Becher 7, Netzkäfig")}${fld.sel("cLoc","Standort",[...locOpts()],c?.locationId||"")}
+  const root = openSheet(`<h2>${c?"Behälter bearbeiten":"Neuer Behälter"}</h2>${fld.text("cName","Name",c?.name||"","z. B. Box 2, Becher 7, Netzkäfig")}
+    <div class="f"><span class="lab">Art</span><div class="kindpick" id="cKind">${Object.entries(BOXK).map(([k,x])=>`<button type="button" data-k="${k}" aria-pressed="${k===boxKind(c)}"><svg viewBox="0 0 24 24" aria-hidden="true">${x.svg}</svg>${esc(x.l)}</button>`).join("")}</div></div>
+    ${fld.sel("cLoc","Standort",[...locOpts()],c?.locationId||"")}
     ${c?`<p class="small muted" style="margin:0">${n.length} Tier(e): ${n.map(i=>esc(i.name)).join(", ")||"–"}</p>`:""}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${c?`<button class="btn" id="ev">Ereignis für alle darin</button><button class="btn" id="lb">Etikett</button>${!aliveIn(c.id)?`<button class="btn danger" id="del">Löschen</button>`:""}`:""}</div>
     ${c && !aliveIn(c.id)?confirmBlock("Diese leere Box löschen?","Löschen"):""}`);
-  root.querySelector("#ok").onclick = async () => { const nm=val(root,"cName"); if(!nm){toast("Bitte Namen eingeben");return;} await store.put("containers",{...(c||{}), name:nm, locationId:val(root,"cLoc")||null}); closeSheet(); };
+  let kind = c?.kind || null;
+  root.querySelectorAll("#cKind button").forEach(b => b.addEventListener("click", () => { kind = b.dataset.k; root.querySelectorAll("#cKind button").forEach(x => x.setAttribute("aria-pressed", x===b)); }));
+  root.querySelector("#cName").addEventListener("input", () => { if(kind) return; const g = boxKind({name:val(root,"cName")}); root.querySelectorAll("#cKind button").forEach(x => x.setAttribute("aria-pressed", x.dataset.k===g)); });
+  root.querySelector("#ok").onclick = async () => { const nm=val(root,"cName"); if(!nm){toast("Bitte Namen eingeben");return;} await store.put("containers",{...(c||{}), name:nm, kind: kind || boxKind({name:nm}), locationId:val(root,"cLoc")||null}); closeSheet(); };
   if(c){ root.querySelector("#ev").onclick = () => eventSheet({chooseInds:true, containerId:c.id}); root.querySelector("#lb").onclick = () => labelSheet({conts:[c.id]});
     if(!aliveIn(c.id)) wireConfirm(root, "#del", async () => { for(const i of all("individuals").filter(x=>x.containerId===c.id)) await store.put("individuals", {...i, containerId:null}); await store.del("containers", c.id); closeSheet(); if(cur().v==="box") back(); toast("Box gelöscht"); }); }
 };
