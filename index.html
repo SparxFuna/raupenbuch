@@ -299,6 +299,8 @@ table.t td:first-child{font-family:var(--f-body)}
 /* PWA-Ergänzungen */
 .scanbox{position:relative;border-radius:var(--r);overflow:hidden;background:#000;aspect-ratio:3/4;max-height:58vh}
 .scanbox video{width:100%;height:100%;object-fit:cover;display:block}
+.scanbox .ring{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border:2px solid #fff;border-radius:50%;pointer-events:none;animation:ring .9s ease-out forwards}
+@keyframes ring{from{transform:scale(1.4);opacity:1}to{transform:scale(1);opacity:0}}
 .scanbox .aim{position:absolute;inset:18%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 999px rgba(0,0,0,.25)}
 .backup{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .backup.due{border-color:var(--warn);background:var(--warn-soft)}
@@ -495,7 +497,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.25.0";
+const APP_VERSION = "5.26.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -568,6 +570,7 @@ const I18N_EN = {
   "Eingefroren":"Frozen","eingefroren":"frozen","Entfernen":"Remove","Tiere entfernen":"Remove animals","Eier entfernen":"Remove eggs","Entfernt":"Removed","entfernt":"removed","Eier entfernt":"Eggs removed","Eintrag ändern":"Edit entry","drin":"inside","Nicht mehr da":"No longer here","Verkauft, eingefroren, gestorben … Die Tiere zählen danach nicht mehr in der Box mit, bleiben aber mit ihrer Geschichte erhalten. Eier entfernst du beim jeweiligen Gelege.":"Sold, frozen, died … The animals no longer count in the box afterwards, but they are kept with their history. Eggs are removed in the respective clutch.","Verkauft, verschenkt oder eingefroren – diese Eier zählen nicht in die Schlupfrate.":"Sold, given away or frozen – these eggs don't count towards the hatch rate.",
   "2 × 5 groß, 105 × 59 mm – von weiter weg scanbar":"2 × 5 large, 105 × 59 mm – scannable from further away","Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.":"Hold the QR code inside the frame … From further away: zoom instead of moving closer.",
   "Becher / Dose":"Cup / tub","Netzkäfig":"Mesh cage","Glas":"Jar","Puppenkasten":"Pupation box",
+  "Schärfe":"Focus","(nach links = nah)":"(left = near)","Auto":"Auto","Andere Kamera":"Other camera","Foto aufnehmen – stellt zuverlässiger scharf":"Take a photo – focuses more reliably","Halte den QR-Code in den Rahmen. Unscharf? Aufs Bild tippen, Kamera wechseln oder ein Foto aufnehmen.":"Hold the QR code inside the frame. Blurry? Tap the image, switch camera or take a photo.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -4011,9 +4014,11 @@ ACTS.scan = () => {
   const root = openSheet(`<h2>Etikett scannen</h2>
     ${canLive?`<div class="scanbox" id="sbox" hidden><video id="sv" playsinline muted></video><div class="aim"></div></div>
     <div class="f" id="szW" hidden><label for="sz">Zoom</label><input type="range" id="sz" min="1" max="1" step="0.1" value="1"></div>
+    <div class="f" id="sfW" hidden><label for="sfd">Schärfe <span class="small muted">(nach links = nah)</span></label><div style="display:flex;gap:8px;align-items:center"><input type="range" id="sfd" style="flex:1"><button type="button" class="btn" id="sfa" style="min-height:0;padding:6px 12px">Auto</button></div></div>
+    <div class="btns" id="scamW" hidden style="margin:0"><button type="button" class="btn" id="scam">Andere Kamera</button></div>
     <button class="btn primary block" id="live">Kamera starten</button>`:""}
     <div id="sst" class="small muted">${canLive?"Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":""}</div>
-    <label class="btn block filebtn">Stattdessen Foto vom Etikett<input type="file" id="sf" accept="image/*" capture="environment" class="vh"></label>
+    <label class="btn block filebtn">Foto aufnehmen – stellt zuverlässiger scharf<input type="file" id="sf" accept="image/*" capture="environment" class="vh"></label>
     ${fld.text("sCode","Oder Code eintippen","","RB:i:…")}<div class="btns"><button class="btn" id="go">Öffnen</button></div>`);
   const st = root.querySelector("#sst");
   let stream = null, timer = null, busy = false, det = null, cnv = null, pass = 0;
@@ -4044,20 +4049,52 @@ ACTS.scan = () => {
     timer = setTimeout(tick, 120);
   }
   const lb = root.querySelector("#live");
+  let trk = null, cap = {}, cams = [], camIx = -1, refocus = null;
+  const apply = c => trk ? trk.applyConstraints({advanced:[c]}).catch(()=>{}) : Promise.resolve();
+  async function start(deviceId){
+    if(stream){ stream.getTracks().forEach(t=>t.stop()); stream = null; }
+    clearTimeout(timer);
+    st.textContent = "Starte Kamera …";
+    const base = deviceId ? {deviceId:{exact:deviceId}} : {facingMode:{ideal:"environment"}};
+    try { stream = await navigator.mediaDevices.getUserMedia({video:{...base, width:{ideal:1920}, height:{ideal:1440}}, audio:false}); }
+    catch(e){ if(e && e.name==="NotAllowedError") throw e; stream = await navigator.mediaDevices.getUserMedia({video:base, audio:false}); }
+    const v = root.querySelector("#sv"); v.srcObject = stream; await v.play();
+    root.querySelector("#sbox").hidden = false; if(lb) lb.hidden = true;
+    trk = stream.getVideoTracks()[0]; cap = trk.getCapabilities ? trk.getCapabilities() : {};
+    const fm = cap.focusMode || [];
+    if(fm.includes("continuous")) apply({focusMode:"continuous"});
+    const zw = root.querySelector("#szW"), z = root.querySelector("#sz");
+    if(cap.zoom && cap.zoom.max > 1){ z.min = cap.zoom.min || 1; z.max = Math.min(cap.zoom.max, 8); z.step = cap.zoom.step || 0.1; z.value = trk.getSettings?.().zoom || z.min; zw.hidden = false; z.oninput = () => apply({zoom:+z.value}); } else zw.hidden = true;
+    // manuelle Schärfe, wenn das Handy sie im Browser erlaubt
+    const fw = root.querySelector("#sfW"), fd = root.querySelector("#sfd");
+    if(cap.focusDistance && fm.includes("manual")){ fd.min = cap.focusDistance.min; fd.max = cap.focusDistance.max; fd.step = cap.focusDistance.step || (cap.focusDistance.max-cap.focusDistance.min)/100; fd.value = trk.getSettings?.().focusDistance ?? cap.focusDistance.min; fw.hidden = false;
+      fd.oninput = () => apply({focusMode:"manual", focusDistance:+fd.value});
+      root.querySelector("#sfa").onclick = () => apply({focusMode: fm.includes("continuous") ? "continuous" : "single-shot"}); } else fw.hidden = true;
+    if(!cams.length){ try { const all_ = (await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"); const back = all_.filter(d=>/back|rück|environment|rear/i.test(d.label)); cams = back.length > 1 ? back : all_; } catch(e){} }
+    camIx = Math.max(0, cams.findIndex(d => d.deviceId === trk.getSettings?.().deviceId));
+    root.querySelector("#scamW").hidden = cams.length < 2;
+    st.textContent = "Halte den QR-Code in den Rahmen. Unscharf? Aufs Bild tippen, Kamera wechseln oder ein Foto aufnehmen.";
+    if("BarcodeDetector" in window && !det){ try { const f = await BarcodeDetector.getSupportedFormats(); if(f.includes("qr_code")) det = new BarcodeDetector({formats:["qr_code"]}); } catch(e){} }
+    tick();
+  }
+  // Antippen = an dieser Stelle scharf stellen
+  root.querySelector("#sbox")?.addEventListener("click", e => {
+    if(!trk) return; const b = e.currentTarget.getBoundingClientRect(), x = (e.clientX-b.left)/b.width, y = (e.clientY-b.top)/b.height;
+    const r = document.createElement("i"); r.className = "ring"; r.style.left = (x*100)+"%"; r.style.top = (y*100)+"%"; e.currentTarget.appendChild(r); setTimeout(()=>r.remove(), 900);
+    const fm = cap.focusMode || [];
+    apply({pointsOfInterest:[{x, y}]}).then(() => {
+      clearTimeout(refocus);
+      if(fm.includes("single-shot")){ apply({focusMode:"single-shot"}); if(fm.includes("continuous")) refocus = setTimeout(() => apply({focusMode:"continuous"}), 3000); }
+      else if(fm.includes("continuous") && fm.includes("manual")) apply({focusMode:"manual"}).then(() => apply({focusMode:"continuous"}));
+    });
+  });
+  root.querySelector("#scam")?.addEventListener("click", async () => {
+    if(cams.length < 2) return; camIx = (camIx + 1) % cams.length;
+    try { await start(cams[camIx].deviceId); } catch(e){ st.textContent = "Kamera nicht verfügbar: " + (e.message||e.name||e); }
+  });
   if(lb) lb.onclick = async () => {
-    try {
-      st.textContent = "Starte Kamera …";
-      stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}, width:{ideal:1920}, height:{ideal:1440}}, audio:false});
-      const v = root.querySelector("#sv"); v.srcObject = stream; await v.play();
-      const trk = stream.getVideoTracks()[0], cap = trk.getCapabilities ? trk.getCapabilities() : {};
-      if(cap.focusMode && cap.focusMode.includes("continuous")) trk.applyConstraints({advanced:[{focusMode:"continuous"}]}).catch(()=>{});
-      if(cap.zoom && cap.zoom.max > 1){ const z = root.querySelector("#sz"); z.min = cap.zoom.min || 1; z.max = Math.min(cap.zoom.max, 8); z.step = cap.zoom.step || 0.1; z.value = z.min; root.querySelector("#szW").hidden = false;
-        z.oninput = () => trk.applyConstraints({advanced:[{zoom:+z.value}]}).catch(()=>{}); }
-      root.querySelector("#sbox").hidden = false; lb.hidden = true;
-      st.textContent = "Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.";
-      if("BarcodeDetector" in window){ try { const f = await BarcodeDetector.getSupportedFormats(); if(f.includes("qr_code")) det = new BarcodeDetector({formats:["qr_code"]}); } catch(e){} }
-      tick();
-    } catch(e){
+    try { await start(null); }
+    catch(e){
       stop();
       st.textContent = e && e.name==="NotAllowedError" ? "Kamera nicht erlaubt. Erlaube sie in den Website-Einstellungen oder nimm ein Foto." : "Kamera nicht verfügbar: " + (e.message||e.name||e);
     }
