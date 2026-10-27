@@ -497,7 +497,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.26.0";
+const APP_VERSION = "5.27.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -571,6 +571,7 @@ const I18N_EN = {
   "2 × 5 groß, 105 × 59 mm – von weiter weg scanbar":"2 × 5 large, 105 × 59 mm – scannable from further away","Halte den QR-Code in den Rahmen … Von weiter weg: zoomen statt näher ran.":"Hold the QR code inside the frame … From further away: zoom instead of moving closer.",
   "Becher / Dose":"Cup / tub","Netzkäfig":"Mesh cage","Glas":"Jar","Puppenkasten":"Pupation box",
   "Schärfe":"Focus","(nach links = nah)":"(left = near)","Auto":"Auto","Andere Kamera":"Other camera","Foto aufnehmen – stellt zuverlässiger scharf":"Take a photo – focuses more reliably","Halte den QR-Code in den Rahmen. Unscharf? Aufs Bild tippen, Kamera wechseln oder ein Foto aufnehmen.":"Hold the QR code inside the frame. Blurry? Tap the image, switch camera or take a photo.",
+  "korrigieren":"correct","Anzahl korrigieren":"Correct count","Eier-Anzahl korrigieren":"Correct egg count","Wie viele sind wirklich drin?":"How many are really inside?","Zuchtansatz der neuen Tiere":"Brood of the new animals","Keine Änderung.":"No change.","Wie viele Eier waren es insgesamt?":"How many eggs were there in total?","Auf Foto zählen":"Count on photo","Bitte einen Zuchtansatz wählen":"Please choose a brood",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -790,6 +791,10 @@ const I18N_RX = [
   [/^geschlüpft (\d\d\.\d\d\.)(?: – (\d\d\.\d\d\.))?$/, (m,a,b)=>`hatched ${a}${b?` – ${b}`:""}`], [/^(\d+) (Eier|Ei) (verkauft|verschenkt|getauscht|eingefroren|abgegeben)( an .+)?$/, (m,n,e,h,t)=>`${n} ${e==="Ei"?"egg":"eggs"} ${({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",eingefroren:"frozen",abgegeben:"given away"})[h]}${t?" to"+t.slice(3):""}`],
   [/^(Verkauft|Verschenkt|Getauscht) an (.+)$/, (m,a,b)=>`${({Verkauft:"Sold",Verschenkt:"Given away",Getauscht:"Swapped"})[a]} to ${b}`], [/^Davon abgegeben: (\d+) \(unter „Abgegeben“ änderbar\)$/, "Of these given away: $1 (editable under “Given away”)"],
   [/^(\d+) Tiere in (\d+) (Box|Boxen)(?: · (\d+) ohne Box)?$/, (m,a,b,c,d)=>`${a} animals in ${b} ${c==="Box"?"box":"boxes"}${d?` · ${d} without a box`:""}`], [/^(\d+) leere (Box|Boxen) anzeigen$/, (m,n,b)=>`Show ${n} empty ${b==="Box"?"box":"boxes"}`], [/^(\d+) nicht mehr da \(tot, verkauft …\) anzeigen$/, "Show $1 no longer here (dead, sold …)"], [/^Davon entfernt: (\d+) \(unter „Entfernt“ änderbar\)$/, "Of these removed: $1 (editable under “Removed”)"],
+  [/^(.+): bisher (\d+) (Tiere?)\.$/, (m,b,n,t)=>`${b==="Ohne Box"?"No box":b}: so far ${n} ${t==="Tier"?"animal":"animals"}.`], [/^Jetzt (\d+) (Tiere?) in (.+)$/, (m,n,t,b)=>`Now ${n} ${t==="Tier"?"animal":"animals"} in ${b==="ohne Box"?"no box":b}`], [/^Mindestens (\d+)$/, "At least $1"],
+  [/^(\d+) (Tier wird|Tiere werden) neu angelegt(?: als (.+?))?(?:, geschlüpft (.+\.)|\.)$/, (m,n,w,st,d)=>`${n} new ${n==="1"?"animal is":"animals are"} created${st?` as ${st}`:""}${d?`, hatched ${d}`:"."}`],
+  [/^(\d+) (Tier wird|Tiere werden) gelöscht – die zuletzt angelegten ohne eigene Einträge \((.+)\)\. Sie zählen nicht als gestorben\.$/, (m,n,w,l)=>`${n} ${n==="1"?"animal is":"animals are"} deleted – the most recently added ones without own entries (${l}). They don't count as dead.`],
+  [/^(?:Mindestens (\d+) – so viele sind schon geschlüpft, ausgefallen oder entfernt\. )?Die Zahl der noch liegenden Eier ergibt sich daraus\.$/, (m,n)=>`${n?`At least ${n} – that many have already hatched, failed or been removed. `:""}The number of eggs still lying follows from this.`],
   [/^(\d+) umgesetzt( → (.+))?$/, (m,n,_,b)=>`${n} moved${b?` → ${b}`:""}`], [/^ohne Box: (\d+)$/, "no box: $1"], [/^ohne Box \((\d+)\)$/, "no box ($1)"],
   [/^Stammt aus (\d+) Gelegen$/, "Comes from $1 clutches"],
   [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`],
@@ -2050,9 +2055,9 @@ VIEWS.box = r => {
   const OUTL = {verkauft:"verkauft", verschenkt:"verschenkt", getauscht:"getauscht", eingefroren:"eingefroren", abgegeben:"abgegeben", tot:"gestorben", freigelassen:"freigelassen", praepariert:"präpariert"};
   const loc = c && S.locations[c.locationId];
   let h = `<div class="pagehead"><span class="muted small">${c?esc(BOXK[boxKind(c)].l):"Box"}</span><div style="display:flex;align-items:center;gap:12px">${boxGlyph(c, L)}<h1 style="margin:0">${c?esc(c.name):"Ohne Box"}</h1></div>${loc?`<div class="meta"><span class="pill">${esc(loc.name)}</span></div>`:""}</div>`;
-  h += `<div class="stats"><div class="stat"><b>${L.length}</b><span>${L.length===1?"Tier drin":"Tiere drin"}</span></div>${gone.length?`<div class="stat"><b>${gone.length}</b><span>nicht mehr drin</span><span class="small">${esc(Object.entries(out).map(([k,n])=>`${n} ${OUTL[k]||k}`).join(", "))}</span></div>`:""}</div>`;
+  h += `<div class="stats"><button class="stat" style="text-align:left;font:inherit;color:inherit;cursor:pointer" data-act="boxCount" data-id="${key}"><b>${L.length}</b><span>${L.length===1?"Tier drin":"Tiere drin"}</span><span class="small" style="color:var(--accent)">korrigieren</span></button>${gone.length?`<div class="stat"><b>${gone.length}</b><span>nicht mehr drin</span><span class="small">${esc(Object.entries(out).map(([k,n])=>`${n} ${OUTL[k]||k}`).join(", "))}</span></div>`:""}</div>`;
   if(L.length) h += `<div style="display:flex;flex-wrap:wrap;gap:6px">${stageChips(L)}</div>`;
-  h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}</div>`;
+  h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}<button class="btn" data-act="boxCount" data-id="${key}">Anzahl korrigieren</button></div>`;
   const bs = [...new Set(L.map(i=>i.broodId))];
   for(const bid of bs){ const M = L.filter(i=>i.broodId===bid), open = r.open?.["x"+bid], show = open ? M : M.slice(0,30);
     h += `<section class="sec"><div class="sec-h"><h2>${esc(S.broods[bid]?.name||"Ohne Zuchtansatz")}</h2><span class="small muted">${M.length}</span></div><div class="list">${show.map(i=>indRow(i, indSubline(i))).join("")}${M.length>show.length?`<button class="row" data-act="grpMore" data-k="x${esc(bid)}"><span class="main"><span class="t" style="color:var(--accent)">${M.length-show.length} weitere anzeigen</span></span></button>`:""}</div></section>`; }
@@ -2061,6 +2066,60 @@ VIEWS.box = r => {
   return h;
 };
 ACTS.labelBox = d => labelSheet({conts:[d.id]});
+/* Verzählt? Anzahl in einer Box auf den richtigen Wert setzen.
+   Zu viele: die zuletzt angelegten Tiere ohne eigene Einträge werden gelöscht (nicht „gestorben“ – es gab sie nie).
+   Zu wenige: neue Tiere werden angelegt, mit Schlupftag und Stadium wie die meisten in der Box. */
+ACTS.boxCount = d => {
+  const key = d.id, c = key==="_none" ? null : S.containers[key];
+  const L = all("individuals").filter(i => isAlive(i) && boxKey(i)===key);
+  const most = arr => { const n = {}; arr.filter(Boolean).forEach(x => n[x] = (n[x]||0)+1); return Object.entries(n).sort((a,b)=>b[1]-a[1])[0]?.[0] || ""; };
+  const day = most(L.map(hatchDay)), stg = most(L.map(currentStage)), bdef = most(L.map(i=>i.broodId)) || all("broods").filter(b=>!b.archived).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||""))[0]?.id || "";
+  const extra = i => evOf(i.id).filter(e => !["schlupf_ei","umgesetzt","stadium"].includes(e.type)).length + photosOf("individual", i.id).length*5;
+  const victims = [...L].sort((a,b) => extra(a)-extra(b) || byName(b,a));
+  const root = openSheet(`<h2>Anzahl korrigieren</h2>
+    <p class="muted" style="margin:0">${c?esc(c.name):"Ohne Box"}: bisher ${L.length} ${L.length===1?"Tier":"Tiere"}.</p>
+    ${fld.num("bcN","Wie viele sind wirklich drin?",L.length,"1")}
+    <div id="bcAdd" hidden>${fld.sel("bcBr","Zuchtansatz der neuen Tiere",all("broods").filter(b=>!b.archived||b.id===bdef).sort((a,b)=>(b.startDate||"").localeCompare(a.startDate||"")).map(b=>[b.id,b.name]),bdef)}</div>
+    <div class="hint" id="bcH"></div>
+    <div class="btns"><button class="btn primary" id="ok">Übernehmen</button></div>`);
+  const upd = () => { const n = Math.max(0, Math.round(+val(root,"bcN")||0)), dlt = n - L.length;
+    root.querySelector("#bcAdd").hidden = dlt <= 0;
+    root.querySelector("#bcH").textContent = dlt < 0 ? `${-dlt} ${-dlt===1?"Tier wird":"Tiere werden"} gelöscht – die zuletzt angelegten ohne eigene Einträge (${victims.slice(0,-dlt).map(i=>i.name).join(", ")}). Sie zählen nicht als gestorben.`
+      : dlt > 0 ? `${dlt} ${dlt===1?"Tier wird":"Tiere werden"} neu angelegt${stg?` als ${stageLabel(stg)}`:""}${day?`, geschlüpft ${dShort(day)}`:"."}` : "Keine Änderung."; };
+  root.querySelector("#bcN").addEventListener("input", upd); upd();
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const n = Math.max(0, Math.round(+val(root,"bcN")||0)), dlt = n - L.length;
+    if(!dlt){ closeSheet(); return; }
+    if(dlt < 0){
+      for(const i of victims.slice(0,-dlt)){
+        for(const e of evOf(i.id)) await store.del("events", e.id);
+        for(const ph of photosOf("individual", i.id)){ await store.deletePhotoAsset(ph); await store.del("photos", ph.id); }
+        await store.del("individuals", i.id); }
+    } else {
+      const bid = val(root,"bcBr"); if(!bid || !S.broods[bid]){ toast("Bitte einen Zuchtansatz wählen"); return; }
+      for(const nm of nextAutoNames(S.broods[bid].speciesId, dlt)){
+        const iid = await store.put("individuals", {name:nm, broodId:bid, sex:"u", containerId:c ? c.id : null});
+        if(day) await store.put("events", {type:"schlupf_ei", individualId:iid, broodId:bid, ...makeTime("tag", day), data:{}, note:"bei Anzahl-Korrektur ergänzt"});
+        if(stg && currentStage(S.individuals[iid]) !== stg) await store.put("events", {type:"stadium", individualId:iid, broodId:bid, ...makeTime("tag", todayISO()), data:{to:stg}, note:"bei Anzahl-Korrektur ergänzt"});
+      }
+    }
+    closeSheet(); toast(`Jetzt ${n} ${n===1?"Tier":"Tiere"} in ${c?c.name:"ohne Box"}`);
+  });
+};
+/* Eier verzählt: Gesamtzahl direkt korrigieren */
+ACTS.clutchCount = d => {
+  const c = S.clutches[d.id]; if(!c) return; const s = clutchSum(c), min = s.hatched + s.lost + s.given;
+  const root = openSheet(`<h2>Eier-Anzahl korrigieren</h2>
+    ${fld.num("ccN","Wie viele Eier waren es insgesamt?",s.eggs ?? "","1")}
+    <div class="hint">${min?`Mindestens ${min} – so viele sind schon geschlüpft, ausgefallen oder entfernt. `:""}Die Zahl der noch liegenden Eier ergibt sich daraus.</div>
+    <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn" id="cnt">Auf Foto zählen</button></div>`);
+  root.querySelector("#cnt").onclick = () => ACTS.eggCount({id:c.id});
+  root.querySelector("#ok").addEventListener("click", async () => {
+    const v = val(root,"ccN"); const n = v==="" ? null : Math.max(0, Math.round(+v));
+    if(n != null && n < min){ toast(`Mindestens ${min}`); return; }
+    await store.put("clutches", {...S.clutches[c.id], eggs:n}); closeSheet(); toast(n==null ? "Gespeichert" : `Eier: ${n}`);
+  });
+};
 ACTS.boxEvent = d => eventSheet({chooseInds:true, containerId:d.id});
 /* Tiere ohne Box nach Schlupftag in Boxen verteilen; Vorschlag je Tag: Box, in der schon Tiere dieses Tages sind, sonst „Box TT.MM.“ */
 ACTS.autoBox = () => {
@@ -3480,13 +3539,13 @@ VIEWS.clutch = r => {
   let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(clutchName(c))}</h1>
     <div class="meta"><span class="pill">abgelegt ${esc(fmtTime(c))}</span>${c.collectedAt?`<span class="pill">gesammelt ${dShort(c.collectedAt)}</span>`:""}${ct?`<span class="pill">${esc(ct.name)}</span>`:""}<span class="pill ${s.done?"good":"warn"}">${s.done?"abgeschlossen":s.hatched?"schlüpft":"liegt"}</span></div>
     ${c.notes?`<p class="muted" style="margin:0">${esc(c.notes)}</p>`:""}</div>`;
-  h += `<div class="stats"><div class="stat"><b>${s.eggs ?? "?"}</b><span>Eier</span></div><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div>${dev!=null||s.done?`<div class="stat"><b>${dev ?? "–"}</b><span>Tage im Ei</span><span class="small">Ablage bis 1. Schlupf</span></div>`:`<div class="stat"><b>${clutchAge(c) ?? "–"}</b><span>Tage liegend</span></div>`}</div>`;
+  h += `<div class="stats"><button class="stat" style="text-align:left;font:inherit;color:inherit;cursor:pointer" data-act="clutchCount" data-id="${c.id}"><b>${s.eggs ?? "?"}</b><span>Eier</span><span class="small" style="color:var(--accent)">korrigieren</span></button><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div>${dev!=null||s.done?`<div class="stat"><b>${dev ?? "–"}</b><span>Tage im Ei</span><span class="small">Ablage bis 1. Schlupf</span></div>`:`<div class="stat"><b>${clutchAge(c) ?? "–"}</b><span>Tage liegend</span></div>`}</div>`;
   const ex = !s.hatched && !s.done ? clutchExpect(c) : null;
   if(ex) h += `<p class="small muted" style="margin:0">Schlupf erwartet um den ${dShort(ex.date)} (nach ${ex.days} Tagen, Median aus ${ex.n} ${ex.n===1?"Gelege":"Gelegen"} dieser Art).</p>`;
   h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["g","entfernt",s.given],["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
     ${c.hatchFirst?`<p class="small muted" style="margin:8px 0 0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
   const open = Math.max(0, s.hatched - clutchLarvae(c));
-  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle &amp; Zahlen</button><button class="btn" data-act="clutchGive" data-id="${c.id}" ${s.open===0?"disabled":""}>Eier entfernen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:""}</div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchCount" data-id="${c.id}">Eier-Anzahl korrigieren</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle &amp; Zahlen</button><button class="btn" data-act="clutchGive" data-id="${c.id}" ${s.open===0?"disabled":""}>Eier entfernen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:""}</div>`;
   const log = clutchLog(c);
   if(log.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf-Einträge</h2><span class="small muted">antippen zum Ändern</span></div><div class="list">${log.map(e=>`<button class="row" data-act="clutchLogEdit" data-id="${c.id}" data-k="${esc(e.id)}"><span class="main"><span class="t">${dDE(e.d)}</span><span class="s">${e.n} ${e.n===1?"Raupe":"Raupen"} geschlüpft</span></span><span class="end small muted">ändern</span></button>`).join("")}</div></section>`;
   const out = clutchOut(c);
