@@ -490,7 +490,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.22.0";
+const APP_VERSION = "5.23.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -750,7 +750,7 @@ const I18N_EN = {
   "Neue Herkunft":"New source","Herkunft bearbeiten":"Edit source","z. B. Kontakt, Ort, Nachweise":"e.g. contact, place, records",
   "Behälter bearbeiten":"Edit container","z. B. Box 2, Becher 7, Netzkäfig":"e.g. Box 2, Cup 7, net cage","Ereignis für alle darin":"Event for all inside",
   "Format (A4)":"Format (A4)","3 × 7 Etiketten, 70 × 42 mm":"3 × 7 labels, 70 × 42 mm","4 × 10 Etiketten, 52 × 30 mm":"4 × 10 labels, 52 × 30 mm","Keine Tiere.":"No animals.",
-  "Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.":"Print the PDF on sticky labels or plain paper (with cut lines). Scan the label later via the QR icon at the top.",
+  "Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Scannen geht mit der normalen Handykamera oder über das QR-Symbol oben in der App.":"Print the PDF on sticky labels or plain paper (with cut lines). Scan it with the normal phone camera or via the QR icon at the top of the app.",
   "PDF speichern":"Save PDF","Direkt drucken":"Print directly","Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.":"When printing choose “Margins: none” and “Scale: 100 %” so the labels fit.","Erstelle PDF …":"Creating PDF …",
   "Etikett scannen":"Scan label","Kamera starten":"Start camera","Halte den QR-Code in den Rahmen. Das Tier, Gelege oder der Behälter öffnet sich dann von selbst.":"Hold the QR code inside the frame. The animal, clutch or container then opens by itself.",
   "Halte den QR-Code in den Rahmen …":"Hold the QR code inside the frame …","Stattdessen Foto vom Etikett":"Photo of the label instead","Oder Code eintippen":"Or type the code","Starte Kamera …":"Starting camera …",
@@ -3903,10 +3903,10 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
     ${G.length?`<div class="f"><span class="lab">Gelege</span><div class="checks">${G.map(c=>`<label><input type="checkbox" data-k="g" value="${c.id}" ${preG.has(c.id)?"checked":""}> ${esc(clutchName(c))} <span class="small muted" style="margin-left:auto">${dShort(clutchDate(c))}</span></label>`).join("")}</div></div>`:""}
     ${C.length?`<div class="f"><span class="lab">Behälter</span><div class="checks">${C.map(c=>`<label><input type="checkbox" data-k="c" value="${c.id}" ${preC.has(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")}</div></div>`:""}
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="lQr" style="width:20px;height:20px;min-height:0"><span>Nur QR-Code, ohne Text</span></label>
-    <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Gescannt wird das Etikett später über das QR-Symbol oben.</div>
+    <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Scannen geht mit der normalen Handykamera oder über das QR-Symbol oben in der App.</div>
     <div class="btns"><button class="btn primary" id="ok">PDF speichern</button><button class="btn" id="pr">Direkt drucken</button></div><div id="lst" class="small muted"></div>
     <div class="hint">Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.</div>`);
-  const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:`RB:i:${x.value}`, ...labelText(S.individuals[x.value])} : x.dataset.k==="g" ? {code:`RB:g:${x.value}`, ...clutchLabelText(S.clutches[x.value])} : {code:`RB:c:${x.value}`, title:S.containers[x.value].name, l2:tr("Behälter"), l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
+  const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:codeUrl(`RB:i:${x.value}`), ...labelText(S.individuals[x.value])} : x.dataset.k==="g" ? {code:codeUrl(`RB:g:${x.value}`), ...clutchLabelText(S.clutches[x.value])} : {code:codeUrl(`RB:c:${x.value}`), title:S.containers[x.value].name, l2:tr("Behälter"), l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
   root.querySelector("#ok").onclick = async () => {
     const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
     const st = root.querySelector("#lst"); st.textContent = "Erstelle PDF …";
@@ -4006,7 +4006,7 @@ ACTS.scan = () => {
           const r = jsQR(ctx.getImageData(0,0,cnv.width,cnv.height).data, cnv.width, cnv.height, {inversionAttempts:"dontInvert"});
           if(r) code = r.data;
         }
-        if(code && /^RB:/.test(code)){ if(navigator.vibrate) navigator.vibrate(60); if(found(code)) { stop(); return; } }
+        if(code && /RB:[icg]:/.test(code)){ if(navigator.vibrate) navigator.vibrate(60); if(found(code)) { stop(); return; } }
       } finally { busy = false; }
     }
     timer = setTimeout(tick, 200);
@@ -4052,8 +4052,11 @@ async function decodeQr(file){
     return null;
   } finally { URL.revokeObjectURL(url); }
 }
+/* Etikett-Codes: alt „RB:c:ID“, neu als Link „…/raupenbuch/#RB:c:ID“ (öffnet die App auch aus der Kamera-App) */
+const codeUrl = code => new URL("./", location.href).href + "#" + code;
 function openCode(code){
-  const m = String(code||"").trim().match(/^RB:([icg]):(.+)$/); if(!m) return false;
+  let t = String(code||"").trim(); try { t = decodeURIComponent(t); } catch(e){}
+  const m = t.match(/RB:([icg]):([A-Za-z0-9_-]+)/); if(!m) return false;
   if(m[1]==="g" && S.clutches[m[2]]){ closeSheet(); nav("clutch",{id:m[2]}); return true; }
   if(m[1]==="i" && S.individuals[m[2]]){ closeSheet(); nav("animal",{id:m[2]}); return true; }
   if(m[1]==="c" && S.containers[m[2]]){ closeSheet(); nav("box",{id:m[2]}); return true; }
@@ -4127,7 +4130,14 @@ async function importBackup(o, replace, say=()=>{}){
 /* ---- Start ---- */
 ACTS.search = () => { nav("search"); setTimeout(()=>{ const g=$("#gq"); g&&g.focus(); }, 30); };
 render();
-store.init();
+store.init().then(openFromHash);
+/* Mit der Handykamera gescannt: die App wird mit #RB:… geöffnet */
+function openFromHash(){
+  if(!/RB:/.test(location.hash)) return;
+  const h = location.hash; history.replaceState(null, "", location.pathname + location.search);
+  if(!openCode(h)) toast("Kein Eintrag mit diesem Code");
+}
+window.addEventListener("hashchange", () => { if(store.ready()) openFromHash(); });
 
 /* Service Worker: offline-first, Update-Hinweis bei neuer Version */
 if("serviceWorker" in navigator && location.protocol !== "file:"){
