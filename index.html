@@ -73,7 +73,7 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 
 /* bottom nav */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);
-  display:grid;grid-template-columns:repeat(5,1fr);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
+  display:grid;grid-template-columns:repeat(4,1fr);padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px))}
 .tabs button{appearance:none;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11px;color:var(--muted);cursor:pointer;border-radius:8px}
 .tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
@@ -103,7 +103,7 @@ main{padding:14px var(--gut) calc(96px + env(safe-area-inset-bottom,0px));max-wi
 .empty b{color:var(--ink)}
 
 /* pills */
-.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;font-size:12px;font-family:var(--f-data);line-height:20px;white-space:nowrap;background:var(--sunk);color:var(--ink)}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:1px 9px;font-size:12px;font-family:var(--f-body);font-variant-numeric:tabular-nums;line-height:20px;white-space:nowrap;background:var(--sunk);color:var(--ink)}
 .pill.stage{background:var(--accent-soft);color:var(--accent)}
 .pill.falter{background:var(--ochre-soft);color:var(--ochre)}
 .pill.good{background:var(--good-soft);color:var(--good)}
@@ -368,6 +368,21 @@ button.pill.tag{cursor:pointer}
 .tabs button{border-radius:14px;padding:6px 0 5px}
 .tabs button[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
 .btn{border:0;background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.btn:not(.primary):not(.ghost):not(.danger){box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 16%,transparent),var(--shadow)}
+.now .btn:not(.primary):not(.ghost),.card .btn:not(.primary):not(.ghost),.sheet .btn:not(.primary):not(.ghost):not(.danger){background:var(--sunk)}
+.climline{appearance:none;border:0;background:none;padding:0;margin:-6px 0 2px;display:flex;align-items:center;gap:8px;font:inherit;font-size:13.5px;color:var(--muted);cursor:pointer;text-align:left;flex-wrap:wrap}
+.climline svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.climline b{color:var(--ink);font-weight:600}
+.hints{padding:4px 0}
+.hnt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-top:1px solid var(--line)}
+.hnt:first-child{border-top:0}
+.hnt .dot{width:9px;height:9px;border-radius:50%;background:var(--c);margin-top:6px;flex:none}
+.hnt p{margin:0;flex:1;font-size:14.5px;line-height:1.45} .hnt p small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.hnt .x{appearance:none;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:0 4px;cursor:pointer}
+.clhero{display:flex;flex-direction:column;gap:10px}
+.clhero .big{display:flex;align-items:baseline;gap:10px} .clhero .big b{font-family:var(--f-name);font-size:44px;line-height:1;color:var(--egg)} .clhero .big span{font-size:15px;font-weight:600}
+.clhero .facts{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px;color:var(--muted)} .clhero .facts b{color:var(--ink);font-weight:600}
+.clhero .cbar{height:12px;border-radius:6px;margin:0}
 .btn.primary{box-shadow:0 2px 10px color-mix(in srgb,var(--accent) 35%,transparent)}
 .btn.ghost{box-shadow:none;background:none}
 .btn .ic{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -497,7 +512,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.27.0";
+const APP_VERSION = "5.28.0";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -572,6 +587,7 @@ const I18N_EN = {
   "Becher / Dose":"Cup / tub","Netzkäfig":"Mesh cage","Glas":"Jar","Puppenkasten":"Pupation box",
   "Schärfe":"Focus","(nach links = nah)":"(left = near)","Auto":"Auto","Andere Kamera":"Other camera","Foto aufnehmen – stellt zuverlässiger scharf":"Take a photo – focuses more reliably","Halte den QR-Code in den Rahmen. Unscharf? Aufs Bild tippen, Kamera wechseln oder ein Foto aufnehmen.":"Hold the QR code inside the frame. Blurry? Tap the image, switch camera or take a photo.",
   "korrigieren":"correct","Anzahl korrigieren":"Correct count","Eier-Anzahl korrigieren":"Correct egg count","Wie viele sind wirklich drin?":"How many are really inside?","Zuchtansatz der neuen Tiere":"Brood of the new animals","Keine Änderung.":"No change.","Wie viele Eier waren es insgesamt?":"How many eggs were there in total?","Auf Foto zählen":"Count on photo","Bitte einen Zuchtansatz wählen":"Please choose a brood",
+  "Hinweise":"Hints","Alle Hinweise":"All hints","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -795,6 +811,7 @@ const I18N_RX = [
   [/^(\d+) (Tier wird|Tiere werden) neu angelegt(?: als (.+?))?(?:, geschlüpft (.+\.)|\.)$/, (m,n,w,st,d)=>`${n} new ${n==="1"?"animal is":"animals are"} created${st?` as ${st}`:""}${d?`, hatched ${d}`:"."}`],
   [/^(\d+) (Tier wird|Tiere werden) gelöscht – die zuletzt angelegten ohne eigene Einträge \((.+)\)\. Sie zählen nicht als gestorben\.$/, (m,n,w,l)=>`${n} ${n==="1"?"animal is":"animals are"} deleted – the most recently added ones without own entries (${l}). They don't count as dead.`],
   [/^(?:Mindestens (\d+) – so viele sind schon geschlüpft, ausgefallen oder entfernt\. )?Die Zahl der noch liegenden Eier ergibt sich daraus\.$/, (m,n)=>`${n?`At least ${n} – that many have already hatched, failed or been removed. `:""}The number of eggs still lying follows from this.`],
+  [/^vor (\d+) Std\.$/, "$1 h ago"], [/^vor (\d+) (Tag|Tagen)$/, (m,n)=>`${n} ${n==="1"?"day":"days"} ago`], [/^(\d+) × (.+)$/, (m,n,r)=>{ const t = tr(r); return t===r ? m : `${n} × ${t}`; }], [/^(.+) und (\d+) weitere$/, "$1 and $2 more"], [/^(Tagen|Tag)$/, (m,t)=>t==="Tag"?"day":"days"],
   [/^(\d+) umgesetzt( → (.+))?$/, (m,n,_,b)=>`${n} moved${b?` → ${b}`:""}`], [/^ohne Box: (\d+)$/, "no box: $1"], [/^ohne Box \((\d+)\)$/, "no box ($1)"],
   [/^Stammt aus (\d+) Gelegen$/, "Comes from $1 clutches"],
   [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`],
@@ -1251,9 +1268,9 @@ function back(){ if(R.stack.length>1) R.stack.pop(); render(); }
 let _rq = false;
 function scheduleRender(){ if(_rq) return; _rq = true; requestAnimationFrame(()=>{ _rq=false; render(); }); }
 
-const TABS = [["home","Übersicht","home"],["zucht","Zucht","brood"],["animals","Tiere","bug"],["climate","Klima","temp"],["more","Mehr","more"]];
+const TABS = [["home","Übersicht","home"],["zucht","Zucht","brood"],["animals","Tiere","bug"],["more","Mehr","more"]];
 const TAB_OF = {home:"home",zucht:"zucht",brood:"zucht",broods:"zucht",clutch:"zucht",clutches:"zucht",animals:"animals",animal:"animals",imagos:"more",imago:"more",compare:"more",
-  climate:"climate",location:"climate",more:"more",species:"more",sources:"more",containers:"zucht",box:"zucht",labels:"more",data:"more",stats:"more",search:"",scanresult:""};
+  climate:"more",location:"more",more:"more",species:"more",sources:"more",containers:"zucht",box:"zucht",labels:"more",data:"more",stats:"more",search:"",scanresult:""};
 
 function render(){
   const ae = document.activeElement; const focusId = ae && ae.id && $("#main").contains(ae) ? ae.id : null;
@@ -1268,7 +1285,7 @@ function render(){
     + `<button class="iconbtn" data-act="search" aria-label="Suchen">${svg("search")}</button>`
     + `<button class="iconbtn" data-act="scan" aria-label="QR-Etikett scannen">${svg("scan")}</button>`;
   const active = TAB_OF[r.v] ?? "";
-  $("#tabs").innerHTML = TABS.map(([v,l,i]) => `<button data-tab="${v}" ${active===v?'aria-current="page"':''}>${svg(i)}<span>${l}${v==="more"&&unresolved?` (${unresolved})`:''}</span></button>`).join("");
+  $("#tabs").innerHTML = TABS.map(([v,l,i]) => `<button data-tab="${v}" ${active===v?'aria-current="page"':''}>${svg(i)}<span>${l}</span></button>`).join("");
   if(!store.ready()){ $("#main").innerHTML = `<p class="muted">Lade dein Raupenbuch …</p>`; return; }
   if(!_migrated) setTimeout(()=>migrateImagos().catch(()=>{}),0);
   const fn = VIEWS[r.v] || VIEWS.home;
@@ -1369,7 +1386,7 @@ const IC2 = {
   larva:'<path d="M3.5 15.5c0-2.2 1.6-3.4 3.2-3.4s2.1 1.1 3.6 1.1 2.1-2.3 3.7-2.3 3.2 1.2 3.2 3.4"/><circle cx="19" cy="13" r="2"/><path d="M6 16v2.2M9.6 15v2.2M13.2 14.8v2.2"/>',
   burrow:'<path d="M3 15h18M6 18.5h12M9 21.5h6"/><path d="M12 3v8M8.8 8l3.2 3.2L15.2 8"/>',
   pupa:'<path d="M12 3c3.2 0 5 3.6 5 8.5S15 21 12 21s-5-4.6-5-9.5S8.8 3 12 3z"/><path d="M8 9.5h8M7.4 13h9.2M8.2 16.5h7.6"/>',
-  imago:IC.moth, egg:'<ellipse cx="12" cy="13" rx="6" ry="8"/>', unk:'<circle cx="12" cy="12" r="8"/><path d="M9.8 9.6a2.3 2.3 0 1 1 3.3 2.1c-.7.4-1.1.9-1.1 1.7M12 16.8v.2"/>',
+  imago:IC.moth, egg:'<ellipse cx="12" cy="8.6" rx="3.3" ry="4.1"/><ellipse cx="7.6" cy="15.6" rx="3.3" ry="4.1"/><ellipse cx="16.4" cy="15.6" rx="3.3" ry="4.1"/>', unk:'<circle cx="12" cy="12" r="8"/><path d="M9.8 9.6a2.3 2.3 0 1 1 3.3 2.1c-.7.4-1.1.9-1.1 1.7M12 16.8v.2"/>',
   dead:'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>', note:'<path d="M4 20h4.2L19.5 8.7l-4.2-4.2L4 15.8z"/>', moult:'<path d="M12 3.5l8 4-8 4-8-4z"/><path d="M4 12.5l8 4 8-4M4 17l8 4 8-4"/>',
   release:'<path d="M12 21V9M7 14l5-5 5 5"/><path d="M5 4h14"/>', pin:'<path d="M12 2.5v5M8 7.5h8l-1.2 6H9.2z"/><path d="M12 13.5v8"/>', more:IC.more, scale:'<path d="M5 20h14l-2.2-11H7.2z"/><circle cx="12" cy="5.8" r="2"/>'
 };
@@ -1425,7 +1442,10 @@ VIEWS.home = () => {
   const unresolved = openImagos();
   const broods = all("broods").filter(b=>!b.archived);
   const fcs = pupae.map(i=>[i,forecast(i)]).filter(([,f])=>f && !f.insufficient).sort((a,b)=>a[1].from-b[1].from);
-  const recent = all("events").sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,6);
+  // gleiche Einträge am selben Tag (z. B. 30 × „Umgesetzt → Box 20.10.“) zu einer Zeile bündeln
+  const recent = []; for(const e of all("events").sort((a,b)=>(b.t0||"").localeCompare(a.t0||"")).slice(0,300)){
+    const k = `${evTitle(e)}|${(e.t0||"").slice(0,10)}`, g = recent.find(x=>x.k===k);
+    if(g){ g.list.push(e); continue; } if(recent.length>=6) break; recent.push({k, e, list:[e]}); }
   let h = "";
   if(store.mode==="mem") h += `<div class="note warn">Der Gerätespeicher ist nicht verfügbar (privates Fenster?). Einträge gehen beim Schließen verloren.</div>`;
   if(!broods.length){
@@ -1437,7 +1457,7 @@ VIEWS.home = () => {
   const larvae = alive.filter(i=>STG(currentStage(i))==="larva");
   const moths = alive.filter(i=>currentStage(i)==="falter");
   const hr = new Date().getHours(), greet = hr<11 ? "Guten Morgen!" : hr<18 ? "Guten Tag!" : "Guten Abend!";
-  h += `<section class="hero"><h1>${greet}</h1>
+  h += `<section class="hero"><h1>${greet}</h1>${climLine()}
     <div class="kpis">
       <button class="kpi st-larva" data-act="kpi" data-k="raupe">${ic2("larva")}<b>${larvae.length}</b><span>Raupen</span></button>
       <button class="kpi st-pupa" data-act="kpi" data-k="puppe">${ic2("pupa")}<b>${pupae.length}</b><span>Puppen &amp; Vorpuppen</span></button>
@@ -1445,6 +1465,7 @@ VIEWS.home = () => {
       <button class="kpi st-dead" data-act="kpi" data-k="tot">${ic2("dead")}<b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></button>
     </div></section>`;
   if(unresolved.length) h += `<section class="uncertain"><b>${unresolved.length} Falter noch nicht zugeordnet</b><span class="small muted">Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.</span><div><button class="btn" data-go="imagos">Zuordnen</button></div></section>`;
+  h += hintsCard();
   h += `<section class="sec"><div class="sec-h"><h2>Jetzt dran</h2><span class="small muted">richtet sich nach deinen Stadien</span></div>`;
   const cards = [];
   const broodsOf = list => [...new Set(list.map(i=>i.broodId))].filter(id=>S.broods[id]);
@@ -1455,7 +1476,7 @@ VIEWS.home = () => {
     if(!e.length) return ""; const none = list.filter(i => !(i.containerId && S.containers[i.containerId])).length;
     return `<div class="small boxline">${e.map(([k,n])=>`<button class="linkbtn" data-go="box:${k}">${esc(S.containers[k].name)}: ${n}</button>`).join(" · ")}${none?` · <button class="linkbtn muted" data-go="box:_none">ohne Box: ${none}</button>`:""} · <button class="linkbtn" data-go="containers">Alle Boxen</button></div>`; };
   if(larvae.length) cards.push(`<div class="now st-larva"><div class="hd"><span class="ic">${ic2("larva")}</span><span><b>${larvae.length} ${larvae.length===1?"Raupe":"Raupen"}</b><span class="small muted">${esc(dist(larvae))} · ${esc(where(larvae))}</span></span></div>${boxLine(larvae)}
-    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" data-act="moveMany">Umsetzen</button><button class="btn" data-act="giveMany">Entfernen</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
+    <div class="btns"><button class="btn primary" data-act="moultMany">Häutung eintragen</button><button class="btn" ${toBrood(larvae)}>Zum Zuchtansatz</button></div></div>`);
   if(pupae.length) cards.push(`<div class="now st-pupa"><div class="hd"><span class="ic">${ic2("pupa")}</span><span><b>${pupae.length} ${pupae.length===1?"Puppe":"Puppen"}</b><span class="small muted">${esc(dist(pupae))} · ${esc(where(pupae))}</span></span></div>
     ${fcs.length ? `<div class="list">${fcs.slice(0,4).map(([i,f])=>forecastRow(i,f)).join("")}</div>${fcs.length>4?`<span class="small muted">${fcs.length-4} weitere im Zuchtansatz</span>`:""}` : `<span class="small muted">Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.</span>`}
     <div class="btns"><button class="btn primary" data-act="eclosion">Falterschlupf erfassen</button><button class="btn" ${toBrood(pupae)}>Zum Zuchtansatz</button></div></div>`);
@@ -1470,12 +1491,73 @@ VIEWS.home = () => {
   h += cards.length ? `<div style="display:flex;flex-direction:column;gap:12px">${cards.join("")}</div>` : `<div class="list"><div class="empty">Gerade nichts Aktives. Leg im Tab Zucht einen Zuchtansatz an oder füge Tiere hinzu.</div></div>`;
   h += `<div class="btns"><button class="btn" data-act="multiEvent">Ereignis für mehrere</button></div></section>`;
   h += backupCard();
-  h += `<section class="sec"><div class="sec-h"><h2>Zuletzt eingetragen</h2><button class="btn ghost link" data-go="stats">Auswertung</button></div><div class="list">${recent.length? recent.map(e=>{
-      const who = e.individualId? indName(e.individualId) : e.containerId? (S.containers[e.containerId]?.name||"Behälter") : (S.broods[e.broodId]?.name||"");
-      return `<button class="row" ${e.individualId?`data-go="animal:${e.individualId}"`:`data-act="editEvent" data-id="${e.id}"`}><span class="main"><span class="t">${esc(evTitle(e))}</span><span class="s">${esc(who)} · ${esc(fmtTime(e))}</span></span></button>`;
+  h += `<section class="sec"><div class="sec-h"><h2>Zuletzt eingetragen</h2><button class="btn ghost link" data-go="stats">Auswertung</button></div><div class="list">${recent.length? recent.map(({e, list})=>{
+      const nm = x => x.individualId? indName(x.individualId) : x.containerId? (S.containers[x.containerId]?.name||"Behälter") : (S.broods[x.broodId]?.name||"");
+      const who = list.length>1 ? `${list.slice(0,3).map(nm).join(", ")}${list.length>3?` und ${list.length-3} weitere`:""}` : nm(e);
+      const go = list.length>1 && e.type==="umgesetzt" && S.containers[e.data?.containerId] ? `data-go="box:${e.data.containerId}"` : e.individualId?`data-go="animal:${e.individualId}"`:`data-act="editEvent" data-id="${e.id}"`;
+      return `<button class="row" ${go}><span class="main"><span class="t">${list.length>1?`${list.length} × `:""}${esc(evTitle(e))}</span><span class="s">${esc(who)} · ${esc(fmtTime(e))}</span></span></button>`;
     }).join("") : `<div class="empty">Noch keine Ereignisse.</div>`}</div></section>`;
   return h;
 };
+/* Klima-Zeile auf der Übersicht: letzter Messwert je Standort (nur wenn es Messwerte gibt) */
+const agoTxt = t => { const h = (Date.now()-t)/36e5; return h < 1 ? "gerade eben" : h < 24 ? `vor ${Math.round(h)} Std.` : `vor ${Math.round(h/24)} ${Math.round(h/24)===1?"Tag":"Tagen"}`; };
+function climLine(){
+  const L = all("locations").map(l => { const m = measOf(l.id); return [l, m[m.length-1]]; }).filter(x => x[1]).sort((a,b)=>b[1].at.localeCompare(a[1].at)).slice(0,2);
+  if(!L.length) return "";
+  return L.map(([l,m]) => `<button class="climline" data-go="location:${l.id}">${svg("temp")}<span><b>${esc(l.name)}</b> ${m.temp!=null?`${fmtN(+m.temp,1)} °C`:""}${m.rh!=null?` · ${fmtN(+m.rh,0)} %`:""} · ${agoTxt(ms(m.at))}</span></button>`).join("");
+}
+/* ---- Hinweise: Muster aus den eigenen Einträgen. Nur mit genug Daten (n steht dabei), sonst nichts. ---- */
+function insights(){
+  const out = [], memo = {}, E_ = LANG==="en";
+  const ref = (spId, k) => memo[spId+"|"+k] ||= speciesStageDays(spId, k);
+  const alive = all("individuals").filter(isAlive), spN = sp => speciesShort(sp);
+  // 1) Schlupffenster der Puppen
+  const fc = alive.map(i=>[i,forecast(i)]).filter(([,f])=>f && !f.insufficient);
+  const inWin = fc.filter(([,f])=>f.state==="im"), soon = fc.filter(([,f])=>f.state==="vor").sort((a,b)=>a[1].from-b[1].from);
+  if(inWin.length) out.push({id:"ecl-now:"+inWin.map(x=>x[0].id).join(","), c:"imago", p:10, t:E_?`In the eclosion window now: ${inWin.slice(0,4).map(x=>x[0].name).join(", ")}${inWin.length>4?` and ${inWin.length-4} more`:""}. Keep an eye on them!`:`Jetzt im Schlupffenster: ${inWin.slice(0,4).map(x=>x[0].name).join(", ")}${inWin.length>4?` und ${inWin.length-4} weitere`:""}. Gut beobachten!`, n:E_?`from ${inWin[0][1].n} pupal periods`:`aus ${inWin[0][1].n} Puppenruhen`});
+  else if(soon.length) out.push({id:"ecl:"+dFromMs(soon[0][1].from), c:"pupa", p:6, t:E_?`Next moth expected from ${dShort(dFromMs(soon[0][1].from))}${soon.length>1?` (${soon.length} pupae)`:` (${soon[0][0].name})`}.`:`Nächster Falterschlupf voraussichtlich ab ${dShort(dFromMs(soon[0][1].from))}${soon.length>1?` (${soon.length} Puppen)`:` (${soon[0][0].name})`}.`, n:E_?`from ${soon[0][1].n} pupal periods`:`aus ${soon[0][1].n} Puppenruhen`});
+  // 2) Häutung fällig: je Box und Stadium
+  const G = {}; alive.forEach(i => { const k = currentStage(i); if(!/^L\d/.test(k)) return; (G[boxKey(i)+"|"+k] ||= []).push(i); });
+  for(const [key, L] of Object.entries(G)){ const [bx, k] = key.split("|"), sp = speciesOfInd(L[0]); if(!sp) continue;
+    const r = ref(sp.id, k); if(r.length < 3) continue;
+    const cur = median(L.map(i => stageSegments(i).find(sg=>sg.open && sg.k===k)?.days).filter(x=>x!=null)); if(!Number.isFinite(cur)) continue;
+    const md = median(r), mx = Math.max(...r), where = bx==="_none" ? (E_?"No box":"Ohne Box") : S.containers[bx]?.name, nT = E_?`from ${r.length} animals`:`aus ${r.length} Tieren`;
+    if(cur > mx + 1) out.push({id:`late:${bx}:${k}`, c:"crit", p:8, t:E_?`${where}: ${L.length} × ${k} for ${Math.round(cur)} days – longer than all your previous ${spN(sp)} (at most ${Math.round(mx)} days). Check temperature and food?`:`${where}: ${L.length} × ${k} seit ${Math.round(cur)} Tagen – länger als bei allen bisherigen ${spN(sp)} (höchstens ${Math.round(mx)} Tage). Temperatur und Futter prüfen?`, n:nT});
+    else if(cur >= md - 1) out.push({id:`moult:${bx}:${k}`, c:"larva", p:7, t:E_?`${where}: ${L.length} × ${k} for ${Math.round(cur)} days – in your ${spN(sp)}, ${k} usually took ${fmtN(md,0)} days so far. A moult is coming up.`:`${where}: ${L.length} × ${k} seit ${Math.round(cur)} Tagen – bei deinen ${spN(sp)} dauerte ${k} bisher meist ${fmtN(md,0)} Tage. Häutung steht bald an.`, n:nT}); }
+  // 3) Gelege: Schlupf läuft oder steht an
+  for(const c of all("clutches")){ const s = clutchSum(c); if(s.done) continue;
+    const spans = all("clutches").filter(x => x.id!==c.id && x.speciesId===c.speciesId && clutchSum(x).done && x.hatchFirst && x.hatchLast).map(x => daysBetweenIso(x.hatchFirst, x.hatchLast));
+    if(s.hatched && s.kept){ const since = daysBetweenIso(c.hatchFirst, todayISO());
+      if(spans.length >= 2) out.push({id:`hatch:${c.id}:${s.hatched}`, c:"egg", p:5, t:E_?`${clutchName(c)}: ${pctTxt(s.hatched/s.kept)} hatched, for ${since} ${since===1?"day":"days"}. So far, hatching of a clutch usually took ${fmtN(median(spans),0)} days.`:`${clutchName(c)}: ${pctTxt(s.hatched/s.kept)} geschlüpft, seit ${since} ${since===1?"Tag":"Tagen"}. Bisher dauerte der Schlupf eines Geleges meist ${fmtN(median(spans),0)} Tage.`, n:E_?`from ${spans.length} clutches`:`aus ${spans.length} Gelegen`}); }
+    else if(!s.hatched){ const ex = clutchExpect(c); if(ex && Math.abs(daysBetweenIso(todayISO(), ex.date)) <= 2) out.push({id:`exp:${c.id}`, c:"egg", p:6, t:E_?`${clutchName(c)}: hatching expected around ${dShort(ex.date)}.`:`${clutchName(c)}: Schlupf erwartet um den ${dShort(ex.date)}.`, n:E_?`from ${ex.n} clutches`:`aus ${ex.n} Gelegen`}); } }
+  // 4) Ältester Falter im Vergleich
+  const moths = alive.filter(i=>currentStage(i)==="falter").map(i=>[i, stageSegments(i).find(sg=>sg.k==="falter")]).filter(x=>x[1]).sort((a,b)=>b[1].days-a[1].days);
+  if(moths.length){ const [m, sg] = moths[0], sp = speciesOfInd(m);
+    const life = all("individuals").filter(i=>!isAlive(i) && speciesOfInd(i)?.id===sp?.id).map(i=>stageSegments(i).find(x=>x.k==="falter" && !x.open)?.days).filter(x=>x!=null);
+    if(life.length >= 3 && sg.days >= 0.8*median(life)) out.push({id:`old:${m.id}:${Math.round(sg.days/3)}`, c:"imago", p:3, t:E_?`${m.name} is your oldest moth at ${Math.round(sg.days)} days${sg.days > median(life) ? ` – older than most so far (usually ${fmtN(median(life),0)} days)` : ` – your moths usually lived ${fmtN(median(life),0)} days so far`}.`:`${m.name} ist mit ${Math.round(sg.days)} Tagen dein ältester Falter${sg.days > median(life) ? ` – älter als die meisten bisher (meist ${fmtN(median(life),0)} Tage)` : ` – bisher wurden deine Falter meist ${fmtN(median(life),0)} Tage alt`}.`, n:E_?`from ${life.length} moths`:`aus ${life.length} Faltern`}); }
+  // 5) Verluste: Häufung in einem Stadium oder einer Box
+  const deaths = all("individuals").map(i=>[i, deathOf(i)]).filter(([i,d]) => d && !firstEv(i,"falterschlupf"));
+  if(deaths.length >= 4){ const by = f => { const n = {}; deaths.forEach(x => { const k = f(x); if(k) n[k] = (n[k]||0)+1; }); return Object.entries(n).sort((a,b)=>b[1]-a[1])[0]; };
+    const st = by(([i,d]) => d.data?.stage), bx = by(([i]) => S.containers[i.containerId] ? i.containerId : null);
+    if(st && st[1] >= 3 && st[1]/deaths.length >= 0.5) out.push({id:`loss-st:${st[0]}:${deaths.length}`, c:"dead", p:4, t:E_?`${st[1]} of ${deaths.length} losses happened in ${tr(stageLabel(st[0]))}.`:`${st[1]} von ${deaths.length} Verlusten passierten in ${stageLabel(st[0])}.`, n:E_?`from ${deaths.length} losses`:`aus ${deaths.length} Verlusten`});
+    if(bx && bx[1] >= 3 && bx[1]/deaths.length >= 0.5) out.push({id:`loss-bx:${bx[0]}:${deaths.length}`, c:"dead", p:4, t:E_?`${bx[1]} of ${deaths.length} losses were in ${S.containers[bx[0]].name}.`:`${bx[1]} von ${deaths.length} Verlusten gab es in ${S.containers[bx[0]].name}.`, n:E_?`from ${deaths.length} losses`:`aus ${deaths.length} Verlusten`}); }
+  // 6) Generationen vergleichen (Nachzucht vs. Elternansatz)
+  for(const b of all("broods")){ const pb = S.broods[b.parentBroodId]; if(!pb || pb.speciesId!==b.speciesId) continue;
+    const dur = (bid, k) => indsOf(bid).flatMap(i => stageSegments(i).filter(sg => sg.k===k && !sg.open && !sg.est).map(sg => sg.days));
+    let best = null; for(const k of ["L1","L2","L3","L4","L5","puppe"]){ const a = dur(b.id,k), z = dur(pb.id,k); if(a.length<3 || z.length<3) continue; const df = median(a)-median(z); if(Math.abs(df) >= 1.5 && (!best || Math.abs(df) > Math.abs(best.df))) best = {k, df, a:median(a), z:median(z), n:a.length+z.length}; }
+    if(best) out.push({id:`gen:${b.id}:${best.k}`, c:"accent", p:2, t:E_?`${b.name} needs ${fmtN(Math.abs(best.df),0)} days ${best.df<0?"less":"more"} for ${tr(stageLabel(best.k))} than ${pb.name} (${fmtN(best.a,0)} instead of ${fmtN(best.z,0)} days).`:`${b.name} braucht für ${stageLabel(best.k)} ${fmtN(Math.abs(best.df),0)} Tage ${best.df<0?"weniger":"mehr"} als ${pb.name} (${fmtN(best.a,0)} statt ${fmtN(best.z,0)} Tage).`, n:E_?`from ${best.n} animals`:`aus ${best.n} Tieren`}); }
+  return out.sort((a,b)=>b.p-a.p);
+}
+const daysBetweenIso = (a, b) => Math.round((ms(b.slice(0,10)+"T12:00") - ms(a.slice(0,10)+"T12:00"))/864e5);
+const hintRow = (x, off) => `<div class="hnt st-${x.c}"><span class="dot"></span><p>${esc(x.t)}<small>${esc(x.n)}</small></p>${off?"":`<button class="x" data-act="hintOff" data-k="${esc(x.id)}" aria-label="Ausblenden">×</button>`}</div>`;
+function hintsCard(){
+  let all_; try { all_ = insights(); } catch(e){ console.warn(e); return ""; }
+  const off = store.meta.hintsOff || {}, show = all_.filter(x => !off[x.id]);
+  if(!show.length) return "";
+  return `<section class="sec"><div class="sec-h"><h2>Hinweise</h2>${all_.length>3||show.length<all_.length?`<button class="btn ghost link" data-act="allHints">Alle Hinweise</button>`:""}</div><div class="card hints" style="padding:0">${show.slice(0,3).map(x=>hintRow(x)).join("")}</div></section>`;
+}
+ACTS.hintOff = async d => { await store.setMeta("hintsOff", {...(store.meta.hintsOff||{}), [d.k]:todayISO()}); render(); };
+ACTS.allHints = () => { nav("stats"); };
 /* Schlupf eintragen von der Übersicht: bei mehreren laufenden Gelegen erst eins wählen */
 ACTS.hatchPick = () => {
   const run = all("clutches").filter(c=>!clutchSum(c).done).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
@@ -1965,6 +2047,8 @@ VIEWS.stats = () => {
   const inds = all("individuals");
   const deaths = inds.map(i=>[i,deathOf(i)]).filter(([i,d])=>d && !firstEv(i,"falterschlupf"));
   let h = `<div class="pagehead"><h1>Auswertung</h1><p class="muted" style="margin:0">Über alle Zuchtansätze. Bei kleinen Zahlen sind Unterschiede oft Zufall: achte auf n.</p></div>`;
+  { let hs = []; try { hs = insights(); } catch(e){}
+    if(hs.length) h += `<section class="sec"><div class="sec-h"><h2>Hinweise</h2><span class="small muted">aus deinen Einträgen</span></div><div class="card hints" style="padding:0">${hs.map(x=>hintRow(x, true)).join("")}</div></section>`; }
   h += clutchStats();
   const byCause = {}; deaths.forEach(([i,d])=>{ const c=d.data?.cause||"unbekannt"; (byCause[c] ||= {s:0,v:0}); byCause[c][d.data?.certainty==="vermutet"?"v":"s"]++; });
   const maxC = Math.max(1,...Object.values(byCause).map(x=>x.s+x.v));
@@ -2011,12 +2095,9 @@ document.addEventListener("input", e => { if(e.target.id==="gq"){ R.gq = e.targe
 /* ---- Mehr ---- */
 VIEWS.more = () => `<div class="pagehead"><h1>Mehr</h1></div>
   <div class="list">
-    <button class="row" data-act="eclosion"><span class="main"><span class="t">Falterschlupf erfassen</span><span class="s">auch für mehrere Puppen gleichzeitig</span></span></button>
-    <button class="row" data-go="imagos"><span class="main"><span class="t">Falter zuordnen${openImagos().length?` (${openImagos().length} offen)`:""}</span><span class="s">wenn unklar ist, welcher Falter aus welcher Puppe kam</span></span></button>
-    <button class="row" data-go="stats"><span class="main"><span class="t">Auswertung</span><span class="s">Verluste, Puppenruhe, Schlupfrate der Gelege</span></span></button>
+    <button class="row" data-go="climate"><span class="main"><span class="t">Klima</span><span class="s">Temperatur und Luftfeuchte pro Standort, Sensor koppeln</span></span></button>
     <button class="row" data-go="species"><span class="main"><span class="t">Arten</span><span class="s">${all("species").length} im Katalog</span></span></button>
     <button class="row" data-go="sources"><span class="main"><span class="t">Herkünfte</span><span class="s">Züchter, Wildfunde, eigene Nachzucht</span></span></button>
-    <button class="row" data-go="containers"><span class="main"><span class="t">Boxen &amp; Behälter</span><span class="s">Wie viele Tiere wo sind, umsetzen, abgeben</span></span></button>
     <button class="row" data-act="labels"><span class="main"><span class="t">Etiketten drucken</span><span class="s">QR-Codes als PDF oder direkt drucken</span></span></button>
     <button class="row" data-go="data"><span class="main"><span class="t">Daten &amp; Sicherung</span><span class="s">Backup mit Fotos, CSV, Wiederherstellen</span></span></button>
   </div>
@@ -2105,6 +2186,13 @@ ACTS.boxCount = d => {
     }
     closeSheet(); toast(`Jetzt ${n} ${n===1?"Tier":"Tiere"} in ${c?c.name:"ohne Box"}`);
   });
+};
+/* „Eier …“: alles rund um die Eizahl an einer Stelle */
+ACTS.clutchEggs = d => {
+  const c = S.clutches[d.id]; if(!c) return; const s = clutchSum(c);
+  const it = [["clutchCount","Anzahl korrigieren","verzählt? Gesamtzahl der Eier ändern"],["clutchLoss","Ausfälle eintragen","unbefruchtet, vertrocknet, verschimmelt …"],["clutchGive","Eier entfernen","verkauft, verschenkt, eingefroren", s.open===0],["eggCount","Auf Foto zählen","Eier auf einem Foto automatisch zählen"]];
+  const root = openSheet(`<h2>Eier</h2><div class="list">${it.map(([a,t,sub,dis])=>`<button class="row" data-pick="${a}" ${dis?"disabled":""}><span class="main"><span class="t">${t}</span><span class="s">${sub}</span></span></button>`).join("")}</div>`);
+  root.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => { closeSheet(); ACTS[b.dataset.pick]({id:c.id}); }));
 };
 /* Eier verzählt: Gesamtzahl direkt korrigieren */
 ACTS.clutchCount = d => {
@@ -3539,13 +3627,15 @@ VIEWS.clutch = r => {
   let h = `<div class="pagehead"><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(clutchName(c))}</h1>
     <div class="meta"><span class="pill">abgelegt ${esc(fmtTime(c))}</span>${c.collectedAt?`<span class="pill">gesammelt ${dShort(c.collectedAt)}</span>`:""}${ct?`<span class="pill">${esc(ct.name)}</span>`:""}<span class="pill ${s.done?"good":"warn"}">${s.done?"abgeschlossen":s.hatched?"schlüpft":"liegt"}</span></div>
     ${c.notes?`<p class="muted" style="margin:0">${esc(c.notes)}</p>`:""}</div>`;
-  h += `<div class="stats"><button class="stat" style="text-align:left;font:inherit;color:inherit;cursor:pointer" data-act="clutchCount" data-id="${c.id}"><b>${s.eggs ?? "?"}</b><span>Eier</span><span class="small" style="color:var(--accent)">korrigieren</span></button><div class="stat"><b>${s.hatched}</b><span>geschlüpft</span></div><div class="stat"><b>${pctTxt(s.rate)}</b><span>Schlupfrate${s.done||s.rate==null?"":" bisher"}</span></div>${dev!=null||s.done?`<div class="stat"><b>${dev ?? "–"}</b><span>Tage im Ei</span><span class="small">Ablage bis 1. Schlupf</span></div>`:`<div class="stat"><b>${clutchAge(c) ?? "–"}</b><span>Tage liegend</span></div>`}</div>`;
+  const big = s.eggs==null ? ["?", "Eier noch nicht gezählt"] : s.done ? [pctTxt(s.rate), "geschlüpft"] : [String(s.open), s.open===1?"Ei liegt noch":"Eier liegen noch"];
+  h += `<div class="card clhero"><div class="big"><b>${esc(big[0])}</b><span>${esc(big[1])}</span></div>
+    <div class="facts"><span><b>${s.eggs ?? "?"}</b> Eier <button class="linkbtn" data-act="clutchCount" data-id="${c.id}">korrigieren</button></span><span><b>${s.hatched}</b> geschlüpft</span>${s.rate!=null&&!s.done?`<span><b>${pctTxt(s.rate)}</b> Schlupfrate bisher</span>`:""}${dev!=null?`<span><b>${dev}</b> Tage im Ei</span>`:clutchAge(c)!=null&&!s.done?`<span>liegt seit <b>${clutchAge(c)}</b> ${clutchAge(c)===1?"Tag":"Tagen"}</span>`:""}</div>
+    ${clutchBar(c)}<div class="legend">${[["g","entfernt",s.given],["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div>
+    ${c.hatchFirst?`<p class="small muted" style="margin:0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
   const ex = !s.hatched && !s.done ? clutchExpect(c) : null;
   if(ex) h += `<p class="small muted" style="margin:0">Schlupf erwartet um den ${dShort(ex.date)} (nach ${ex.days} Tagen, Median aus ${ex.n} ${ex.n===1?"Gelege":"Gelegen"} dieser Art).</p>`;
-  h += `<div class="card"><div class="cleg">${clutchBar(c)}<div class="legend">${[["g","entfernt",s.given],["h","geschlüpft",s.hatched],["u","unbefruchtet",s.infertile],["d","vertrocknet",s.dried],["o","sonstige",s.other],["x","offen",s.open]].filter(x=>x[2]).map(([k,l,v])=>`<span><i class="cl-${k}"></i>${l} ${v}</span>`).join("")}</div></div>
-    ${c.hatchFirst?`<p class="small muted" style="margin:8px 0 0">Schlupf ${dShort(c.hatchFirst)}${c.hatchLast&&c.hatchLast!==c.hatchFirst?` – ${dShort(c.hatchLast)}`:""}</p>`:""}</div>`;
   const open = Math.max(0, s.hatched - clutchLarvae(c));
-  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchCount" data-id="${c.id}">Eier-Anzahl korrigieren</button><button class="btn" data-act="clutchLoss" data-id="${c.id}">Ausfälle &amp; Zahlen</button><button class="btn" data-act="clutchGive" data-id="${c.id}" ${s.open===0?"disabled":""}>Eier entfernen</button><button class="btn" data-act="eggCount" data-id="${c.id}">Eier auf Foto zählen</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz öffnen</button>`:""}</div>`;
+  h += `<div class="btns"><button class="btn primary" data-act="clutchHatch" data-id="${c.id}">Schlupf eintragen</button><button class="btn" data-act="clutchEggs" data-id="${c.id}">Eier …</button><button class="btn" data-act="clutchBrood" data-id="${c.id}" ${s.hatched?"":"disabled"}>${br?"Raupen hinzufügen":"Raupen weiterführen"}${br&&open?` (${open})`:""}</button>${br?`<button class="btn" data-go="brood:${br.id}">Zuchtansatz</button>`:""}</div>`;
   const log = clutchLog(c);
   if(log.length) h += `<section class="sec"><div class="sec-h"><h2>Schlupf-Einträge</h2><span class="small muted">antippen zum Ändern</span></div><div class="list">${log.map(e=>`<button class="row" data-act="clutchLogEdit" data-id="${c.id}" data-k="${esc(e.id)}"><span class="main"><span class="t">${dDE(e.d)}</span><span class="s">${e.n} ${e.n===1?"Raupe":"Raupen"} geschlüpft</span></span><span class="end small muted">ändern</span></button>`).join("")}</div></section>`;
   const out = clutchOut(c);
