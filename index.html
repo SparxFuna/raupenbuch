@@ -59,7 +59,9 @@ h1,h2,h3{margin:0;text-wrap:balance;line-height:1.2}
 a{color:var(--accent)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 
-/* top bar */
+/* top bar: Inhalt beginnt unter der Statusleiste, die Leiste selbst bekommt einen deckenden Hintergrund */
+body{padding-top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;left:0;right:0;top:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:25}
 .top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
   display:flex;align-items:center;gap:8px;padding:10px var(--gut)}
 .top .brand{font-family:var(--f-name);font-weight:600;font-size:20px;letter-spacing:.01em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -383,6 +385,10 @@ button.pill.tag{cursor:pointer}
 .grpd>summary .end{display:flex;align-items:center;gap:10px}
 .grpd .chev{font-size:22px;color:var(--muted);transition:transform .15s;display:inline-block} .grpd[open] .chev{transform:rotate(90deg)}
 .grpd>.list{box-shadow:none;border-radius:0;border-top:1px solid var(--line)}
+.iconpick{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px}
+.iconpick button{appearance:none;border:2px solid transparent;background:none;border-radius:20px;padding:6px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;color:var(--ink);font:inherit;font-size:12.5px}
+.iconpick img{width:72px;height:72px;border-radius:18px;display:block}
+.iconpick button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
 .climline{appearance:none;border:0;background:none;padding:0;margin:-6px 0 2px;display:flex;align-items:center;gap:8px;font:inherit;font-size:13.5px;color:var(--muted);cursor:pointer;text-align:left;flex-wrap:wrap}
 .climline svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .climline b{color:var(--ink);font-weight:600}
@@ -534,7 +540,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.32.0";
+const APP_VERSION = "5.33.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -615,6 +621,7 @@ const I18N_EN = {
   "Hinweise":"Hints","Alle Hinweise":"All hints","Gerade keine Hinweise.":"No hints right now.","Ausgeblendete wieder zeigen":"Show hidden again","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
   "Tiere nach Schlupftag":"Animals by hatch day","antippen zum Aufklappen":"tap to expand","Ohne Schlupfdatum":"No hatch date","Verlauf der Box":"Box history","wer wann rein- und rauskam":"who came in and left when",
   "Neue App-Version":"New app version","Android-App aktualisieren":"Update Android app","neueste Version herunterladen und darüber installieren – deine Daten bleiben":"download the latest version and install it over the old one – your data stays","Herunterladen":"Download","Speichern oder teilen":"Save or share","Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.":"Bluetooth sensor: not yet available in the Android app. For now, please open the web app in Chrome to read it.",
+  "App-Icon":"App icon","Aussehen auf dem Startbildschirm wählen":"Choose how it looks on the home screen","Raupe klassisch":"Classic larva","Nacht":"Night","Hell":"Light","Grün":"Green","Atropos-Raupe":"Atropos larva","Buch":"Book","Totenkopf":"Death's-head","App-Icon geändert":"App icon changed","Der Startbildschirm übernimmt das neue Icon nach ein paar Sekunden. Liegt das Raupenbuch dort als Verknüpfung, musst du es eventuell neu aus der App-Übersicht ziehen.":"The home screen picks up the new icon after a few seconds. If Raupenbuch sits there as a shortcut, you may need to drag it from the app drawer again.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -2155,6 +2162,7 @@ VIEWS.more = () => `<div class="pagehead"><h1>Mehr</h1></div>
     <button class="row" data-go="species"><span class="main"><span class="t">Arten</span><span class="s">${all("species").length} im Katalog</span></span></button>
     <button class="row" data-go="sources"><span class="main"><span class="t">Herkünfte</span><span class="s">Züchter, Wildfunde, eigene Nachzucht</span></span></button>
     <button class="row" data-act="labels"><span class="main"><span class="t">Etiketten drucken</span><span class="s">QR-Codes als PDF oder direkt drucken</span></span></button>
+    ${NATIVE?`<button class="row" data-act="appIcon"><span class="main"><span class="t">App-Icon</span><span class="s">Aussehen auf dem Startbildschirm wählen</span></span></button>`:""}
     <button class="row" data-go="data"><span class="main"><span class="t">Daten &amp; Sicherung</span><span class="s">Backup mit Fotos, CSV, Wiederherstellen</span></span></button>
   </div>
   <section class="sec"><div class="sec-h"><h2>Experimentell</h2></div><label class="row" style="cursor:pointer"><span class="main"><span class="t">Foto-Wiedererkennung</span><span class="s">„Wer ist das?“ und „Mehrere Fotos sortieren“ unter Zuordnen. Unzuverlässig, nur als grober Hinweis.</span></span><span class="end"><input type="checkbox" data-act="ridToggle" ${store.meta.ridOn?"checked":""} style="width:22px;height:22px;min-height:0"></span></label></section>
@@ -4457,6 +4465,18 @@ function openFromHash(){
 window.addEventListener("hashchange", () => { if(store.ready()) openFromHash(); });
 
 /* Service Worker: offline-first, Update-Hinweis bei neuer Version */
+/* Android-App: App-Icon wechseln (Plugin „AppIcon“ schaltet activity-alias-Einträge um) */
+const APP_ICONS = [["Klassisch","icon-192.png","Raupe klassisch"],["Nacht","app-icons/nacht.svg","Nacht"],["Hell","app-icons/hell.svg","Hell"],["Gruen","app-icons/gruen.svg","Grün"],["Raupe","app-icons/raupe.svg","Atropos-Raupe"],["Buch","app-icons/buch.svg","Buch"],["Totenkopf","app-icons/totenkopf.svg","Totenkopf"]];
+ACTS.appIcon = async () => {
+  const P = window.Capacitor?.Plugins?.AppIcon; if(!P){ toast("Nur in der Android-App"); return; }
+  let cur = "Klassisch"; try { cur = (await P.get()).current; } catch(e){}
+  const root = openSheet(`<h2>App-Icon</h2><div class="iconpick">${APP_ICONS.map(([k,src,l])=>`<button type="button" data-k="${k}" aria-pressed="${k===cur}"><img src="${src}" alt=""><span>${esc(l)}</span></button>`).join("")}</div>
+    <p class="small muted" style="margin:0">Der Startbildschirm übernimmt das neue Icon nach ein paar Sekunden. Liegt das Raupenbuch dort als Verknüpfung, musst du es eventuell neu aus der App-Übersicht ziehen.</p>`);
+  root.querySelectorAll(".iconpick button").forEach(b => b.addEventListener("click", async () => {
+    try { await P.set({name:b.dataset.k}); root.querySelectorAll(".iconpick button").forEach(x => x.setAttribute("aria-pressed", x===b)); toast("App-Icon geändert"); }
+    catch(e){ toast("Icon konnte nicht geändert werden: " + (e?.message||e)); }
+  }));
+};
 /* Android-App: neuere Version auf GitHub? (Web-App-Version aus sw.js) */
 let _apkNewer = null;
 async function checkApkUpdate(){
