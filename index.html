@@ -534,7 +534,10 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.31.0";
+const APP_VERSION = "5.32.0";
+/* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
+const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
 const COLS = ["species","sources","broods","individuals","events","imagos","containers","locations","climate","photos","clutches"];
 const S = {}; COLS.forEach(c => S[c] = {});
 
@@ -611,6 +614,7 @@ const I18N_EN = {
   "korrigieren":"correct","Anzahl korrigieren":"Correct count","Eier-Anzahl korrigieren":"Correct egg count","Wie viele sind wirklich drin?":"How many are really inside?","Zuchtansatz der neuen Tiere":"Brood of the new animals","Keine Änderung.":"No change.","Wie viele Eier waren es insgesamt?":"How many eggs were there in total?","Auf Foto zählen":"Count on photo","Bitte einen Zuchtansatz wählen":"Please choose a brood",
   "Hinweise":"Hints","Alle Hinweise":"All hints","Gerade keine Hinweise.":"No hints right now.","Ausgeblendete wieder zeigen":"Show hidden again","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
   "Tiere nach Schlupftag":"Animals by hatch day","antippen zum Aufklappen":"tap to expand","Ohne Schlupfdatum":"No hatch date","Verlauf der Box":"Box history","wer wann rein- und rauskam":"who came in and left when",
+  "Neue App-Version":"New app version","Android-App aktualisieren":"Update Android app","neueste Version herunterladen und darüber installieren – deine Daten bleiben":"download the latest version and install it over the old one – your data stays","Herunterladen":"Download","Speichern oder teilen":"Save or share","Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.":"Bluetooth sensor: not yet available in the Android app. For now, please open the web app in Chrome to read it.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -1183,6 +1187,7 @@ const store = {
   },
   /* Datei speichern: normaler Browser-Download */
   async save(filename, data){
+    if(NATIVE) return nativeSave(filename, data);
     try {
       const blob = data instanceof Blob ? data : new Blob([data], {type: filename.endsWith(".json") ? "application/json" : filename.endsWith(".csv") ? "text/csv" : "application/octet-stream"});
       const url = URL.createObjectURL(blob);
@@ -1195,6 +1200,16 @@ const store = {
   }
 };
 
+/* Android-App: Datei in den Cache schreiben und über das Teilen-Menü weitergeben (Drive, Dateien, Mail …) */
+async function nativeSave(filename, data){
+  try {
+    const P = window.Capacitor.Plugins, blob = data instanceof Blob ? data : new Blob([data]);
+    const b64 = (await blobToDataUrl(blob)).split(",")[1];
+    const r = await P.Filesystem.writeFile({path:filename, data:b64, directory:"CACHE"});
+    await P.Share.share({title:filename, files:[r.uri], dialogTitle:"Speichern oder teilen"});
+    return true;
+  } catch(e){ if(!/cancel/i.test(String(e?.message||e))) toast("Speichern fehlgeschlagen: " + (e?.message||e)); return false; }
+}
 const SPECIES_SEED = [
   ["Acherontia atropos","Totenkopfschwärmer"],["Agrius convolvuli","Windenschwärmer"],["Sphinx ligustri","Ligusterschwärmer"],
   ["Smerinthus ocellata","Abendpfauenauge"],["Laothoe populi","Pappelschwärmer"],["Mimas tiliae","Lindenschwärmer"],
@@ -2146,7 +2161,8 @@ VIEWS.more = () => `<div class="pagehead"><h1>Mehr</h1></div>
   <section class="sec"><div class="sec-h"><h2>Sprache</h2></div><div class="seg" role="group" aria-label="Sprache"><button data-act="lang" data-k="de" aria-pressed="${LANG==="de"}">Deutsch</button><button data-act="lang" data-k="en" aria-pressed="${LANG==="en"}">English</button></div></section>
   ${_installEvt?`<div class="btns"><button class="btn primary" data-act="install">Als App installieren</button></div>`:""}
   <p class="small muted">Speicher: ${store.mode==="idb"?"auf diesem Gerät (IndexedDB)":"nicht verfügbar"}${store.persisted===true?", dauerhaft geschützt":store.persisted===false?", nicht dauerhaft geschützt":""}. Mach regelmäßig ein Backup unter <b>Daten &amp; Sicherung</b>.</p>
-  <p class="small muted mono">Version ${APP_VERSION}</p>`;
+  ${NATIVE?`<div class="list"><a class="row" href="${APK_URL}"><span class="main"><span class="t">Android-App aktualisieren</span><span class="s">neueste Version herunterladen und darüber installieren – deine Daten bleiben</span></span></a></div>`:""}
+  <p class="small muted mono">Version ${APP_VERSION}${NATIVE?" · Android-App":""}</p>`;
 
 VIEWS.species = () => `<div class="pagehead"><h1>Arten</h1></div><div class="btns"><button class="btn primary" data-act="editSpecies">+ Art</button></div>
   <div class="list">${all("species").sort((a,b)=>a.sci.localeCompare(b.sci)).map(s=>`<button class="row" data-act="editSpecies" data-id="${s.id}"><span class="main"><span class="t sp">${esc(s.sci)}</span><span class="s">${esc(spCommon(s))}${s.family?" · "+esc(s.family):""}</span></span><span class="end small muted">${all("broods").filter(b=>b.speciesId===s.id).length} Ansätze</span></button>`).join("") || `<div class="empty">Keine Arten.</div>`}</div>`;
@@ -4036,6 +4052,7 @@ ACTS.importCsv = d => {
 const BT_SVC = "ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6", BT_CHR = "ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6";
 const withTimeout = (p, ms, msg="Zeitüberschreitung") => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg)), ms))]);
 function sensorCard(l){
+  if(NATIVE) return `<div class="note">Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.</div>`;
   if(!navigator.bluetooth) return `<div class="note">Bluetooth-Sensor: In diesem Browser nicht verfügbar. Öffne das Raupenbuch in Chrome auf Android.</div>`;
   const sn = l.sensor;
   if(!sn) return `<div class="card sensor"><b>Bluetooth-Sensor</b><span class="small muted">Koppel einen Xiaomi-Hygrometer (LYWSD03MMC) mit diesem Standort. Danach holst du den aktuellen Wert mit einem Tippen.</span><div class="btns"><button class="btn primary" data-act="sensorRead" data-loc="${l.id}" data-new="1">Sensor koppeln</button></div></div>`;
@@ -4161,7 +4178,7 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
     ${C.length?`<div class="f"><span class="lab">Behälter</span><div class="checks">${C.map(c=>`<label><input type="checkbox" data-k="c" value="${c.id}" ${preC.has(c.id)?"checked":""}> ${esc(c.name)}</label>`).join("")}</div></div>`:""}
     <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="lQr" style="width:20px;height:20px;min-height:0"><span>Nur QR-Code, ohne Text</span></label>
     <div class="hint">Das PDF kannst du auf Klebeetiketten oder normales Papier drucken (mit Schnittlinien). Scannen geht mit der normalen Handykamera oder über das QR-Symbol oben in der App.</div>
-    <div class="btns"><button class="btn primary" id="ok">PDF speichern</button><button class="btn" id="pr">Direkt drucken</button></div><div id="lst" class="small muted"></div>
+    <div class="btns"><button class="btn primary" id="ok">PDF speichern</button>${NATIVE?"":`<button class="btn" id="pr">Direkt drucken</button>`}</div><div id="lst" class="small muted"></div>
     <div class="hint">Beim Drucken „Ränder: keine“ und „Skalierung: 100 %“ wählen, damit die Etiketten passen.</div>`);
   const items = () => [...root.querySelectorAll(".checks input:checked")].map(x=>x.dataset.k==="i" ? {code:codeUrl(`RB:i:${x.value}`), ...labelText(S.individuals[x.value])} : x.dataset.k==="g" ? {code:codeUrl(`RB:g:${x.value}`), ...clutchLabelText(S.clutches[x.value])} : {code:codeUrl(`RB:c:${x.value}`), title:S.containers[x.value].name, l2:tr("Behälter"), l3:S.locations[S.containers[x.value].locationId]?.name||"", it:false});
   root.querySelector("#ok").onclick = async () => {
@@ -4174,7 +4191,7 @@ function labelSheet({brood=null, inds=null, conts=null, clutches=null}={}){
       if(ok) closeSheet(); else st.textContent = "";
     } catch(e){ st.textContent = "PDF konnte nicht erstellt werden: " + (e.message||e); }
   };
-  root.querySelector("#pr").onclick = async () => {
+  if(root.querySelector("#pr")) root.querySelector("#pr").onclick = async () => {
     const it = items(); if(!it.length){ toast("Bitte etwas auswählen"); return; }
     try { await loadLib("qrgen"); printLabels(it, val(root,"lFmt"), root.querySelector("#lQr").checked); }
     catch(e){ root.querySelector("#lst").textContent = "Drucken nicht möglich: " + (e.message||e); }
@@ -4353,7 +4370,7 @@ async function decodeQr(file){
   } finally { URL.revokeObjectURL(url); }
 }
 /* Etikett-Codes: alt „RB:c:ID“, neu als Link „…/raupenbuch/#RB:c:ID“ (öffnet die App auch aus der Kamera-App) */
-const codeUrl = code => new URL("./", location.href).href + "#" + code;
+const codeUrl = code => (NATIVE ? WEB_URL : new URL("./", location.href).href) + "#" + code;
 function openCode(code){
   let t = String(code||"").trim(); try { t = decodeURIComponent(t); } catch(e){}
   const m = t.match(/RB:([icg]):([A-Za-z0-9_-]+)/); if(!m) return false;
@@ -4440,7 +4457,24 @@ function openFromHash(){
 window.addEventListener("hashchange", () => { if(store.ready()) openFromHash(); });
 
 /* Service Worker: offline-first, Update-Hinweis bei neuer Version */
-if("serviceWorker" in navigator && location.protocol !== "file:"){
+/* Android-App: neuere Version auf GitHub? (Web-App-Version aus sw.js) */
+let _apkNewer = null;
+async function checkApkUpdate(){
+  try {
+    const t = await (await fetch(WEB_URL + "sw.js?" + Date.now(), {cache:"no-store"})).text();
+    const v = (t.match(/rb-(\d+\.\d+\.\d+)/)||[])[1]; if(!v) return;
+    const n = x => x.split(".").reduce((a,y)=>a*1000 + (+y), 0);
+    _apkNewer = n(v) > n(APP_VERSION) ? v : null;
+    if(_apkNewer && !$(".update")){
+      const el = document.createElement("div"); el.className = "update"; el.setAttribute("role","status");
+      el.innerHTML = `<span class="small">${esc(tr("Neue App-Version"))} ${esc(v)}</span><a class="btn" href="${APK_URL}">${esc(tr("Herunterladen"))}</a><button class="btn ghost" aria-label="Schließen">×</button>`;
+      el.querySelector("button").onclick = () => el.remove();
+      document.body.appendChild(el);
+    }
+  } catch(e){}
+}
+if(NATIVE){ window.addEventListener("load", () => setTimeout(checkApkUpdate, 3000)); document.addEventListener("visibilitychange", () => { if(document.visibilityState==="visible") checkApkUpdate(); }); }
+if(!NATIVE && "serviceWorker" in navigator && location.protocol !== "file:"){
   window.addEventListener("load", async () => {
     try {
       const reg = await navigator.serviceWorker.register("sw.js", {updateViaCache:"none"});
