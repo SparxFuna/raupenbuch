@@ -5,7 +5,7 @@ name: Android-App
 on:
   push:
     branches: [main]
-    paths: ["index.html", "sw.js", "android-build/**", ".github/workflows/android.yml"]
+    paths: ["index.html", "sw.js", "app-icons/**", "android-build/**", ".github/workflows/android.yml"]
   workflow_dispatch:
 
 permissions:
@@ -39,6 +39,7 @@ jobs:
         run: |
           mkdir -p www
           cp ../index.html ../manifest.webmanifest ../*.js ../*.woff2 ../icon*.png www/
+          cp -r ../app-icons www/
 
       - name: Android-Projekt erzeugen
         working-directory: android-build
