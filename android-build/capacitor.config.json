@@ -1,0 +1,7 @@
+{
+  "appId": "de.sparxfuna.raupenbuch",
+  "appName": "Raupenbuch",
+  "webDir": "www",
+  "backgroundColor": "#121411",
+  "android": { "allowMixedContent": false }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "raupenbuch-android",
+  "private": true,
+  "description": "Android-App (Capacitor) aus der Web-App im Hauptordner. Wird von .github/workflows/android.yml gebaut.",
+  "dependencies": {
+    "@capacitor/android": "8.6.0",
+    "@capacitor/core": "8.6.0",
+    "@capacitor/filesystem": "8.1.5",
+    "@capacitor/share": "8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.6.0",
+    "sharp": "0.34.4"
+  }
+}
