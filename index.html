@@ -420,6 +420,19 @@ button.pill.tag{cursor:pointer}
 .pbars{display:flex;flex-direction:column;gap:10px}
 .pbar{display:grid;grid-template-columns:110px 1fr;align-items:center;gap:10px;font-size:13.5px;color:var(--muted)}
 .pbar i{display:block;height:10px;border-radius:5px;background:var(--sunk);overflow:hidden} .pbar b{display:block;height:100%;border-radius:5px;transition:width .4s}
+.petwrap.dance .body{animation:dance .45s ease-in-out 8 alternate}
+@keyframes dance{0%{transform:scale(var(--sc)) translate(-16px,0) rotate(-7deg)}100%{transform:scale(var(--sc)) translate(16px,-14px) rotate(7deg)}}
+.petwrap.dance .petsvg.moth{animation:mdance .45s ease-in-out 8 alternate}
+@keyframes mdance{0%{transform:translateX(-18px) rotate(-10deg)}100%{transform:translateX(18px) rotate(10deg)}}
+.petfx .mnote{position:absolute;top:42%;color:#fff;font-size:28px;text-shadow:0 1px 3px rgba(0,0,0,.35);animation:rise 1.8s ease-out forwards;opacity:0}
+.petfx .ball{position:absolute;width:13%;aspect-ratio:1;bottom:24%;left:105%;animation:ballroll 2.6s ease-in-out forwards}
+.petfx .ball svg{width:100%;height:100%;animation:spin 2.6s linear forwards}
+@keyframes ballroll{0%{left:105%;bottom:24%}32%{left:68%;bottom:24%}44%{left:56%;bottom:58%}58%{left:42%;bottom:24%}68%{left:32%;bottom:38%}78%{left:23%;bottom:24%}100%{left:-20%;bottom:24%}}
+@keyframes spin{to{transform:rotate(-900deg)}}
+.petwrap.play .head{animation:nudge .28s ease-in-out .78s 2}
+@keyframes nudge{50%{transform:translate(-14px,-10px)}}
+.petwrap.play .body{animation:hop .5s ease-out 1.1s 2}
+@keyframes hop{50%{transform:scale(var(--sc)) translateY(-18px)}}
 @media (prefers-reduced-motion:reduce){.petsvg *,.petsvg,.petwrap *{animation:none!important}}
 .climline{appearance:none;border:0;background:none;padding:0;margin:-6px 0 2px;display:flex;align-items:center;gap:8px;font:inherit;font-size:13.5px;color:var(--muted);cursor:pointer;text-align:left;flex-wrap:wrap}
 .climline svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
@@ -572,7 +585,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.36.0";
+const APP_VERSION = "5.37.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -654,7 +667,7 @@ const I18N_EN = {
   "Tiere nach Schlupftag":"Animals by hatch day","antippen zum Aufklappen":"tap to expand","Ohne Schlupfdatum":"No hatch date","Verlauf der Box":"Box history","wer wann rein- und rauskam":"who came in and left when",
   "Neue App-Version":"New app version","Android-App aktualisieren":"Update Android app","neueste Version herunterladen und darüber installieren – deine Daten bleiben":"download the latest version and install it over the old one – your data stays","Herunterladen":"Download","Speichern oder teilen":"Save or share","Bitte Bluetooth einschalten …":"Please turn on Bluetooth …","Bluetooth-Berechtigung fehlt. Bitte in den Android-Einstellungen für Raupenbuch „Geräte in der Nähe“ erlauben.":"Bluetooth permission missing. Please allow “Nearby devices” for Raupenbuch in the Android settings.","Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.":"Bluetooth sensor: not yet available in the Android app. For now, please open the web app in Chrome to read it.",
   "App-Icon":"App icon","Aussehen auf dem Startbildschirm wählen":"Choose how it looks on the home screen","Raupe klassisch":"Classic larva","Nacht":"Night","Hell":"Light","Grün":"Green","Atropos-Raupe":"Atropos larva","Buch":"Book","Totenkopf":"Death's-head","App-Icon geändert":"App icon changed","Der Startbildschirm übernimmt das neue Icon nach ein paar Sekunden. Liegt das Raupenbuch dort als Verknüpfung, musst du es eventuell neu aus der App-Übersicht ziehen.":"The home screen picks up the new icon after a few seconds. If Raupenbuch sits there as a shortcut, you may need to drag it from the app drawer again.",
-  "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
+  "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Ball spielen":"Play ball","Tanzen":"Dance","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
   "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
@@ -4591,7 +4604,7 @@ VIEWS.pet = () => {
   </div>
   <p class="petmsg"><b>${esc(p.name)}</b> ${esc(petMoodTxt(p))}</p>
   <div class="card pbars">${eats||adult ? petBar("Satt", p.hunger, "var(--larva)") + petBar("Laune", p.mood, "var(--ochre)") + petBar("Gesundheit", p.health, "var(--crit)") : ""}${petBar(adult ? "Lebenslauf" : eats ? `Bis zur Häutung` : "Entwicklung", adult ? 100 : next, "var(--accent)")}</div>
-  <div class="btns">${eats ? `<button class="btn primary" data-act="petFeed">Füttern</button>` : adult ? `<button class="btn primary" data-act="petFeed">Honig geben</button>` : ""}${(eats||adult) ? `<button class="btn" data-act="petClean" ${p.poop?"":"disabled"}>Saubermachen</button><button class="btn" data-act="petPet">Streicheln</button>` : ""}${adult ? `<button class="btn" data-act="petEggs">Eier legen lassen</button>` : ""}</div>
+  <div class="btns">${eats ? `<button class="btn primary" data-act="petFeed">Füttern</button>` : adult ? `<button class="btn primary" data-act="petFeed">Honig geben</button>` : ""}${(eats||adult) ? `<button class="btn" data-act="petClean" ${p.poop?"":"disabled"}>Saubermachen</button><button class="btn" data-act="petPet">Streicheln</button>${eats ? `<button class="btn" data-act="petPlay">Ball spielen</button>` : ""}<button class="btn" data-act="petDance">Tanzen</button>` : ""}${adult ? `<button class="btn" data-act="petEggs">Eier legen lassen</button>` : ""}</div>
   <div class="btns"><button class="btn ghost" data-act="petName">Umbenennen</button>${p.album?.length ? `<button class="btn ghost" data-act="petAlbum">Frühere Generationen (${p.album.length})</button>` : ""}<button class="btn ghost" data-act="petReset">Neu anfangen</button></div>
   <p class="small muted">${esc(p.name)} lebt in Echtzeit weiter: Hunger und Laune sinken auch, wenn die App zu ist. Gute Laune lässt sie schneller wachsen, schmollend frisst und wächst sie schlechter. Gut versorgt häutet sie sich etwa jeden halben Tag, gräbt sich nach L5 ein und schlüpft nach der Puppenruhe als Totenkopfschwärmer.</p>`;
   return h;
@@ -4605,6 +4618,8 @@ function petFx(kind){
   const fx = $("#petFx"), w = $("#petWrap"); if(!fx || !w) return;
   if(kind==="feed"){ fx.innerHTML = `<svg viewBox="0 0 100 100" class="leaf"><path d="M 10 60 C 20 20 70 10 92 18 C 88 50 60 86 18 80 Z" fill="#5f9e4a"/><path d="M 16 74 C 40 56 62 40 88 20" stroke="#3f7a2f" stroke-width="3" fill="none"/></svg>`; w.classList.add("chomp"); setTimeout(()=>{ fx.innerHTML=""; w.classList.remove("chomp"); }, 1600); }
   if(kind==="love"){ fx.innerHTML = Array.from({length:5},(_,k)=>`<span class="heart" style="left:${30+k*10}%;animation-delay:${k*0.12}s">♥</span>`).join(""); w.classList.add("wiggle"); setTimeout(()=>{ fx.innerHTML=""; w.classList.remove("wiggle"); }, 1500); }
+  if(kind==="ball"){ fx.innerHTML = `<div class="ball"><svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="19" fill="#e8607a"/><path d="M 1 20 C 10 13 30 13 39 20" stroke="#fff" stroke-width="4" fill="none"/><path d="M 20 1 C 13 12 13 28 20 39" stroke="#f2b632" stroke-width="4" fill="none"/></svg></div>`; w.classList.add("play"); setTimeout(()=>{ fx.innerHTML=""; w.classList.remove("play"); }, 2700); }
+  if(kind==="dance"){ fx.innerHTML = Array.from({length:6},(_,k)=>`<span class="mnote" style="left:${18+k*12}%;animation-delay:${k*0.3}s">${k%2?"♫":"♪"}</span>`).join(""); w.classList.add("dance"); setTimeout(()=>{ fx.innerHTML=""; w.classList.remove("dance"); }, 3700); }
   if(kind==="clean"){ fx.innerHTML = `<span class="sparkle">✦</span><span class="sparkle" style="left:60%;animation-delay:.2s">✦</span><span class="sparkle" style="left:40%;top:30%;animation-delay:.35s">✦</span>`; setTimeout(()=>{ fx.innerHTML=""; }, 1300); }
 }
 ACTS.petFeed = () => {
@@ -4618,6 +4633,14 @@ let _petPetT = 0;
 ACTS.petPet = (d, el, ev) => { if(ev && ev.target.closest("button") && !ev.target.closest('[data-act="petPet"].btn')) return; const now = Date.now(); if(now - _petPetT < 1200) return; _petPetT = now;
   const p = petTick(_pet || store.meta.pet || petNew()); if(!/^L\d|falter/.test(p.stage)){ toast("Pssst – nicht stören!"); return; }
   petAct(q => ({...q, mood:Math.min(100, q.mood + 10)}), "love"); };
+let _petPlayT = 0;
+const petFun = (fx, mood, cost) => { const now = Date.now(); if(now - _petPlayT < 3000) return; 
+  const p = petTick(_pet || store.meta.pet || petNew());
+  if(!/^L\d|falter/.test(p.stage)){ toast("Pssst – nicht stören!"); return; }
+  if(p.hunger < 15){ toast(`${p.name} hat keine Kraft mehr – erst füttern!`); return; }
+  _petPlayT = now; petAct(q => ({...q, mood:Math.min(100, q.mood + mood), hunger:Math.max(0, q.hunger - cost)}), fx); };
+ACTS.petPlay = () => petFun("ball", 15, 4);
+ACTS.petDance = () => petFun("dance", 12, 3);
 ACTS.petEggs = () => { const p = petTick(_pet || store.meta.pet || petNew());
   const root = openSheet(`<h2>Eier legen lassen</h2><p class="muted" style="margin:0">${esc(p.name)} legt Eier, aus denen die nächste Generation schlüpft. ${esc(p.name)} kommt ins Album.</p>${fld.text("pN","Name der neuen Raupe","Raupi")}<div class="btns"><button class="btn primary" id="ok">Los geht's</button></div>`);
   root.querySelector("#ok").onclick = async () => { const n = petNew(p.gen + 1, val(root,"pN") || "Raupi"); n.album = [...(p.album||[]), {name:p.name, gen:p.gen, days:Math.round((Date.now()-p.born)/864e5)}]; await petSave(n); closeSheet(); render(); toast("Eine neue Raupe ist geschlüpft!"); }; };
