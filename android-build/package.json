@@ -3,6 +3,7 @@
   "private": true,
   "description": "Android-App (Capacitor) aus der Web-App im Hauptordner. Wird von .github/workflows/android.yml gebaut.",
   "dependencies": {
+    "@capacitor-community/bluetooth-le": "8.3.0",
     "@capacitor/android": "8.6.0",
     "@capacitor/core": "8.6.0",
     "@capacitor/filesystem": "8.1.5",
