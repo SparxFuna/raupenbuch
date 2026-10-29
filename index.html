@@ -572,7 +572,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.35.0";
+const APP_VERSION = "5.36.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -652,7 +652,7 @@ const I18N_EN = {
   "korrigieren":"correct","Anzahl korrigieren":"Correct count","Eier-Anzahl korrigieren":"Correct egg count","Wie viele sind wirklich drin?":"How many are really inside?","Zuchtansatz der neuen Tiere":"Brood of the new animals","Keine Änderung.":"No change.","Wie viele Eier waren es insgesamt?":"How many eggs were there in total?","Auf Foto zählen":"Count on photo","Bitte einen Zuchtansatz wählen":"Please choose a brood",
   "Hinweise":"Hints","Alle Hinweise":"All hints","Gerade keine Hinweise.":"No hints right now.","Ausgeblendete wieder zeigen":"Show hidden again","Ausblenden":"Hide","aus deinen Einträgen":"from your entries","Eier …":"Eggs …","Ausfälle eintragen":"Record losses","unbefruchtet, vertrocknet, verschimmelt …":"infertile, dried up, mouldy …","verzählt? Gesamtzahl der Eier ändern":"miscounted? change the total number of eggs","verkauft, verschenkt, eingefroren":"sold, given away, frozen","Eier auf einem Foto automatisch zählen":"count eggs on a photo automatically","Ei liegt noch":"egg still incubating","Eier noch nicht gezählt":"eggs not counted yet","liegt seit":"lying for","Temperatur und Luftfeuchte pro Standort, Sensor koppeln":"Temperature and humidity per location, pair a sensor","gerade eben":"just now",
   "Tiere nach Schlupftag":"Animals by hatch day","antippen zum Aufklappen":"tap to expand","Ohne Schlupfdatum":"No hatch date","Verlauf der Box":"Box history","wer wann rein- und rauskam":"who came in and left when",
-  "Neue App-Version":"New app version","Android-App aktualisieren":"Update Android app","neueste Version herunterladen und darüber installieren – deine Daten bleiben":"download the latest version and install it over the old one – your data stays","Herunterladen":"Download","Speichern oder teilen":"Save or share","Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.":"Bluetooth sensor: not yet available in the Android app. For now, please open the web app in Chrome to read it.",
+  "Neue App-Version":"New app version","Android-App aktualisieren":"Update Android app","neueste Version herunterladen und darüber installieren – deine Daten bleiben":"download the latest version and install it over the old one – your data stays","Herunterladen":"Download","Speichern oder teilen":"Save or share","Bitte Bluetooth einschalten …":"Please turn on Bluetooth …","Bluetooth-Berechtigung fehlt. Bitte in den Android-Einstellungen für Raupenbuch „Geräte in der Nähe“ erlauben.":"Bluetooth permission missing. Please allow “Nearby devices” for Raupenbuch in the Android settings.","Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.":"Bluetooth sensor: not yet available in the Android app. For now, please open the web app in Chrome to read it.",
   "App-Icon":"App icon","Aussehen auf dem Startbildschirm wählen":"Choose how it looks on the home screen","Raupe klassisch":"Classic larva","Nacht":"Night","Hell":"Light","Grün":"Green","Atropos-Raupe":"Atropos larva","Buch":"Book","Totenkopf":"Death's-head","App-Icon geändert":"App icon changed","Der Startbildschirm übernimmt das neue Icon nach ein paar Sekunden. Liegt das Raupenbuch dort als Verknüpfung, musst du es eventuell neu aus der App-Übersicht ziehen.":"The home screen picks up the new icon after a few seconds. If Raupenbuch sits there as a shortcut, you may need to drag it from the app drawer again.",
   "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
@@ -4094,14 +4094,42 @@ ACTS.importCsv = d => {
 const BT_SVC = "ebe0ccb0-7a0a-4b0c-8a1a-6ff2997da3a6", BT_CHR = "ebe0ccc1-7a0a-4b0c-8a1a-6ff2997da3a6";
 const withTimeout = (p, ms, msg="Zeitüberschreitung") => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error(msg)), ms))]);
 function sensorCard(l){
-  if(NATIVE) return `<div class="note">Bluetooth-Sensor: In der Android-App noch nicht verfügbar. Zum Auslesen bitte vorerst die Web-App in Chrome öffnen.</div>`;
-  if(!navigator.bluetooth) return `<div class="note">Bluetooth-Sensor: In diesem Browser nicht verfügbar. Öffne das Raupenbuch in Chrome auf Android.</div>`;
+  if(!btOK()) return `<div class="note">Bluetooth-Sensor: In diesem Browser nicht verfügbar. Öffne das Raupenbuch in Chrome auf Android.</div>`;
   const sn = l.sensor;
   if(!sn) return `<div class="card sensor"><b>Bluetooth-Sensor</b><span class="small muted">Koppel einen Xiaomi-Hygrometer (LYWSD03MMC) mit diesem Standort. Danach holst du den aktuellen Wert mit einem Tippen.</span><div class="btns"><button class="btn primary" data-act="sensorRead" data-loc="${l.id}" data-new="1">Sensor koppeln</button></div></div>`;
   const batt = sn.mv ? `${fmtN(sn.mv/1000,2)} V` : "";
   return `<div class="card sensor"><div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline"><b>Sensor ${esc(sn.name||"")}</b>${batt?`<span class="pill ${sn.mv<2500?"warn":""}">Batterie ${batt}</span>`:""}</div>
     ${sn.last?`<div class="vals"><span>${fmtN(sn.last.temp,1)} °C</span><span>${fmtN(sn.last.rh,0)} %</span></div><span class="small muted">abgerufen ${dDE(sn.last.at)} ${sn.last.at.slice(11,16)}</span>`:""}
     <div class="btns"><button class="btn primary" data-act="sensorRead" data-loc="${l.id}">Messwert vom Sensor holen</button><button class="btn ghost" data-act="sensorMenu" data-loc="${l.id}">Sensor ändern</button></div></div>`;
+}
+const btNat = () => NATIVE && window.Capacitor?.Plugins?.BluetoothLe;
+const btOK = () => NATIVE ? !!btNat() : !!navigator.bluetooth;
+const hexDV = h => { const b = String(h||"").replace(/[^0-9a-f]/gi,"").match(/../g) || []; return new DataView(new Uint8Array(b.map(x=>parseInt(x,16))).buffer); };
+const btParse = v => ({temp: Math.round(v.getInt16(0,true))/100, rh: v.getUint8(2), mv: v.byteLength>=5 ? v.getUint16(3,true) : null});
+/* Android-App: Bluetooth über das Capacitor-Plugin (@capacitor-community/bluetooth-le). Geräte-ID ist dort die MAC-Adresse (sensor.nid). */
+async function btNativeRead(l, isNew, say){
+  const B = btNat();
+  await B.initialize({androidNeverForLocation:true});
+  try { if(!(await B.isEnabled()).value){ say("Bitte Bluetooth einschalten …"); await B.requestEnable(); } } catch(e){}
+  try { await B.setDisplayStrings({scanning:"Suche Sensoren …", cancel:"Abbrechen", availableDevices:"Gefundene Sensoren", noDeviceFound:"Kein Sensor gefunden"}); } catch(e){}
+  let id = !isNew && l.sensor?.nid, name = l.sensor?.name || "";
+  if(!id){ say("Wähle den Sensor in der Liste …"); const d = await B.requestDevice({namePrefix:"LYWSD03", optionalServices:[BT_SVC]}); id = d.deviceId; name = d.name || name || "LYWSD03MMC"; }
+  let ok = false, err = null;
+  for(let a=1; a<=3 && !ok; a++){
+    try { say(a===1?"Verbinde …":`Verbinde (Versuch ${a}) …`); await B.connect({deviceId:id, timeout:15000}); ok = true; }
+    catch(e){ err = e; try { await B.disconnect({deviceId:id}); } catch(_){} await new Promise(r=>setTimeout(r,1500)); }
+  }
+  if(!ok) throw err || new Error("Keine Verbindung");
+  let lis = null;
+  try {
+    say("Warte auf Messwert …");
+    const v = await withTimeout(new Promise(async (res, rej) => {
+      try { lis = await B.addListener(`notification|${id}|${BT_SVC}|${BT_CHR}`, ev => res(hexDV(ev?.value)));
+        await B.startNotifications({deviceId:id, service:BT_SVC, characteristic:BT_CHR}); } catch(e){ rej(e); }
+    }), 25000, "Kein Messwert empfangen");
+    try { await B.stopNotifications({deviceId:id, service:BT_SVC, characteristic:BT_CHR}); } catch(e){}
+    return {...btParse(v), nid:id, name};
+  } finally { try { lis && lis.remove(); } catch(e){} try { await B.disconnect({deviceId:id}); } catch(e){} }
 }
 async function btPick(){
   return await navigator.bluetooth.requestDevice({filters:[{namePrefix:"LYWSD03"},{namePrefix:"ATC_"},{services:[BT_SVC]}], optionalServices:[BT_SVC]});
@@ -4135,29 +4163,33 @@ async function btRead(dev, say){
       ch.startNotifications().catch(rej);
     }), 25000, "Kein Messwert empfangen");
     try { await ch.stopNotifications(); } catch(e){}
-    return {temp: Math.round(v.getInt16(0,true))/100, rh: v.getUint8(2), mv: v.byteLength>=5 ? v.getUint16(3,true) : null};
+    return btParse(v);
   } finally { try { dev.gatt.disconnect(); } catch(e){} }
 }
 ACTS.sensorRead = async d => {
   const l = S.locations[d.loc]; if(!l) return;
-  if(!navigator.bluetooth){ toast("Bluetooth ist in diesem Browser nicht verfügbar"); return; }
+  if(!btOK()){ toast("Bluetooth ist in diesem Browser nicht verfügbar"); return; }
   const root = openSheet(`<h2>${esc(l.name)}: Sensor</h2><div class="card sensor"><div class="vals" id="bv"><span>– °C</span><span>– %</span></div><div id="bst" class="small muted">Starte …</div></div><div class="btns"><button class="btn" id="bx">Schließen</button></div>`);
   root.querySelector("#bx").onclick = closeSheet;
   const say = t => { const e = root.querySelector("#bst"); if(e) e.textContent = t; };
-  let dev = null;
+  let dev = null, r, sn;
   try {
-    if(!d.new && l.sensor) dev = await btKnown(l.sensor.id);
-    if(!dev){ say(l.sensor && !d.new ? "Gerät nicht gespeichert. Bitte den Sensor in der Liste wählen …" : "Wähle den Sensor in der Liste …"); dev = await btPick(); }
-    const r = await btRead(dev, say);
+    if(NATIVE){ r = await btNativeRead(l, !!d.new, say); sn = {...(!d.new && l.sensor || {}), nid:r.nid, name:r.name}; }
+    else {
+      if(!d.new && l.sensor) dev = await btKnown(l.sensor.id);
+      if(!dev){ say(l.sensor && !d.new ? "Gerät nicht gespeichert. Bitte den Sensor in der Liste wählen …" : "Wähle den Sensor in der Liste …"); dev = await btPick(); }
+      r = await btRead(dev, say); sn = {...(!d.new && l.sensor || {}), id:dev.id, name:dev.name||""};
+    }
     const now = nowLocal();
     await addPoints(l.id, [{date:now.slice(0,10), time:now.slice(11,16), temp:r.temp, rh:r.rh, src:"b"}]);
-    await store.put("locations", {...S.locations[l.id], sensor:{id:dev.id, name:dev.name||"", mv:r.mv, last:{at:now, temp:r.temp, rh:r.rh}}});
+    await store.put("locations", {...S.locations[l.id], sensor:{...sn, mv:r.mv, last:{at:now, temp:r.temp, rh:r.rh}}});
     const bv = root.querySelector("#bv"); if(bv) bv.innerHTML = `<span>${fmtN(r.temp,1)} °C</span><span>${fmtN(r.rh,0)} %</span>`;
     say(`Gespeichert um ${now.slice(11,16)} Uhr${r.mv?` · Batterie ${fmtN(r.mv/1000,2)} V`:""}.`);
     if(navigator.vibrate) navigator.vibrate(40);
   } catch(e){
     console.warn(e);
-    say(e && e.name==="NotFoundError" ? "Kein Sensor gewählt." : e && e.name==="SecurityError" ? "Bitte erneut tippen (Chrome verlangt dafür ein frisches Antippen)." : "Fehler: " + (e && e.message || e) + ". Sensor näher ans Handy halten und Xiaomi Home schließen.");
+    const m = String(e && e.message || e);
+    say(e && e.name==="NotFoundError" || /cancel/i.test(m) ? "Kein Sensor gewählt." : /permission|berechtigung/i.test(m) ? "Bluetooth-Berechtigung fehlt. Bitte in den Android-Einstellungen für Raupenbuch „Geräte in der Nähe“ erlauben." : e && e.name==="SecurityError" ? "Bitte erneut tippen (Chrome verlangt dafür ein frisches Antippen)." : "Fehler: " + (e && e.message || e) + ". Sensor näher ans Handy halten und Xiaomi Home schließen.");
   }
 };
 ACTS.sensorMenu = d => {
