@@ -1,0 +1,4 @@
+build/
+.gradle/
+release.p12
+src/main/res/drawable-nodpi/
