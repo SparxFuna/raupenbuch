@@ -438,8 +438,8 @@ button.pill.tag{cursor:pointer}
 .petwrap.eating .jaw{animation:jaw 1.4s ease-in-out infinite}
 @keyframes jaw{0%,100%{transform:scaleY(.3)}18%,36%{transform:scaleY(1)}46%{transform:scaleY(.15)}62%{transform:scaleY(.55)}78%{transform:scaleY(.15)}}
 .petwrap.eating .crumb{animation:crumb 1.4s ease-in infinite;opacity:0}
-.petwrap.eating .crumb.c2{animation-delay:.7s}
-@keyframes crumb{0%,45%{opacity:0;transform:translate(0,0)}50%{opacity:1}100%{opacity:0;transform:translate(6px,26px)}}
+.petwrap.eating .crumb.c2{animation-delay:.47s} .petwrap.eating .crumb.c3{animation-delay:.93s}
+@keyframes crumb{0%,40%{opacity:0;transform:translate(0,0)}46%{opacity:1}100%{opacity:0;transform:translate(10px,44px)}}
 .petwrap.play .head{animation:nudge .28s ease-in-out .78s 2}
 @keyframes nudge{50%{transform:translate(-14px,-10px)}}
 .petwrap.play .body{animation:hop .5s ease-out 1.1s 2}
@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.39.0";
+const APP_VERSION = "5.40.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -4577,7 +4577,7 @@ function petTick(p, now=Date.now()){
   if(q.food){   // Blatt/Honig: wird in ~1 Minute verputzt (auch wenn die App zu ist)
     if(!/^L\d|falter/.test(q.stage)) q.food = null;
     else { const f = q.food = {...q.food};
-      if(q.hunger <= 95){ const e = Math.min(f.left, Math.max(0, (now - (f.eatT||f.at))/6e4)); f.left -= e; q.hunger = Math.min(100, q.hunger + e*(f.gain||30)); }
+      if(q.hunger < 100){ const e = Math.min(f.left, Math.max(0, (now - (f.eatT||f.at))/6e4), (100 - q.hunger)/(f.gain||30)); f.left -= e; q.hunger = Math.min(100, q.hunger + e*(f.gain||30)); }
       f.eatT = now;
       if(f.left <= 0.0005){ q.food = null; q.mood = Math.min(100, q.mood + 4); if(q.stage!=="falter" && Math.random() < 0.6) q.poop = Math.min(9, q.poop + 1); } }
   }
@@ -4589,7 +4589,7 @@ async function petLoad(){ const m = store.meta.pet; _pet = petTick(_pet && m && 
   return _pet; }
 async function petSave(p){ _pet = p; await store.setMeta("pet", p); }
 const petMoodTxt = p => p.stage==="vorpuppe" ? "hat sich eingegraben und baut eine Puppenwiege …" : p.stage==="puppe" ? "ruht als Puppe. Pssst!"
-  : p.food && p.hunger <= 95 ? (p.stage==="falter" ? "nascht vom Honig." : "knabbert an einem Ligusterblatt.") : p.food ? "ist gerade satt – das Futter bleibt liegen."
+  : p.food && p.hunger < 99.5 ? (p.stage==="falter" ? "nascht vom Honig." : "knabbert an einem Ligusterblatt.") : p.food ? "ist gerade satt – das Futter bleibt liegen."
   : p.health < 25 ? "ist sehr schwach. Füttern und saubermachen hilft!" : p.hunger < 20 ? "hat großen Hunger!" : p.poop >= 4 ? "findet es hier ziemlich schmutzig." : p.mood < 20 ? "schmollt und wächst kaum – streichel sie mal!" : p.mood < 30 ? "langweilt sich – streichel sie mal."
   : p.mood > 70 && p.hunger > 40 ? "ist bestens gelaunt und wächst prächtig!" : p.hunger > 90 ? "ist pappsatt und zufrieden." : "fühlt sich wohl.";
 function petSvg(p, act){
@@ -4605,7 +4605,7 @@ function petSvg(p, act){
   const mouth = face==="happy" ? `<path d="M ${hx-2} 312 Q ${hx+10} 324 ${hx+20} 312" stroke="#2a2a20" stroke-width="4" fill="none" stroke-linecap="round"/>` : face==="sad" ? `<path d="M ${hx-2} 320 Q ${hx+10} 310 ${hx+20} 320" stroke="#2a2a20" stroke-width="4" fill="none" stroke-linecap="round"/>` : `<path d="M ${hx} 316 L ${hx+18} 316" stroke="#2a2a20" stroke-width="4" stroke-linecap="round"/>`;
   const horn = L>=2 ? `<path d="M 140 286 C 118 262 112 236 122 216 C 128 236 138 252 156 268 Z" fill="#e0b23c" stroke="#8a6a1c" stroke-width="3"/>` : "";
   const soil = st==="vorpuppe" ? `<path d="M -56 318 C 120 300 380 300 568 318 L 568 512 L -56 512 Z" fill="#5b4330"/><g fill="#6d5340"><circle cx="90" cy="360" r="8"/><circle cx="300" cy="400" r="10"/><circle cx="410" cy="350" r="7"/></g>` : "";
-  return `<svg viewBox="-56 0 624 512" class="petsvg cat ${act||""}" style="--sc:${sc}"><g id="pfood">${petFoodInner(p)}</g><g id="pmv" transform="${st==="vorpuppe" ? "" : petMv(p)}"><g class="body"><g transform="translate(256 330) scale(${sc}) translate(-256 -330)">${horn}${segs}<g class="head"><circle cx="${hx}" cy="298" r="34" fill="${st==="vorpuppe"?"#a68a4c":"#b7c63e"}"/><circle cx="${hx+8}" cy="288" r="7" fill="#2a2a20"/><circle cx="${hx+10}" cy="286" r="2.4" fill="#fff"/><g class="mface">${mouth}</g><g class="meat"><ellipse class="jaw" cx="${hx+19}" cy="313" rx="10" ry="8" fill="#3a2a1e"/><circle class="crumb" cx="${hx+24}" cy="320" r="3.2" fill="#4f8a3f"/><circle class="crumb c2" cx="${hx+16}" cy="321" r="2.6" fill="#4f8a3f"/></g>${face==="happy"?`<circle cx="${hx-10}" cy="306" r="6" fill="#ee9a78" opacity=".55"/>`:""}</g></g></g></g>${soil}</svg>`;
+  return `<svg viewBox="-56 0 624 512" class="petsvg cat ${act||""}" style="--sc:${sc}"><g id="pfood">${petFoodInner(p)}</g><g id="pmv" transform="${st==="vorpuppe" ? "" : petMv(p)}"><g class="body"><g transform="translate(256 330) scale(${sc}) translate(-256 -330)">${horn}${segs}<g class="head"><circle cx="${hx}" cy="298" r="34" fill="${st==="vorpuppe"?"#a68a4c":"#b7c63e"}"/><circle cx="${hx+8}" cy="288" r="7" fill="#2a2a20"/><circle cx="${hx+10}" cy="286" r="2.4" fill="#fff"/><g class="mface">${mouth}</g><g class="meat"><ellipse class="jaw" cx="${hx+19}" cy="313" rx="10" ry="8" fill="#3a2a1e"/><circle class="crumb" cx="${hx+26}" cy="320" r="5" fill="#2f6b2a"/><circle class="crumb c2" cx="${hx+14}" cy="322" r="4.2" fill="#2f6b2a"/><circle class="crumb c3" cx="${hx+21}" cy="318" r="3.6" fill="#3f7a35"/></g>${face==="happy"?`<circle cx="${hx-10}" cy="306" r="6" fill="#ee9a78" opacity=".55"/>`:""}</g></g></g></g>${soil}</svg>`;
 }
 const PET_MOTH = (() => { const H = '<path d="M 248 268 C 205 275 160 290 146 322 C 146 356 186 372 248 336 Z" fill="#f2b632"/><path d="M 238 290 C 205 300 172 312 160 330" fill="none" stroke="#1d1611" stroke-width="9" stroke-linecap="round"/><path d="M 248 212 C 196 180 116 146 60 160 C 50 186 72 240 116 280 C 158 300 212 298 248 282 Z" fill="#3b2b22" stroke="#8c7356" stroke-width="5"/><path d="M 120 262 C 150 254 190 252 230 262" fill="none" stroke="#5a4334" stroke-width="10" stroke-linecap="round"/><circle cx="176" cy="238" r="7" fill="#d9c7a0"/>';
   return `<g class="wl">${H}</g><g class="wr"><g transform="translate(512,0) scale(-1,1)">${H}</g></g><ellipse cx="256" cy="322" rx="19" ry="56" fill="#f2b632"/><g fill="#1d1611"><rect x="237" y="296" width="38" height="7" rx="3"/><rect x="238" y="314" width="36" height="7" rx="3"/><rect x="240" y="332" width="32" height="7" rx="3"/></g><ellipse cx="256" cy="246" rx="25" ry="36" fill="#2a201a"/><path d="M 256 228 C 270 228 276 240 274 252 C 272 262 266 268 256 270 C 246 268 240 262 238 252 C 236 240 242 228 256 228 Z" fill="#e9d9b0"/><circle cx="249" cy="246" r="4.5" fill="#2a201a"/><circle cx="263" cy="246" r="4.5" fill="#2a201a"/><circle cx="256" cy="206" r="13" fill="#2a201a"/><path d="M 251 200 C 240 176 228 160 214 150 M 261 200 C 272 176 284 160 298 150" fill="none" stroke="#2a201a" stroke-width="5" stroke-linecap="round"/>`; })();
@@ -4651,7 +4651,7 @@ function petFx(kind){
 ACTS.petFeed = () => {
   const p = petTick(_pet || store.meta.pet || petNew()), adult = p.stage==="falter";
   if(p.food){ toast(adult ? "Da ist noch Honig." : "Da liegt noch ein Blatt."); return; }
-  if(p.hunger > 95){ toast(`${p.name} ist satt und mag nicht mehr.`); return; }
+  if(p.hunger >= 97){ toast(`${p.name} ist satt und mag nicht mehr.`); return; }
   const sulk = p.mood < 20 && !adult; if(sulk) setTimeout(() => toast(`${p.name} schmollt und mag heute nicht so recht fressen.`), 300);
   const w = petPos(p), side = w.x > 256 ? "l" : "r";
   const x = adult ? 150 + Math.random()*210 : side==="r" ? 412 + Math.random()*28 : 72 + Math.random()*28;
@@ -4691,14 +4691,14 @@ function petLoop(ts){
     const step = (tx, ty) => { const dx = tx - w.x, dy = ty - w.y, d = Math.hypot(dx, dy); if(d < 1.5) return true;
       const k = Math.min(1, speed*dt/d); w.x += dx*k; w.y += dy*k; if(!moth && Math.abs(dx) > 1) w.dir = dx > 0 ? 1 : -1; return false; };
     if(f) f.eatT = now;
-    if(f && p.hunger <= 95 && w.mode!=="play" && w.mode!=="dance"){
+    if(f && (p.hunger <= 95 || (w.mode==="eat" || w.mode==="food") && p.hunger < 99.9) && w.mode!=="play" && w.mode!=="dance"){
       const t = petFoodSpot(p, f);
       if(step(t.x, t.y)){ w.mode = "eat"; w.dir = t.dir;
-        const e = Math.min(f.left, dt/60); f.left -= e; p.hunger = Math.min(100, p.hunger + e*(f.gain||30));
+        const e = Math.min(f.left, dt/60, (100 - p.hunger)/(f.gain||30)); f.left -= e; p.hunger = Math.min(100, p.hunger + e*(f.gain||30));
         if(f.left <= 0.0005){ p.food = null; p.mood = Math.min(100, p.mood + 4); if(!moth && Math.random() < 0.6) p.poop = Math.min(9, p.poop + 1);
           w.mode = "rest"; w.until = now + 2500; petSave(p).then(() => { if(cur().v==="pet" && !$("#scrim")) render(); }); }
       } else w.mode = "food";
-    } else if(w.mode==="food" || w.mode==="eat"){ w.mode = "rest"; w.until = now + 2000; }
+    } else if(w.mode==="food" || w.mode==="eat"){ w.mode = "rest"; w.until = now + 2000; petSave(p).then(() => { if(cur().v==="pet" && !$("#scrim")) render(); }); }
     else if(w.mode==="walk"){ if(step(w.tx, w.ty)){ w.mode = "rest"; w.until = now + 2000 + Math.random()*4000; } }
     else if((w.mode==="play" || w.mode==="dance") && now > w.until){ w.mode = "rest"; w.until = now + 3000; }
     else if(w.mode==="rest" && now > w.until){
