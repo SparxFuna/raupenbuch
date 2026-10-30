@@ -12,11 +12,11 @@
     <DigitalClock x="0" y="0" width="450" height="450">
       <TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="70" width="450" height="112" alpha="255">
         <Variant mode="AMBIENT" target="alpha" value="0"/>
-        <Font family="SYNC_TO_DEVICE" size="104" weight="BOLD" color="#ff1f3d2d"/>
+        <Font family="SYNC_TO_DEVICE" size="92" weight="BOLD" color="#ff1f3d2d"/>
       </TimeText>
       <TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="70" width="450" height="112" alpha="0">
         <Variant mode="AMBIENT" target="alpha" value="255"/>
-        <Font family="SYNC_TO_DEVICE" size="104" weight="THIN" color="#ffffffff"/>
+        <Font family="SYNC_TO_DEVICE" size="92" weight="THIN" color="#ffffffff"/>
       </TimeText>
     </DigitalClock>
 
@@ -57,219 +57,263 @@
       <Image resource="raupi_ambient"/>
     </PartImage>
 
-    <!-- Komplikationen: auf der Uhr per langem Drücken → Anpassen auswählbar -->
-    <ComplicationSlot x="192" y="10" width="66" height="66" slotId="0" displayName="slot_top" supportedTypes="SHORT_TEXT RANGED_VALUE MONOCHROMATIC_IMAGE SMALL_IMAGE EMPTY">
-      <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
-      <BoundingOval x="0" y="0" width="66" height="66"/>
-      <Complication type="SHORT_TEXT">
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="66" height="66"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Ellipse x="1" y="1" width="64" height="64"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartImage x="23" y="11" width="20" height="20" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-        <PartText x="4" y="32" width="58" height="21">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="16" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
-        </PartText>
-      </Complication>
-      <Complication type="RANGED_VALUE">
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="66" height="66"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Ellipse x="1" y="1" width="64" height="64"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartDraw x="4" y="4" width="58" height="58">
-          <Arc centerX="29.0" centerY="29.0" width="52" height="52" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#40ffffff" cap="ROUND"/>
-          </Arc>
-          <Arc centerX="29.0" centerY="29.0" width="52" height="52" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#fff2b632" cap="ROUND"/>
-            <Transform target="endAngle" value="-140 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 280"/>
-          </Arc>
-        </PartDraw>
-        <PartImage x="23" y="11" width="20" height="20" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-        <PartText x="4" y="32" width="58" height="21">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="16" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
-        </PartText>
-      </Complication>
-      <Complication type="MONOCHROMATIC_IMAGE">
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="66" height="66"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="66" height="66">
-          <Ellipse x="1" y="1" width="64" height="64"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartImage x="16" y="16" width="33" height="33" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-      </Complication>
-      <Complication type="SMALL_IMAGE">
-        <PartImage x="0" y="0" width="66" height="66">
-          <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
-        </PartImage>
-      </Complication>
-    </ComplicationSlot>
-    <ComplicationSlot x="28" y="162" width="82" height="82" slotId="1" displayName="slot_left" supportedTypes="SHORT_TEXT RANGED_VALUE MONOCHROMATIC_IMAGE SMALL_IMAGE EMPTY">
-      <DefaultProviderPolicy defaultSystemProvider="WATCH_BATTERY" defaultSystemProviderType="RANGED_VALUE"/>
-      <BoundingOval x="0" y="0" width="82" height="82"/>
-      <Complication type="SHORT_TEXT">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartImage x="28" y="13" width="25" height="25" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-        <PartText x="4" y="39" width="74" height="26">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="20" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
-        </PartText>
-      </Complication>
-      <Complication type="RANGED_VALUE">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartDraw x="4" y="4" width="74" height="74">
-          <Arc centerX="37.0" centerY="37.0" width="68" height="68" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#40ffffff" cap="ROUND"/>
-          </Arc>
-          <Arc centerX="37.0" centerY="37.0" width="68" height="68" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#fff2b632" cap="ROUND"/>
-            <Transform target="endAngle" value="-140 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 280"/>
-          </Arc>
-        </PartDraw>
-        <PartImage x="28" y="13" width="25" height="25" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-        <PartText x="4" y="39" width="74" height="26">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="20" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
-        </PartText>
-      </Complication>
-      <Complication type="MONOCHROMATIC_IMAGE">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartImage x="20" y="20" width="41" height="41" tintColor="#ffeef6ef">
-          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
-        </PartImage>
-      </Complication>
-      <Complication type="SMALL_IMAGE">
-        <PartImage x="0" y="0" width="82" height="82">
-          <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
-        </PartImage>
-      </Complication>
-    </ComplicationSlot>
-    <ComplicationSlot x="340" y="162" width="82" height="82" slotId="2" displayName="slot_right" supportedTypes="SHORT_TEXT RANGED_VALUE MONOCHROMATIC_IMAGE SMALL_IMAGE EMPTY">
+    <!-- KOMPLIKATIONEN (erzeugt von tools/complications.py) -->
+    <ComplicationSlot x="0" y="0" width="450" height="450" slotId="0" displayName="slot_tl" supportedTypes="RANGED_VALUE SHORT_TEXT MONOCHROMATIC_IMAGE EMPTY">
       <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="SHORT_TEXT"/>
-      <BoundingOval x="0" y="0" width="82" height="82"/>
-      <Complication type="SHORT_TEXT">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
+      <BoundingArc centerX="225" centerY="225" width="410" height="410" thickness="44" startAngle="264" endAngle="348"/>
+      <Complication type="RANGED_VALUE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#ff1f3d2d" cap="ROUND"/><Transform target="endAngle" value="282 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
+          <Transform target="angle" value="282 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
         </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#ffffffff" cap="ROUND"/><Transform target="endAngle" value="282 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ffffffff"/></Ellipse>
+          <Transform target="angle" value="282 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
         </PartDraw>
-        <PartImage x="28" y="13" width="25" height="25" tintColor="#ffeef6ef">
+        <PartImage x="8" y="206" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
           <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
         </PartImage>
-        <PartText x="4" y="39" width="74" height="26">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="20" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
+        <PartImage x="8" y="206" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="286" endAngle="322" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="286" endAngle="322" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
         </PartText>
       </Complication>
-      <Complication type="RANGED_VALUE">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartDraw x="4" y="4" width="74" height="74">
-          <Arc centerX="37.0" centerY="37.0" width="68" height="68" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#40ffffff" cap="ROUND"/>
-          </Arc>
-          <Arc centerX="37.0" centerY="37.0" width="68" height="68" startAngle="-140" endAngle="140">
-            <Stroke thickness="4" color="#fff2b632" cap="ROUND"/>
-            <Transform target="endAngle" value="-140 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 280"/>
-          </Arc>
-        </PartDraw>
-        <PartImage x="28" y="13" width="25" height="25" tintColor="#ffeef6ef">
+      <Complication type="SHORT_TEXT">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="8" y="206" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
           <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
         </PartImage>
-        <PartText x="4" y="39" width="74" height="26">
-          <Text align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="20" weight="MEDIUM" color="#ffeef6ef">
-              <Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template>
-            </Font>
-          </Text>
+        <PartImage x="8" y="206" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="286" endAngle="322" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="286" endAngle="322" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
         </PartText>
       </Complication>
       <Complication type="MONOCHROMATIC_IMAGE">
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Variant mode="AMBIENT" target="alpha" value="0"/>
-          <Ellipse x="0" y="0" width="82" height="82"><Fill color="#e62f5a43"/></Ellipse>
-        </PartDraw>
-        <PartDraw x="0" y="0" width="82" height="82">
-          <Ellipse x="1" y="1" width="80" height="80"><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
-          <Variant mode="AMBIENT" target="alpha" value="120"/>
-        </PartDraw>
-        <PartImage x="20" y="20" width="41" height="41" tintColor="#ffeef6ef">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="282" endAngle="348"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="6" y="204" width="28" height="28" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="6" y="204" width="28" height="28" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
           <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
         </PartImage>
       </Complication>
-      <Complication type="SMALL_IMAGE">
-        <PartImage x="0" y="0" width="82" height="82">
-          <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
+    </ComplicationSlot>
+    <ComplicationSlot x="0" y="0" width="450" height="450" slotId="1" displayName="slot_tr" supportedTypes="RANGED_VALUE SHORT_TEXT MONOCHROMATIC_IMAGE EMPTY">
+      <DefaultProviderPolicy defaultSystemProvider="WATCH_BATTERY" defaultSystemProviderType="RANGED_VALUE"/>
+      <BoundingArc centerX="225" centerY="225" width="410" height="410" thickness="44" startAngle="-6" endAngle="78"/>
+      <Complication type="RANGED_VALUE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#ff1f3d2d" cap="ROUND"/><Transform target="endAngle" value="12 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
+          <Transform target="angle" value="12 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#ffffffff" cap="ROUND"/><Transform target="endAngle" value="12 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ffffffff"/></Ellipse>
+          <Transform target="angle" value="12 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartImage x="220" y="8" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="220" y="8" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="16" endAngle="52" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="16" endAngle="52" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="SHORT_TEXT">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="220" y="8" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="220" y="8" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="16" endAngle="52" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="348" height="348" startAngle="16" endAngle="52" direction="CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="MONOCHROMATIC_IMAGE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="12" endAngle="78"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="218" y="6" width="28" height="28" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="218" y="6" width="28" height="28" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
         </PartImage>
       </Complication>
     </ComplicationSlot>
+    <ComplicationSlot x="0" y="0" width="450" height="450" slotId="2" displayName="slot_br" supportedTypes="RANGED_VALUE SHORT_TEXT MONOCHROMATIC_IMAGE EMPTY">
+      <DefaultProviderPolicy defaultSystemProvider="SUNRISE_SUNSET" defaultSystemProviderType="SHORT_TEXT"/>
+      <BoundingArc centerX="225" centerY="225" width="410" height="410" thickness="44" startAngle="84" endAngle="168"/>
+      <Complication type="RANGED_VALUE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#ff1f3d2d" cap="ROUND"/><Transform target="endAngle" value="102 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
+          <Transform target="angle" value="102 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#ffffffff" cap="ROUND"/><Transform target="endAngle" value="102 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ffffffff"/></Ellipse>
+          <Transform target="angle" value="102 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartImage x="418" y="220" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="418" y="220" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="142" endAngle="106" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="142" endAngle="106" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="SHORT_TEXT">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="418" y="220" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="418" y="220" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="142" endAngle="106" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="142" endAngle="106" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="MONOCHROMATIC_IMAGE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="102" endAngle="168"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="416" y="218" width="28" height="28" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="416" y="218" width="28" height="28" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+      </Complication>
+    </ComplicationSlot>
+    <ComplicationSlot x="0" y="0" width="450" height="450" slotId="3" displayName="slot_bl" supportedTypes="RANGED_VALUE SHORT_TEXT MONOCHROMATIC_IMAGE EMPTY">
+      <DefaultProviderPolicy defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
+      <BoundingArc centerX="225" centerY="225" width="410" height="410" thickness="44" startAngle="174" endAngle="258"/>
+      <Complication type="RANGED_VALUE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#ff1f3d2d" cap="ROUND"/><Transform target="endAngle" value="192 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ff1f3d2d"/></Ellipse>
+          <Transform target="angle" value="192 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#ffffffff" cap="ROUND"/><Transform target="endAngle" value="192 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Ellipse x="217" y="12" width="16" height="16"><Fill color="#ffffffff"/><Stroke thickness="2" color="#ffffffff"/></Ellipse>
+          <Transform target="angle" value="192 + (clamp([COMPLICATION.RANGED_VALUE_VALUE], [COMPLICATION.RANGED_VALUE_MIN], [COMPLICATION.RANGED_VALUE_MAX]) - [COMPLICATION.RANGED_VALUE_MIN]) / ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) * 66"/>
+        </PartDraw>
+        <PartImage x="206" y="418" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="206" y="418" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="232" endAngle="196" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="232" endAngle="196" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="SHORT_TEXT">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="206" y="418" width="24" height="24" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="206" y="418" width="24" height="24" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartText x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="232" endAngle="196" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ff1f3d2d"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+        <PartText x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <TextCircular centerX="225" centerY="225" width="384" height="384" startAngle="232" endAngle="196" direction="COUNTER_CLOCKWISE" align="CENTER" ellipsis="TRUE">
+            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="#ffffffff"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+          </TextCircular>
+        </PartText>
+      </Complication>
+      <Complication type="MONOCHROMATIC_IMAGE">
+        <PartDraw x="0" y="0" width="450" height="450" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#4d1f3d2d" cap="ROUND"/></Arc></PartDraw>
+        <PartDraw x="0" y="0" width="450" height="450" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/><Arc centerX="225" centerY="225" width="410" height="410" startAngle="192" endAngle="258"><Stroke thickness="12" color="#55ffffff" cap="ROUND"/></Arc></PartDraw>
+        <PartImage x="204" y="416" width="28" height="28" tintColor="#ff1f3d2d" alpha="255"><Variant mode="AMBIENT" target="alpha" value="0"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+        <PartImage x="204" y="416" width="28" height="28" tintColor="#ffffffff" alpha="0"><Variant mode="AMBIENT" target="alpha" value="255"/>
+          <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]"/>
+        </PartImage>
+      </Complication>
+    </ComplicationSlot>
+    <!-- /KOMPLIKATIONEN -->
   </Scene>
 </WatchFace>
