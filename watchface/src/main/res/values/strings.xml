@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <string name="watch_face_name">Raupi</string>
+  <string name="slot_top">Oben</string>
+  <string name="slot_left">Links</string>
+  <string name="slot_right">Rechts</string>
 </resources>
