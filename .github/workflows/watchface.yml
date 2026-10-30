@@ -33,6 +33,11 @@ jobs:
         with:
           gradle-version: "9.2.1"
 
+      - name: Zifferblatt-XML und Schriften erzeugen
+        run: |
+          pip install --quiet fonttools brotli
+          python3 watchface/tools/gen_watchface.py
+
       - name: XML prüfen (offizieller WFF-Validator)
         run: |
           git clone --depth 1 https://github.com/google/watchface /tmp/gwf
