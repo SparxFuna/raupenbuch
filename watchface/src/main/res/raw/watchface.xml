@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Raupi-Zifferblatt (Watch Face Format 1). Bilder werden aus der Raupenbuch-App gerendert. -->
+<WatchFace width="450" height="450">
+  <Metadata key="CLOCK_TYPE" value="DIGITAL"/>
+  <Metadata key="PREVIEW_TIME" value="10:08:32"/>
+  <Scene backgroundColor="#ff000000">
+    <PartImage x="0" y="0" width="450" height="450" name="bg">
+      <Variant mode="AMBIENT" target="alpha" value="0"/>
+      <Image resource="raupi_bg"/>
+    </PartImage>
+
+    <DigitalClock x="0" y="0" width="450" height="450">
+      <TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="70" width="450" height="112" alpha="255">
+        <Variant mode="AMBIENT" target="alpha" value="0"/>
+        <Font family="SYNC_TO_DEVICE" size="104" weight="BOLD" color="#ff1f3d2d"/>
+      </TimeText>
+      <TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="70" width="450" height="112" alpha="0">
+        <Variant mode="AMBIENT" target="alpha" value="255"/>
+        <Font family="SYNC_TO_DEVICE" size="104" weight="THIN" color="#ffffffff"/>
+      </TimeText>
+    </DigitalClock>
+
+    <PartText x="0" y="182" width="450" height="40" alpha="255">
+      <Variant mode="AMBIENT" target="alpha" value="0"/>
+      <Text align="CENTER">
+        <Font family="SYNC_TO_DEVICE" size="28" color="#ff2f5a43">
+          <Template>%s, %s. %s<Parameter expression="[DAY_OF_WEEK_S]"/><Parameter expression="[DAY]"/><Parameter expression="[MONTH_S]"/></Template>
+        </Font>
+      </Text>
+    </PartText>
+    <PartText x="0" y="182" width="450" height="40" alpha="0">
+      <Variant mode="AMBIENT" target="alpha" value="255"/>
+      <Text align="CENTER">
+        <Font family="SYNC_TO_DEVICE" size="28" color="#ffaaaaaa">
+          <Template>%s, %s. %s<Parameter expression="[DAY_OF_WEEK_S]"/><Parameter expression="[DAY]"/><Parameter expression="[MONTH_S]"/></Template>
+        </Font>
+      </Text>
+    </PartText>
+
+    <!-- Raupis Tag: wandern, tanzen, Ball spielen (Endlosschleife) -->
+    <PartAnimatedImage x="45" y="238" width="360" height="149" name="raupi">
+      <Variant mode="AMBIENT" target="alpha" value="0"/>
+      <AnimationController play="ON_VISIBLE" repeat="TRUE" resumePlayBack="TRUE" beforePlaying="FIRST_FRAME" afterPlaying="FIRST_FRAME"/>
+      <AnimatedImage resource="raupi_day" format="WEBP" thumbnail="raupi_thumb"/>
+    </PartAnimatedImage>
+
+    <!-- Antippen: Herzchen -->
+    <PartAnimatedImage x="45" y="238" width="360" height="149" name="hearts">
+      <Variant mode="AMBIENT" target="alpha" value="0"/>
+      <AnimationController play="TAP" beforePlaying="HIDE" afterPlaying="HIDE"/>
+      <AnimatedImage resource="raupi_hearts" format="WEBP" thumbnail="raupi_hearts_thumb"/>
+    </PartAnimatedImage>
+
+    <!-- Ambient: ruhende Raupi, gedimmt -->
+    <PartImage x="45" y="238" width="360" height="149" name="raupi_ambient" alpha="0">
+      <Variant mode="AMBIENT" target="alpha" value="255"/>
+      <Image resource="raupi_ambient"/>
+    </PartImage>
+  </Scene>
+</WatchFace>
