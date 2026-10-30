@@ -33,7 +33,7 @@ def progress(a0, a1):
           <Transform target="angle" value="{a0} + {FRAC} * {a1-a0}"/>
         </PartDraw>''')
 
-def icon(a0, size=24):
+def icon(a0, size=30):
     a = math.radians(a0 - 10); x = C + R*math.sin(a) - size/2; y = C - R*math.cos(a) - size/2
     return both(lambda fg, tr, al, va: f'''
         <PartImage x="{x:.0f}" y="{y:.0f}" width="{size}" height="{size}" tintColor="{fg}" alpha="{al}"><Variant mode="AMBIENT" target="alpha" value="{va}"/>
@@ -43,13 +43,13 @@ def icon(a0, size=24):
 def text(a0, a1):
     bottom = 90 < (a0 + a1)/2 < 270
     if bottom:  # unten gegen den Uhrzeigersinn, damit die Schrift lesbar bleibt
-        d, s, e, dia = "COUNTER_CLOCKWISE", a0 + 40, a0 + 4, 2*192
+        d, s, e, dia = "COUNTER_CLOCKWISE", a0 + 44, a0 + 4, 2*192
     else:
-        d, s, e, dia = "CLOCKWISE", a0 + 4, a0 + 40, 2*174
+        d, s, e, dia = "CLOCKWISE", a0 + 4, a0 + 44, 2*176
     return both(lambda fg, tr, al, va: f'''
         <PartText x="0" y="0" width="450" height="450" alpha="{al}"><Variant mode="AMBIENT" target="alpha" value="{va}"/>
           <TextCircular centerX="{C}" centerY="{C}" width="{dia}" height="{dia}" startAngle="{s}" endAngle="{e}" direction="{d}" align="CENTER" ellipsis="TRUE">
-            <Font family="SYNC_TO_DEVICE" size="21" weight="SEMI_BOLD" color="{fg}"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
+            <Font family="SYNC_TO_DEVICE" size="26" weight="BOLD" color="{fg}"><Template>%s<Parameter expression="[COMPLICATION.TEXT]"/></Template></Font>
           </TextCircular>
         </PartText>''')
 
@@ -62,7 +62,7 @@ def slot(sid, a0, a1, name, prov, ptype):
       </Complication>
       <Complication type="SHORT_TEXT">{track(a0, a1)}{icon(a0)}{text(a0, a1)}
       </Complication>
-      <Complication type="MONOCHROMATIC_IMAGE">{track(a0, a1)}{icon(a0, 28)}
+      <Complication type="MONOCHROMATIC_IMAGE">{track(a0, a1)}{icon(a0, 34)}
       </Complication>
     </ComplicationSlot>'''
 
