@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.41.0";
+const APP_VERSION = "5.42.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -640,6 +640,7 @@ const CAUSES = {
   austrocknung:"Austrocknung",
   naesse:"Nässe / Schimmel",
   verletzung:"Verletzung",
+  natuerlich:"Natürlicher Tod (Alter)",
   unbekannt:"Unbekannt"
 };
 const PREC = {exakt:"Uhrzeit bekannt", tag:"Tag bekannt", nacht:"In der Nacht", zeitraum:"Zeitraum"};
@@ -816,7 +817,7 @@ const I18N_EN = {
   "Keine Werte erkannt. Prüfe das Format.":"No values recognised. Check the format.",
   // Auswertung
   "Über alle Zuchtansätze. Bei kleinen Zahlen sind Unterschiede oft Zufall: achte auf n.":"Across all broods. With small numbers, differences are often chance: watch n.",
-  "Verluste nach Ursache":"Losses by cause","Keine Verluste eingetragen.":"No losses recorded.","Verluste nach Stadium":"Losses by stage","Verluste je Zuchtansatz":"Losses per brood",
+  "Natürlicher Tod (Alter)":"Natural death (old age)","Verluste nach Ursache":"Losses by cause","Keine Verluste eingetragen.":"No losses recorded.","Verluste nach Stadium":"Losses by stage","Verluste je Zuchtansatz":"Losses per brood",
   "Verluste je Behälter":"Losses per container","Anteil":"Share","Puppenruhe":"Pupal period","ab Verpuppung":"from pupation","ab Eingraben":"from burrowing",
   "gemischt (Verpuppung bzw. Eingraben)":"mixed (pupation or burrowing)",
   // Suche
@@ -2598,7 +2599,7 @@ function evExtraFields(type, d={}){
     case "gewicht": return fld.num("xG","Gewicht (g)",d.g??"","0.01");
     case "futter": return fld.text("xPlant","Futterpflanze",d.plant||"","z. B. Liguster");
     case "umgesetzt": return fld.sel("xCont","Neuer Behälter",contOpts(),d.containerId||"");
-    case "tod": return `${fld.sel("xCause","Ursache",Object.entries(CAUSES),d.cause||"unbekannt")}${fld.sel("xCert","Wie sicher?",[["sicher","sicher"],["vermutet","Verdacht"]],d.certainty||"vermutet")}`;
+    case "tod": return `${fld.sel("xCause","Ursache",Object.entries(CAUSES),d.cause||(d._new && d._adult ? "natuerlich" : "unbekannt"))}${fld.sel("xCert","Wie sicher?",[["sicher","sicher"],["vermutet","Verdacht"]],d.certainty||"vermutet")}`;
     case "abgegeben": return `<div class="frow2">${fld.sel("xHow","Wie?",GIVE_HOW,d.how||"abgegeben")}${fld.text("xTo2","An wen?",d.to||"")}</div>`;
     default: return "";
   }
@@ -2636,7 +2637,7 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
   const typeOpts = Object.entries(ET).filter(([k])=>!(k==="falterschlupf" && !editing)).map(([k,v])=>[k,v.l]);
   const firstInd = S.individuals[indIds[0]] || pickList[0];
   const spId = (firstInd && speciesOfInd(firstInd)?.id) || (broodId && S.broods[broodId]?.speciesId) || null;
-  const xd = d => ({...d, _new:!editing, _spId:spId});
+  const xd = d => ({...d, _new:!editing, _spId:spId, _adult: !!firstInd && STG(currentStage(firstInd))==="imago"});
   const root = openSheet(`<h2>${editing?"Eintrag bearbeiten":ET[t]&&!showType?ET[t].l:"Ereignis eintragen"}</h2>
     ${who?`<p class="muted" style="margin:-8px 0 0">${esc(who)}</p>`:""}
     ${showType?fld.sel("eType","Was ist passiert?",typeOpts,t):""}
