@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.42.0";
+const APP_VERSION = "5.43.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -909,7 +909,7 @@ const I18N_RX = [
   [/^(\d+) (verkauft|verschenkt|getauscht|eingefroren|abgegeben|gestorben|freigelassen|präpariert)$/, (m,n,w)=>`${n} ${({verkauft:"sold",verschenkt:"given away",getauscht:"swapped",eingefroren:"frozen",abgegeben:"given away",gestorben:"died",freigelassen:"released",präpariert:"mounted"})[w]}`],
   [/^(\d+) umgesetzt( → (.+))?$/, (m,n,_,b)=>`${n} moved${b?` → ${b}`:""}`], [/^ohne Box: (\d+)$/, "no box: $1"], [/^ohne Box \((\d+)\)$/, "no box ($1)"],
   [/^Stammt aus (\d+) Gelegen$/, "Comes from $1 clutches"],
-  [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`],
+  [/^(\d+) Falter$/, (m,n)=>`${n} moth${n==="1"?"":"s"}`], [/^Falter · (\d+) gestorben$/, "Moths · $1 died"],
   [/^(\d+) Raupen?$/, (m,n)=>`${n} larva${n==="1"?"":"e"}`], [/^(\d+) Puppen?$/, (m,n)=>`${n} pupa${n==="1"?"":"e"}`], [/^([\d.]+) Eier liegen$/, "$1 eggs incubating"], [/^(\d+) Gelege (läuft|laufen)$/, "$1 clutch(es) running"],
   [/^in (\d+) Gelegen? · ([\d.]+) Eier insgesamt$/, "in $1 clutch(es) · $2 eggs in total"], [/^(\d+) × (.+)$/, (m,n,k)=>`${n} × ${tr(k)}`], [/^(\d+) Gelege$/, "$1 clutches"], [/^(\d+) tot\/weg$/, "$1 dead/gone"], [/^Tiere \((\d+)\)$/, "Animals ($1)"], [/^Gelege \((\d+)\)$/, "Clutches ($1)"],
   [/^(\d+) weitere anzeigen$/, "show $1 more"], [/^Falter zuordnen \((\d+) offen\)$/, "Assign moths ($1 open)"], [/^Nachzucht: (.+)$/, "Offspring: $1"], [/^(\d+) weitere im Zuchtansatz$/, "$1 more in the brood"], [/^ältester: (.+), (\d+) Tage$/, "oldest: $1, $2 days"],
@@ -1569,7 +1569,7 @@ VIEWS.home = () => {
     <div class="kpis">
       <button class="kpi st-larva" data-act="kpi" data-k="raupe">${ic2("larva")}<b>${larvae.length}</b><span>Raupen</span></button>
       <button class="kpi st-pupa" data-act="kpi" data-k="puppe">${ic2("pupa")}<b>${pupae.length}</b><span>Puppen &amp; Vorpuppen</span></button>
-      <button class="kpi st-imago" data-act="kpi" data-k="falter">${ic2("imago")}<b>${inds.filter(i=>firstEv(i,"falterschlupf")).length}</b><span>Falter</span></button>
+      <button class="kpi st-imago" data-act="kpi" data-k="falter">${ic2("imago")}<b>${inds.filter(i=>firstEv(i,"falterschlupf") && isAlive(i)).length}</b><span>Falter${(n=>n?` · ${n} gestorben`:"")(inds.filter(i=>firstEv(i,"falterschlupf") && statusOf(i)==="tot").length)}</span></button>
       <button class="kpi st-dead" data-act="kpi" data-k="tot">${ic2("dead")}<b>${inds.filter(i=>statusOf(i)==="tot" && !firstEv(i,"falterschlupf")).length}</b><span>Verluste</span></button>
     </div></section>`;
   if(unresolved.length) h += `<section class="uncertain"><b>${unresolved.length} Falter noch nicht zugeordnet</b><span class="small muted">Wenn mehrere in einer Nacht schlüpfen, ist offen, wer wer ist. Ordne sie zu, sobald du es weißt.</span><div><button class="btn" data-go="imagos">Zuordnen</button></div></section>`;
