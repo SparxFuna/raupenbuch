@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.40.0";
+const APP_VERSION = "5.41.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -681,7 +681,7 @@ const I18N_EN = {
   "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Ball spielen":"Play ball","Tanzen":"Dance","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
-  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
+  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Vergessen einzutragen? Zeitraum seit dem letzten Eintrag":"Forgot to record it? Range since the last entry","Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen.":"No earlier entry found – please set “From” yourself.","Merkmale & Tags":"Features & tags","+ Merkmal":"+ Feature","Bein fehlt":"Leg missing","Fühler beschädigt":"Antenna damaged","Flügel beschädigt":"Wing damaged","Hat Eier gelegt":"Laid eggs","Gepaart":"Mated","Schwächelt":"Weakening","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
   "Jeder Zuchtansatz ist die Zentrale für seine Tiere, Gelege und Auswertung.":"Each brood is the hub for its animals, clutches and stats.","+ Zuchtansatz":"+ Brood","Alle Gelege":"All clutches","Archiviert":"Archived","archiviert":"archived","Eltern aus":"Parents from","Stammt aus Gelege":"Comes from clutch","Nachzucht":"Offspring","Tot / beendet":"Dead / ended","Gelege dieser Falter":"Clutches of these moths","liegen noch":"still incubating","Bei welchem Gelege?":"Which clutch?","Auswertung":"Stats","noch keine Tiere":"no animals yet",
   "Gerade nichts Aktives. Leg im Tab Zucht einen Zuchtansatz an oder füge Tiere hinzu.":"Nothing active right now. Create a brood in the Breeding tab or add animals.","auch für mehrere Puppen gleichzeitig":"also for several pupae at once","wenn unklar ist, welcher Falter aus welcher Puppe kam":"when it's unclear which moth came from which pupa","Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.":"From 2 eclosions with known burrowing or pupation date, an eclosion window appears here.",
   "liegt seit heute":"incubating since today",
@@ -2013,7 +2013,7 @@ VIEWS.animal = r => {
     : `<div class="cover noimg st-${g}">${cact}<span class="glyph">${ic2(g)}</span><div><span class="sp muted">${esc(sp?.sci||"")}</span><h1>${esc(i.name)}</h1></div></div>`)
     + `<div class="pagehead">
     <div class="meta">${sexBadge(i.sex)}<span class="small">${SEXL[i.sex||"u"]}</span>${stagePill(i)}<button class="pill" data-go="brood:${b?.id}" style="border:0;cursor:pointer">${esc(b?.name||"")}</button>${cont?`<span class="pill">${esc(cont.name)}${loc?" · "+esc(loc.name):""}</span>`:""}</div>
-    <div class="chips">${tagsOf(i).map(t=>`<button class="pill tag" data-act="tagSheet" data-id="${i.id}">#${esc(t)}</button>`).join("")}<button class="pill tag add" data-act="tagSheet" data-id="${i.id}">+ Tag</button></div>
+    <div class="chips">${tagsOf(i).map(t=>`<button class="pill tag" data-act="tagSheet" data-id="${i.id}">#${esc(t)}</button>`).join("")}<button class="pill tag add" data-act="tagSheet" data-id="${i.id}">${isAdultish(i) ? "+ Merkmal" : "+ Tag"}</button></div>
     ${i.notes?`<p class="muted" style="margin:0">${esc(i.notes)}</p>`:""}</div>`;
   h += stepper;
   if(alive){
@@ -2530,11 +2530,14 @@ ACTS.addInds = d => {
 };
 
 /* ---- Tags ---- */
-function tagFieldHtml(id, tags){
-  const others = allTags();
+/* Merkmale, an denen man Falter später auseinanderhält – werden als Tags gespeichert */
+const MARKS = ["Bein fehlt","Fühler beschädigt","Flügel beschädigt","Hat Eier gelegt","Gepaart","Schwächelt"];
+const isAdultish = i => ["pupa","imago"].includes(STG(currentStage(i)));
+function tagFieldHtml(id, tags, marks){
+  const others = [...new Set([...(marks ? MARKS : []), ...allTags()])];
   return `<div class="f"><label for="${id}">Tags</label><input id="${id}" value="${esc(tags.join(", "))}" placeholder="z. B. mini, dunkel, Zuchttier" autocomplete="off"></div>
     ${others.length?`<div class="chips" id="${id}Chips">${others.map(t=>`<button type="button" class="chip ${tags.includes(t)?"on":""}" data-tag="${esc(t)}">#${esc(t)}</button>`).join("")}</div>`:""}
-    <div class="hint">Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.</div>`;
+    <div class="hint">${marks ? "Merkmale wie „Bein fehlt“ helfen, Falter später auseinanderzuhalten. " : ""}Mehrere durch Komma trennen. Tags erscheinen am Tier, in der Liste und lassen sich dort filtern.</div>`;
 }
 function wireTagField(root, id){
   const inp = root.querySelector("#"+id);
@@ -2546,7 +2549,8 @@ function wireTagField(root, id){
 }
 ACTS.tagSheet = d => {
   const i = S.individuals[d.id]; if(!i) return;
-  const root = openSheet(`<h2>Tags</h2><p class="muted" style="margin:-8px 0 0">${esc(i.name)}</p>${tagFieldHtml("tgIn", tagsOf(i))}<div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
+  const mk = isAdultish(i);
+  const root = openSheet(`<h2>${mk ? "Merkmale & Tags" : "Tags"}</h2><p class="muted" style="margin:-8px 0 0">${esc(i.name)}</p>${tagFieldHtml("tgIn", tagsOf(i), mk)}<div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
   wireTagField(root, "tgIn");
   root.querySelector("#ok").onclick = async () => { await store.put("individuals",{...S.individuals[i.id], tags:parseTags(val(root,"tgIn"))}); closeSheet(); };
 };
@@ -2559,7 +2563,7 @@ ACTS.editInd = d => {
     ${fld.sel("nBrood","Zuchtansatz",all("broods").map(b=>[b.id,b.name]),i.broodId)}
     ${fld.sel("nStart","Startstadium",[["",`wie Zuchtansatz (${stageLabel(S.broods[i.broodId]?.startStage||"L1")})`], ...stageOpts()],i.startStage||"")}
     ${fld.hint("Gilt, solange noch keine Häutung oder kein Stadium eingetragen ist.")}
-    ${tagFieldHtml("nTags", tagsOf(i))}
+    ${tagFieldHtml("nTags", tagsOf(i), isAdultish(i))}
     ${fld.area("nNotes","Notizen",i.notes||"")}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button><button class="btn danger" id="del">Löschen</button></div>
     ${confirmBlock(`${esc(i.name)} mit allen Einträgen und Fotos löschen? Das lässt sich nicht rückgängig machen.`,"Endgültig löschen")}`);
@@ -2773,8 +2777,19 @@ ACTS.moultMany = d => {
     <div class="frow2">${fld.num("mN","Wie viele?","","1")}${fld.sel("mTo","gehäutet zu",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"],["L6","L6"]],"L2")}</div>
     <details class="f"><summary class="small">Welche Tiere? (automatisch gewählt)</summary><div class="checks" id="mList"></div></details>
     ${timeFields("m", {prec:"tag", t0:todayISO()+"T12:00"})}
+    <button type="button" class="btn ghost link" id="mBack" style="align-self:flex-start">Vergessen einzutragen? Zeitraum seit dem letzten Eintrag</button>
     <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
   wireTime(root,"m");
+  /* Nachtragen: Zeitraum vom letzten bekannten Eintrag der gewählten Tiere bis heute */
+  root.querySelector("#mBack").addEventListener("click", () => {
+    let ids = [...root.querySelectorAll("#mList input:checked")].map(x=>x.value);
+    if(!ids.length) ids = [...root.querySelectorAll("#mList input")].map(x=>x.value);
+    let last = ""; for(const id of ids) for(const e of evOf(id)) if(e.t0 && e.t0.slice(0,10) > last) last = e.t0.slice(0,10);
+    const today = todayISO(); if(!last || last > today) last = today;
+    root.querySelector('#mprecseg [data-prec="zeitraum"]').click();
+    root.querySelector("#md0").value = last; root.querySelector("#md1").value = today;
+    root.querySelector("#mhint").textContent = tr(last===today ? "Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen." : `Irgendwann zwischen dem letzten Eintrag (${dDE(last)}) und heute. Die Statistik nimmt die Mitte.`);
+  });
   const prevOf = to => LAR[LAR.indexOf(to)-1];
   const fill = (keepTo) => {
     const L = larv(bid), cnt = {}; L.forEach(i => { const k = currentStage(i); cnt[k] = (cnt[k]||0)+1; });
