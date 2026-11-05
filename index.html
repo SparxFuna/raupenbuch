@@ -477,6 +477,12 @@ button.pill.tag{cursor:pointer}
 .st-unk,.st-neutral{--c:var(--muted);--cs:var(--sunk)} .st-accent{--c:var(--accent);--cs:var(--accent-soft)} .st-crit{--c:var(--crit);--cs:var(--crit-soft)}
 .pill.st{background:var(--cs);color:var(--c);font-family:var(--f-body);font-weight:600;padding:2px 10px 2px 8px;gap:6px}
 .pill.st i{width:7px;height:7px;border-radius:50%;background:var(--c);display:inline-block}
+/* Raupenstadien: eigene Farbe je Stadium (L1 blass → L5 goldgelb wie die erwachsene Atropos-Raupe), Symbol wächst mit */
+.inst-L1{--c:#9aa531} .inst-L2{--c:#5fa83a} .inst-L3{--c:#2b9a6a} .inst-L4{--c:#2f8aa6} .inst-L5{--c:#c4931a} .inst-L6,.inst-L7{--c:#b5651d}
+[class*="inst-L"]{--cs:color-mix(in srgb,var(--c) 20%,var(--surface))}
+.pill.st[class*="inst-L"],.chipst[class*="inst-L"]{color:color-mix(in srgb,var(--c) 72%,var(--ink))}
+.av.inst-L1 svg{transform:scale(.72)} .av.inst-L2 svg{transform:scale(.86)} .av.inst-L3 svg{transform:scale(1)} .av.inst-L4 svg{transform:scale(1.12)} .av.inst-L5 svg,.av.inst-L6 svg,.av.inst-L7 svg{transform:scale(1.25)}
+.av .inst{position:absolute;left:-4px;top:-4px;height:18px;min-width:22px;padding:0 4px;border-radius:9px;display:grid;place-items:center;font-size:10.5px;font-weight:700;font-style:normal;background:var(--c);color:var(--surface);box-shadow:0 0 0 2px var(--surface)}
 /* Avatar in Listen */
 .av{position:relative;width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;background:var(--cs);color:var(--c)}
 .av img{position:absolute;inset:0;width:100%;height:100%;max-width:none;object-fit:cover;border-radius:50%;display:block}
@@ -596,7 +602,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.45.1";
+const APP_VERSION = "5.46.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -1502,7 +1508,8 @@ const ic2 = (k, cls="") => `<svg viewBox="0 0 24 24" class="${cls}" aria-hidden=
 function avatar(ind){
   const st = statusOf(ind); const g = st==="tot" ? "dead" : STG(currentStage(ind));
   const ph = coverPhoto(ind);
-  return `<span class="av st-${g}">${ph?`<img src="${esc(photoSrc(ph))}" alt="">`:ic2(g)}<b class="${ind.sex||"u"}">${SEXS[ind.sex||"u"]}</b></span>`;
+  const cs = currentStage(ind), inst = g==="larva" && /^L\d$/.test(cs) ? cs : "";
+  return `<span class="av st-${g}${inst?` inst-${inst}`:""}">${ph?`<img src="${esc(photoSrc(ph))}" alt="">`:ic2(g)}${inst?`<i class="inst">${inst}</i>`:""}<b class="${ind.sex||"u"}">${SEXS[ind.sex||"u"]}</b></span>`;
 }
 const sexBadge = s => `<span class="sex ${s||"u"}" title="${SEXL[s||"u"]}">${SEXS[s||"u"]}</span>`;
 function stagePill(ind){
@@ -1512,7 +1519,7 @@ function stagePill(ind){
   if(st==="abgegeben"){ const h = evOf(ind.id).find(e=>e.type==="abgegeben")?.data?.how; return `<span class="pill st st-neutral"><i></i>${["verkauft","verschenkt","getauscht","eingefroren"].includes(h)?h:"abgegeben"}</span>`; }
   if(st==="freigelassen") return `<span class="pill st st-imago"><i></i>freigelassen</span>`;
   const s = currentStage(ind);
-  return `<span class="pill st st-${STG(s)}"><i></i>${s==="?"?"Stadium ?":stageLabel(s)}</span>`;
+  return `<span class="pill st st-${STG(s)}${/^L\d$/.test(s)?` inst-${s}`:""}"><i></i>${s==="?"?"Stadium ?":stageLabel(s)}</span>`;
 }
 const tagsOf = i => Array.isArray(i?.tags) ? i.tags : [];
 function allTags(){ const c = new Map(); for(const i of all("individuals")) for(const t of tagsOf(i)) c.set(t, (c.get(t)||0)+1); return [...c.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"de")).map(x=>x[0]); }
@@ -1716,7 +1723,7 @@ function evTitle(e){
 const clutchesOfBrood = id => all("clutches").filter(c => parentBroodOf(c)===id).sort((a,b)=>clutchDate(b).localeCompare(clutchDate(a)));
 function stageChips(inds){
   const c = {}; inds.filter(isAlive).forEach(i => { const k = currentStage(i); c[k] = (c[k]||0)+1; });
-  return Object.entries(c).sort((a,b)=>(SIDX[a[0]]??99)-(SIDX[b[0]]??99)).map(([k,n])=>`<span class="chipst st-${STG(k)}">${n} × ${esc(stageLabel(k))}</span>`).join("");
+  return Object.entries(c).sort((a,b)=>(SIDX[a[0]]??99)-(SIDX[b[0]]??99)).map(([k,n])=>`<span class="chipst st-${STG(k)}${/^L\d$/.test(k)?` inst-${k}`:""}">${n} × ${esc(stageLabel(k))}</span>`).join("");
 }
 function broodCard(b){
   const inds = indsOf(b.id), sp = S.species[b.speciesId], src = S.sources[b.sourceId], cs = clutchesOfBrood(b.id);
