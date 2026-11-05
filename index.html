@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.45.0";
+const APP_VERSION = "5.45.1";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -2808,6 +2808,7 @@ ACTS.moultMany = d => {
   const sp = () => S.species[S.broods[bid]?.speciesId];
   const hd = i => hatchGuess(i)?.d || "9999";
   const checked = () => [...root.querySelectorAll("#mList input:checked")].map(x=>x.value);
+  const selBoxes = new Set();
   /* Nachtragen: Zeitraum vom letzten bekannten Eintrag (oder Schlupf) der gewählten Tiere bis heute */
   root.querySelector("#mBack").addEventListener("click", () => {
     let ids = checked(); if(!ids.length) ids = [...root.querySelectorAll("#mList input")].map(x=>x.value);
@@ -2830,13 +2831,15 @@ ACTS.moultMany = d => {
     const to = val(root,"mTo"), ti = LAR.indexOf(to);
     const pool = L.filter(i => LAR.indexOf(currentStage(i)) < ti).sort((a,b)=>hd(a).localeCompare(hd(b)) || byName(a,b));
     const n = Math.round(+val(root,"mN")||0);
-    root.querySelector("#mList").innerHTML = pool.map((i,k)=>`<label><input type="checkbox" value="${i.id}" ${k<n?"checked":""}> ${esc(i.name)} <span class="small muted">${esc(S.containers[i.containerId]?.name||"")}</span> <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("") || `<div class="empty">${esc(tr("Keine Tiere vor"))} ${to}.</div>`;
+    /* Gewählte Boxen begrenzen die Auswahl: „Wie viele?“ nimmt dann die ältesten Raupen aus diesen Boxen */
+    const cand = selBoxes.size ? pool.filter(i => selBoxes.has(boxKey(i))) : pool, pick = new Set(cand.slice(0, n).map(i=>i.id));
+    root.querySelector("#mList").innerHTML = pool.map((i,k)=>`<label><input type="checkbox" value="${i.id}" ${pick.has(i.id)?"checked":""}> ${esc(i.name)} <span class="small muted">${esc(S.containers[i.containerId]?.name||"")}</span> <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("") || `<div class="empty">${esc(tr("Keine Tiere vor"))} ${to}.</div>`;
     const boxes = [...new Set(pool.map(boxKey))].sort(boxSort);
-    root.querySelector("#mBoxes").innerHTML = boxes.length > 1 ? boxes.map(k=>`<button type="button" class="chip" data-box="${k}">${esc(k==="_none"?tr("ohne Box"):S.containers[k].name)} (${pool.filter(i=>boxKey(i)===k).length})</button>`).join("") : "";
+    root.querySelector("#mBoxes").innerHTML = boxes.length > 1 ? boxes.map(k=>`<button type="button" class="chip ${selBoxes.has(k)?"on":""}" data-box="${k}">${esc(k==="_none"?tr("ohne Box"):S.containers[k].name)} (${pool.filter(i=>boxKey(i)===k).length})</button>`).join("") : "";
     root.querySelectorAll("#mBoxes [data-box]").forEach(b => b.addEventListener("click", () => {
-      b.classList.toggle("on"); const on = b.classList.contains("on");
-      root.querySelectorAll("#mList input").forEach(x => { if(boxKey(S.individuals[x.value])===b.dataset.box) x.checked = on; });
-      root.querySelector("#mN").value = checked().length;
+      const k = b.dataset.box; selBoxes.has(k) ? selBoxes.delete(k) : selBoxes.add(k);
+      root.querySelector("#mN").value = selBoxes.size ? pool.filter(i => selBoxes.has(boxKey(i))).length : "";
+      fill(true);
     }));
     if(root.querySelector("#mEst").checked) estInfo();
   };
@@ -2845,10 +2848,9 @@ ACTS.moultMany = d => {
   if(d.box){
     const inBox = larv(bid).filter(i=>boxKey(i)===d.box);
     const low = LAR.find(k=>inBox.some(i=>currentStage(i)===k)); const nx = low && LAR[LAR.indexOf(low)+1];
-    if(nx){ root.querySelector("#mTo").value = nx; fill(true); }
-    root.querySelectorAll("#mList input").forEach(x => { x.checked = boxKey(S.individuals[x.value])===d.box; });
-    root.querySelector(`#mBoxes [data-box="${d.box}"]`)?.classList.add("on");
-    root.querySelector("#mN").value = checked().length;
+    if(nx) root.querySelector("#mTo").value = nx;
+    selBoxes.add(d.box); root.querySelector("#mN").value = inBox.filter(i => LAR.indexOf(currentStage(i)) < LAR.indexOf(val(root,"mTo"))).length;
+    fill(true);
   }
   root.querySelector("#mList").addEventListener("change", () => { root.querySelector("#mN").value = checked().length; });
   const mb = root.querySelector("#mB"); if(mb) mb.addEventListener("change", () => { bid = mb.value; fill(false); });
