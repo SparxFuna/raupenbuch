@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.43.0";
+const APP_VERSION = "5.44.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -682,7 +682,7 @@ const I18N_EN = {
   "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Ball spielen":"Play ball","Tanzen":"Dance","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
-  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","Häutung eintragen":"Record moult","Vergessen einzutragen? Zeitraum seit dem letzten Eintrag":"Forgot to record it? Range since the last entry","Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen.":"No earlier entry found – please set “From” yourself.","Merkmale & Tags":"Features & tags","+ Merkmal":"+ Feature","Bein fehlt":"Leg missing","Fühler beschädigt":"Antenna damaged","Flügel beschädigt":"Wing damaged","Hat Eier gelegt":"Laid eggs","Gepaart":"Mated","Schwächelt":"Weakening","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
+  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","jetzt in":"now in","Welche Tiere? (älteste zuerst)":"Which animals? (oldest first)","Wann genau, weiß ich nicht – Datum schätzen":"Not sure exactly when – estimate the date","Zeitraum seit Schlupf bzw. letztem Eintrag":"Range since hatching or last entry","Richtwert: Tage je Raupenstadium":"Guide value: days per larval instar","Keine Tiere vor":"No animals before","Änderbar unter Mehr → Arten.":"Change under More → Species.","Häutung eintragen":"Record moult","Vergessen einzutragen? Zeitraum seit dem letzten Eintrag":"Forgot to record it? Range since the last entry","Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen.":"No earlier entry found – please set “From” yourself.","Merkmale & Tags":"Features & tags","+ Merkmal":"+ Feature","Bein fehlt":"Leg missing","Fühler beschädigt":"Antenna damaged","Flügel beschädigt":"Wing damaged","Hat Eier gelegt":"Laid eggs","Gepaart":"Mated","Schwächelt":"Weakening","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
   "Jeder Zuchtansatz ist die Zentrale für seine Tiere, Gelege und Auswertung.":"Each brood is the hub for its animals, clutches and stats.","+ Zuchtansatz":"+ Brood","Alle Gelege":"All clutches","Archiviert":"Archived","archiviert":"archived","Eltern aus":"Parents from","Stammt aus Gelege":"Comes from clutch","Nachzucht":"Offspring","Tot / beendet":"Dead / ended","Gelege dieser Falter":"Clutches of these moths","liegen noch":"still incubating","Bei welchem Gelege?":"Which clutch?","Auswertung":"Stats","noch keine Tiere":"no animals yet",
   "Gerade nichts Aktives. Leg im Tab Zucht einen Zuchtansatz an oder füge Tiere hinzu.":"Nothing active right now. Create a brood in the Breeding tab or add animals.","auch für mehrere Puppen gleichzeitig":"also for several pupae at once","wenn unklar ist, welcher Falter aus welcher Puppe kam":"when it's unclear which moth came from which pupa","Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.":"From 2 eclosions with known burrowing or pupation date, an eclosion window appears here.",
   "liegt seit heute":"incubating since today",
@@ -1699,7 +1699,7 @@ function broodRow(b){
 function evTitle(e){
   const d = e.data||{};
   switch(e.type){
-    case "haeutung": return `Häutung → ${d.to||"?"}`;
+    case "haeutung": return `Häutung → ${d.to||"?"}${d.est?" (geschätzt)":""}`;
     case "verpuppt": return d.est ? "Verpuppt (geschätzt)" : "Verpuppt";
     case "stadium": return `Stadium: ${stageLabel(d.to)}`;
     case "geschlecht": return `Geschlecht: ${SEXL[d.sex||"u"]}${d.at?` (an ${d.at==="puppe"?"Puppe":d.at==="falter"?"Falter":"Raupe"})`:""}`;
@@ -2766,8 +2766,28 @@ ACTS.giveMany = d => {
   });
 };
 /* Häutung für viele: „5 Tiere zu L2“ – die App wählt Tiere aus dem Stadium davor, Auswahl lässt sich anpassen */
+/* Richtwerte: Tage je Raupenstadium. Reihenfolge: eigener Wert an der Art > Median aus deinen Daten (ab 3 Werten) > eingebauter Richtwert.
+   A. atropos: Zuchtberichte nennen 3–4 Wochen Raupenzeit bei Wärme und etwa eine Woche für L1; die Aufteilung auf L2–L5 ist geschätzt
+   (ältere Stadien dauern länger) und eher für ~20–22 °C gedacht. */
+const INSTAR_DEFAULTS = {"acherontia atropos":[6,5,6,7,10]};
+const LARK = ["L1","L2","L3","L4","L5","L6","L7"];
+function instarDays(sp){
+  const n = Math.min(LARK.length, sp?.instars || 5), def = INSTAR_DEFAULTS[(sp?.sci||"").toLowerCase().trim()] || [];
+  return LARK.slice(0, n).map((k, ix) => {
+    const own = sp?.instarDays?.[ix]; if(own > 0) return {k, d:own, src:"eigen"};
+    const m = sp ? speciesStageDays(sp.id, k) : []; if(m.length >= 3) return {k, d:Math.round(median(m)), src:"Daten"};
+    return def[ix] ? {k, d:def[ix], src:"Richtwert"} : {k, d:null, src:""};
+  });
+}
+/* Schlupftag einer Raupe: eigener Schlupf-Eintrag, sonst Datum im Boxnamen (z. B. „Box 21.10.“), sonst Start des Zuchtansatzes */
+function hatchGuess(i){
+  const h = hatchDay(i); if(h) return {d:h, src:"Schlupf"};
+  const b = S.broods[i.broodId], c = S.containers[i.containerId], m = c && /(\d{1,2})\.(\d{1,2})\./.exec(c.name||"");
+  if(m){ const d = `${(b?.startDate||todayISO()).slice(0,4)}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; if(d <= todayISO()) return {d, src:"Boxname"}; }
+  return b?.startDate ? {d:b.startDate.slice(0,10), src:"Start des Zuchtansatzes"} : null;
+}
 ACTS.moultMany = d => {
-  const LAR = ["L1","L2","L3","L4","L5","L6","L7"];
+  const LAR = LARK;
   const larv = b => all("individuals").filter(i => isAlive(i) && i.broodId===b && LAR.includes(currentStage(i))).sort(byName);
   const brs = all("broods").filter(b => larv(b.id).length).sort((a,b)=>larv(b.id).length-larv(a.id).length);
   if(!brs.length){ toast("Keine Raupen gefunden"); return; }
@@ -2775,37 +2795,74 @@ ACTS.moultMany = d => {
   const root = openSheet(`<h2>Häutung eintragen</h2>
     ${brs.length>1?fld.sel("mB","Zuchtansatz",brs.map(b=>[b.id,b.name]),bid):""}
     <p class="muted" id="mNow" style="margin:0"></p>
-    <div class="frow2">${fld.num("mN","Wie viele?","","1")}${fld.sel("mTo","gehäutet zu",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"],["L6","L6"]],"L2")}</div>
-    <details class="f"><summary class="small">Welche Tiere? (automatisch gewählt)</summary><div class="checks" id="mList"></div></details>
-    ${timeFields("m", {prec:"tag", t0:todayISO()+"T12:00"})}
-    <button type="button" class="btn ghost link" id="mBack" style="align-self:flex-start">Vergessen einzutragen? Zeitraum seit dem letzten Eintrag</button>
+    <div class="frow2">${fld.num("mN","Wie viele?","","1")}${fld.sel("mTo","jetzt in",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"],["L6","L6"]],"L2")}</div>
+    <div class="chips" id="mBoxes"></div>
+    <details class="f"><summary class="small">Welche Tiere? (älteste zuerst)</summary><div class="checks" id="mList"></div></details>
+    <label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="mEst" style="width:20px;height:20px;min-height:0;flex:none"> Wann genau, weiß ich nicht – Datum schätzen</label>
+    <div class="hint" id="mEstInfo" hidden></div>
+    <div id="mTime">${timeFields("m", {prec:"tag", t0:todayISO()+"T12:00"})}
+    <button type="button" class="btn ghost link" id="mBack" style="align-self:flex-start">Zeitraum seit Schlupf bzw. letztem Eintrag</button></div>
     <div class="btns"><button class="btn primary" id="ok">Speichern</button></div>`);
   wireTime(root,"m");
-  /* Nachtragen: Zeitraum vom letzten bekannten Eintrag der gewählten Tiere bis heute */
+  const sp = () => S.species[S.broods[bid]?.speciesId];
+  const hd = i => hatchGuess(i)?.d || "9999";
+  const checked = () => [...root.querySelectorAll("#mList input:checked")].map(x=>x.value);
+  /* Nachtragen: Zeitraum vom letzten bekannten Eintrag (oder Schlupf) der gewählten Tiere bis heute */
   root.querySelector("#mBack").addEventListener("click", () => {
-    let ids = [...root.querySelectorAll("#mList input:checked")].map(x=>x.value);
-    if(!ids.length) ids = [...root.querySelectorAll("#mList input")].map(x=>x.value);
-    let last = ""; for(const id of ids) for(const e of evOf(id)) if(e.t0 && e.t0.slice(0,10) > last) last = e.t0.slice(0,10);
+    let ids = checked(); if(!ids.length) ids = [...root.querySelectorAll("#mList input")].map(x=>x.value);
+    let last = ""; for(const id of ids){ const i = S.individuals[id]; let l = hatchGuess(i)?.d || ""; for(const e of evOf(id)) if(e.t0 && e.t0.slice(0,10) > l) l = e.t0.slice(0,10); if(l > last) last = l; }
     const today = todayISO(); if(!last || last > today) last = today;
     root.querySelector('#mprecseg [data-prec="zeitraum"]').click();
     root.querySelector("#md0").value = last; root.querySelector("#md1").value = today;
-    root.querySelector("#mhint").textContent = tr(last===today ? "Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen." : `Irgendwann zwischen dem letzten Eintrag (${dDE(last)}) und heute. Die Statistik nimmt die Mitte.`);
+    root.querySelector("#mhint").textContent = tr(last===today ? "Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen." : `Irgendwann zwischen ${dDE(last)} und heute. Die Statistik nimmt die Mitte.`);
   });
-  const prevOf = to => LAR[LAR.indexOf(to)-1];
+  const estInfo = () => {
+    const on = root.querySelector("#mEst").checked; root.querySelector("#mTime").hidden = on; const box = root.querySelector("#mEstInfo"); box.hidden = !on; if(!on) return;
+    const D = instarDays(sp());
+    box.innerHTML = `${esc(tr("Pro Raupe: Schlupftag + typische Dauer je Stadium. Ist das Ergebnis später als heute, wird es auf heute gestaucht. Geschätzte Häutungen zählen nicht in der Statistik."))}<br><b>${D.map(x=>`${x.k} ${x.d??"?"} ${tr("Tage")}`).join(" · ")}</b> <span class="muted">(${esc(tr([...new Set(D.map(x=>x.src).filter(Boolean))].map(s=>({eigen:"eigene Werte",Daten:"aus deinen Daten",Richtwert:"Richtwert"})[s]).join(", ")||"keine Werte"))})</span><br><span class="small muted">${esc(tr("Änderbar unter Mehr → Arten."))}</span>`;
+  };
+  root.querySelector("#mEst").addEventListener("change", estInfo);
   const fill = (keepTo) => {
     const L = larv(bid), cnt = {}; L.forEach(i => { const k = currentStage(i); cnt[k] = (cnt[k]||0)+1; });
     root.querySelector("#mNow").textContent = tr("Aktuell: ") + LAR.filter(k=>cnt[k]).map(k=>`${cnt[k]} × ${k}`).join(", ");
     if(!keepTo){ const low = LAR.find(k=>cnt[k]); const nx = LAR[LAR.indexOf(low)+1]; if(nx) root.querySelector("#mTo").value = nx; }
-    const to = val(root,"mTo"), from = prevOf(to), pool = L.filter(i => currentStage(i)===from), n = Math.round(+val(root,"mN")||0);
-    root.querySelector("#mList").innerHTML = (pool.length ? pool : []).map((i,k)=>`<label><input type="checkbox" value="${i.id}" ${k<n?"checked":""}> ${esc(i.name)} <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("") || `<div class="empty">${esc(tr("Keine Tiere in"))} ${from}.</div>`;
+    const to = val(root,"mTo"), ti = LAR.indexOf(to);
+    const pool = L.filter(i => LAR.indexOf(currentStage(i)) < ti).sort((a,b)=>hd(a).localeCompare(hd(b)) || byName(a,b));
+    const n = Math.round(+val(root,"mN")||0);
+    root.querySelector("#mList").innerHTML = pool.map((i,k)=>`<label><input type="checkbox" value="${i.id}" ${k<n?"checked":""}> ${esc(i.name)} <span class="small muted">${esc(S.containers[i.containerId]?.name||"")}</span> <span class="pill" style="margin-left:auto">${stageLabel(currentStage(i))}</span></label>`).join("") || `<div class="empty">${esc(tr("Keine Tiere vor"))} ${to}.</div>`;
+    const boxes = [...new Set(pool.map(boxKey))].sort(boxSort);
+    root.querySelector("#mBoxes").innerHTML = boxes.length > 1 ? boxes.map(k=>`<button type="button" class="chip" data-box="${k}">${esc(k==="_none"?tr("ohne Box"):S.containers[k].name)} (${pool.filter(i=>boxKey(i)===k).length})</button>`).join("") : "";
+    root.querySelectorAll("#mBoxes [data-box]").forEach(b => b.addEventListener("click", () => {
+      b.classList.toggle("on"); const on = b.classList.contains("on");
+      root.querySelectorAll("#mList input").forEach(x => { if(boxKey(S.individuals[x.value])===b.dataset.box) x.checked = on; });
+      root.querySelector("#mN").value = checked().length;
+    }));
+    if(root.querySelector("#mEst").checked) estInfo();
   };
   fill(false);
+  root.querySelector("#mList").addEventListener("change", () => { root.querySelector("#mN").value = checked().length; });
   const mb = root.querySelector("#mB"); if(mb) mb.addEventListener("change", () => { bid = mb.value; fill(false); });
   root.querySelector("#mTo").addEventListener("change", () => fill(true));
   root.querySelector("#mN").addEventListener("input", () => fill(true));
   root.querySelector("#ok").addEventListener("click", async () => {
-    const ids = [...root.querySelectorAll("#mList input:checked")].map(x=>x.value), to = val(root,"mTo");
+    const ids = checked(), to = val(root,"mTo"), ti = LAR.indexOf(to);
     if(!ids.length){ toast("Bitte eine Anzahl eintragen"); return; }
+    if(root.querySelector("#mEst").checked){
+      const D = instarDays(sp()); if(D.slice(0, ti).some(x=>!x.d)){ toast("Für diese Art fehlen Richtwerte. Trag sie unter Mehr → Arten ein."); return; }
+      const today = todayISO(); let n = 0;
+      for(const id of ids){
+        const i = S.individuals[id], h = hatchGuess(i); if(!h) continue;
+        const ci = LAR.indexOf(currentStage(i)), steps = [];
+        let off = 0; for(let s = 0; s < ti; s++){ off += D[s].d; if(s+1 > ci) steps.push([LAR[s+1], off]); }
+        let lastEv = ""; for(const e of evOf(id)) if(e.t0 && e.t0.slice(0,10) > lastEv) lastEv = e.t0.slice(0,10);
+        const lo = lastEv > h.d ? lastEv : h.d, span = Math.max(0, Math.round((ms(today)-ms(h.d))/864e5));
+        const k = off > span ? span/off : 1;   // zu spät? Dann alle Abstände gleichmäßig stauchen
+        for(const [st, o] of steps){ let dd = addDays(h.d, Math.round(o*k)); if(dd < lo) dd = lo; if(dd > today) dd = today;
+          await store.put("events", {type:"haeutung", individualId:id, broodId:i.broodId, ...makeTime("tag", dd), data:{to:st, est:true}, note:tr(`geschätzt (Schlupf ${dDE(h.d)} + Richtwerte)`)}); }
+        n++;
+      }
+      closeSheet(); toast(`${n} × bis ${to} geschätzt eingetragen`); return;
+    }
     const tm = readTime(root,"m"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     for(const id of ids) await store.put("events", {type:"haeutung", individualId:id, broodId:S.individuals[id].broodId, ...tm, data:{to}, note:""});
     closeSheet(); toast(`${ids.length} × Häutung zu ${to} gespeichert`);
@@ -4248,8 +4305,12 @@ ACTS.editSpecies = d => {
     <div class="frow2">${fld.text("sFam","Familie",s?.family||"","z. B. Sphingidae")}${fld.num("sInst","Larvenstadien",s?.instars||5,"1")}</div>
     ${fld.num("sPre","Richtwert: Tage vom Eingraben bis zur Verpuppung",s?.prepupaDays??"","1")}
     ${fld.hint(s?(()=>{ const v=prepupaDurations(s.id); return v.length?`Deine Tiere: ${v.length} Wert(e), Median ${fmtN(median(v),1)} Tage${v.length>=2?" – dieser Median wird statt des Richtwerts verwendet":""}.`:"Noch keine eigenen Werte mit sicherem Verpuppungsdatum."; })():"")}
+    ${(()=>{ const D = instarDays(s || {instars:5}); const auto = k => { const x = D.find(y=>y.k===k); if(x?.src==="eigen"){ const t = {...(s||{}), instarDays:null}; return instarDays(t).find(y=>y.k===k); } return x; };
+      return `<div class="f"><span class="lab">Richtwert: Tage je Raupenstadium</span><div class="frow2" style="grid-template-columns:repeat(${D.length},1fr)">${D.map((x,ix)=>{ const a = auto(x.k); return `<div class="f"><label for="sId${ix}">${x.k}</label><input id="sId${ix}" type="number" min="1" step="1" inputmode="numeric" value="${s?.instarDays?.[ix]??""}" placeholder="${a?.d??""}"></div>`; }).join("")}</div></div>
+      ${fld.hint("Leer lassen = automatisch: ab 3 eigenen Werten der Median deiner Tiere, sonst der eingebaute Richtwert (grau). Wird zum Schätzen vergessener Häutungen genutzt.")}`; })()}
     <div class="btns"><button class="btn primary" id="ok">Speichern</button>${s&&!all("broods").some(b=>b.speciesId===s.id)?`<button class="btn danger" id="del">Löschen</button>`:""}</div>`);
-  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;} await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), en:val(root,"sEn")||undefined, family:val(root,"sFam"), instars:+val(root,"sInst")||5, prepupaDays: val(root,"sPre")!=="" ? Math.max(0,parseInt(val(root,"sPre"),10)||0) : undefined}); closeSheet(); };
+  root.querySelector("#ok").onclick = async () => { const sci=val(root,"sSci"); if(!sci){toast("Bitte Namen eingeben");return;}
+    const idays = [...root.querySelectorAll('[id^="sId"]')].map(x => +x.value > 0 ? Math.round(+x.value) : null); await store.put("species",{...(s||{}), sci, de:val(root,"sDe"), en:val(root,"sEn")||undefined, family:val(root,"sFam"), instars:+val(root,"sInst")||5, prepupaDays: val(root,"sPre")!=="" ? Math.max(0,parseInt(val(root,"sPre"),10)||0) : undefined, instarDays: idays.some(x=>x) ? idays : undefined}); closeSheet(); };
   const del = root.querySelector("#del"); if(del) del.onclick = async () => { await store.del("species",s.id); closeSheet(); };
 };
 ACTS.editSource = d => {
