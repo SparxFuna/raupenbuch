@@ -602,7 +602,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.47.0";
+const APP_VERSION = "5.47.1";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -2675,7 +2675,9 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
           const tmx = makeTime("tag", dd);
           if(st===extra.to){ if(editing) await store.put("events", {...ev, type:t, ...tmx, data:{to:st, est:true}, note:val(root,"eNote")||note});
                              else await store.put("events", {type:t, individualId:id, broodId:i.broodId, ...tmx, data:{to:st, est:true}, note}); }
-          else if(!evOf(id).some(e=>e.type==="haeutung" && e.data?.to===st && (!editing || e.id!==ev.id))) await store.put("events", {type:t, individualId:id, broodId:i.broodId, ...tmx, data:{to:st, est:true}, note});
+          else { const ex = evOf(id).filter(e=>e.type==="haeutung" && e.data?.to===st && (!editing || e.id!==ev.id));
+            if(!ex.length) await store.put("events", {type:t, individualId:id, broodId:i.broodId, ...tmx, data:{to:st, est:true}, note});
+            else for(const e of ex) if(e.data?.est) await store.put("events", {...e, ...tmx, note:e.note||note}); }   // frühere Schätzungen mitziehen, echte Einträge bleiben
         }
         n++;
       }
