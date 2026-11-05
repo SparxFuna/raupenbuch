@@ -602,7 +602,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.46.0";
+const APP_VERSION = "5.47.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -688,7 +688,7 @@ const I18N_EN = {
   "Raupi – Minispiel":"Raupi – mini game","eine eigene kleine Raupe füttern und großziehen":"feed and raise your own little caterpillar","Füttern":"Feed","Honig geben":"Give honey","Saubermachen":"Clean up","Streicheln":"Pet","Ball spielen":"Play ball","Tanzen":"Dance","Eier legen lassen":"Let her lay eggs","Umbenennen":"Rename","Neu anfangen":"Start over","Satt":"Fed","Laune":"Mood","Gesundheit":"Health","Bis zur Häutung":"Until next moult","Entwicklung":"Development","Lebenslauf":"Life","Pssst – nicht stören!":"Shhh – don't disturb!","Eine neue Raupe ist geschlüpft!":"A new caterpillar has hatched!","Frühere Generationen":"Earlier generations","Name der neuen Raupe":"Name of the new caterpillar","Los geht's":"Let's go","Neu anfangen?":"Start over?","Die jetzige Raupe verschwindet. Frühere Generationen bleiben im Album.":"The current caterpillar disappears. Earlier generations stay in the album.",
   "In welche Box?":"Which box?","– keine Box –":"– no box –","+ Neue Box …":"+ New box …","Name der neuen Box":"Name of the new box","Raupen umsetzen":"Move larvae","Aus":"From","In":"To","Nur Tiere vom Schlupftag":"Only animals hatched on","alle":"all","Umsetzen":"Move","umsetzen":"move","nach Stadium":"by stage","nach Box":"by box","Ohne Box":"No box","Das ist dieselbe Box":"That's the same box","Keine Tiere":"No animals",
   "Herkunft der Tiere":"Origin of the animals","Gelege dieser Falter":"Clutches of these moths","Noch keine. Sobald Falter aus diesem Ansatz Eier legen, trag sie hier ein.":"None yet. Once moths from this brood lay eggs, record them here.",
-  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","jetzt in":"now in","Welche Tiere? (älteste zuerst)":"Which animals? (oldest first)","Wann genau, weiß ich nicht – Datum schätzen":"Not sure exactly when – estimate the date","Zeitraum seit Schlupf bzw. letztem Eintrag":"Range since hatching or last entry","Richtwert: Tage je Raupenstadium":"Guide value: days per larval instar","Keine Tiere vor":"No animals before","Änderbar unter Mehr → Arten.":"Change under More → Species.","Häutung eintragen":"Record moult","Vergessen einzutragen? Zeitraum seit dem letzten Eintrag":"Forgot to record it? Range since the last entry","Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen.":"No earlier entry found – please set “From” yourself.","Merkmale & Tags":"Features & tags","+ Merkmal":"+ Feature","Bein fehlt":"Leg missing","Fühler beschädigt":"Antenna damaged","Flügel beschädigt":"Wing damaged","Hat Eier gelegt":"Laid eggs","Gepaart":"Mated","Schwächelt":"Weakening","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
+  "Zucht":"Breeding","Guten Morgen!":"Good morning!","Guten Abend!":"Good evening!","Jetzt dran":"Now","richtet sich nach deinen Stadien":"follows your current stages","jetzt in":"now in","Welche Tiere? (älteste zuerst)":"Which animals? (oldest first)","Wann genau, weiß ich nicht – Datum schätzen":"Not sure exactly when – estimate the date","Zeitraum seit Schlupf bzw. letztem Eintrag":"Range since hatching or last entry","Richtwert: Tage je Raupenstadium":"Guide value: days per larval instar","Keine Tiere vor":"No animals before","Änderbar unter Mehr → Arten.":"Change under More → Species.","Datum schätzen (Schlupftag + Richtwerte der Art)":"Estimate date (hatch day + species guide values)","Geschätzt gespeichert":"Saved as estimate","Häutung eintragen":"Record moult","Vergessen einzutragen? Zeitraum seit dem letzten Eintrag":"Forgot to record it? Range since the last entry","Kein früherer Eintrag gefunden – bitte „Von“ selbst setzen.":"No earlier entry found – please set “From” yourself.","Merkmale & Tags":"Features & tags","+ Merkmal":"+ Feature","Bein fehlt":"Leg missing","Fühler beschädigt":"Antenna damaged","Flügel beschädigt":"Wing damaged","Hat Eier gelegt":"Laid eggs","Gepaart":"Mated","Schwächelt":"Weakening","Zum Zuchtansatz":"Go to brood","Gelege ansehen":"View clutches","Gelege eintragen":"Record clutch","Falter zuordnen":"Assign moths",
   "Jeder Zuchtansatz ist die Zentrale für seine Tiere, Gelege und Auswertung.":"Each brood is the hub for its animals, clutches and stats.","+ Zuchtansatz":"+ Brood","Alle Gelege":"All clutches","Archiviert":"Archived","archiviert":"archived","Eltern aus":"Parents from","Stammt aus Gelege":"Comes from clutch","Nachzucht":"Offspring","Tot / beendet":"Dead / ended","Gelege dieser Falter":"Clutches of these moths","liegen noch":"still incubating","Bei welchem Gelege?":"Which clutch?","Auswertung":"Stats","noch keine Tiere":"no animals yet",
   "Gerade nichts Aktives. Leg im Tab Zucht einen Zuchtansatz an oder füge Tiere hinzu.":"Nothing active right now. Create a brood in the Breeding tab or add animals.","auch für mehrere Puppen gleichzeitig":"also for several pupae at once","wenn unklar ist, welcher Falter aus welcher Puppe kam":"when it's unclear which moth came from which pupa","Ab 2 Schlüpfen mit bekanntem Eingrabe- oder Verpuppungsdatum erscheint hier ein Schlupffenster.":"From 2 eclosions with known burrowing or pupation date, an eclosion window appears here.",
   "liegt seit heute":"incubating since today",
@@ -2593,7 +2593,9 @@ ACTS.editInd = d => {
 /* ---- Ereignisse ---- */
 function evExtraFields(type, d={}){
   switch(type){
-    case "haeutung": return fld.sel("xTo","Neues Stadium",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"]],d.to||"L2");
+    case "haeutung": return fld.sel("xTo","Neues Stadium",[["L2","L2"],["L3","L3"],["L4","L4"],["L5","L5"]],d.to||"L2")
+      + `<label class="f" style="flex-direction:row;align-items:center;gap:10px"><input type="checkbox" id="xEstM" ${d.est?"checked":""} style="width:20px;height:20px;min-height:0;flex:none"> ${esc(tr("Datum schätzen (Schlupftag + Richtwerte der Art)"))}</label>`
+      + fld.hint("Überschreibt das Datum unten. Fehlende frühere Häutungen werden geschätzt ergänzt. Geschätzte Werte zählen nicht in der Statistik.");
     case "stadium": return fld.sel("xSt","Aktuelles Stadium",STAGES.map(s=>[s.k,s.l]),d.to||"L2")+fld.hint("Zum Korrigieren oder Nachtragen, wenn du nicht weißt, wann sich das Tier gehäutet hat.");
     case "eingegraben": {
       if(!d._new) return "";
@@ -2614,7 +2616,7 @@ function evExtraFields(type, d={}){
 }
 function readExtra(root, type){
   switch(type){
-    case "haeutung": return {to:val(root,"xTo")};
+    case "haeutung": return {to:val(root,"xTo"), _estM: !!root.querySelector("#xEstM")?.checked};
     case "eingegraben": { const c = root.querySelector("#xEst"); return c ? {_est:c.checked, _estD:parseInt(val(root,"xEstD"),10)} : {}; }
     case "stadium": return {to:val(root,"xSt")};
     case "geschlecht": return {sex:val(root,"xSex"), at:val(root,"xAt")};
@@ -2660,8 +2662,28 @@ function eventSheet({ev=null, indIds=[], type=null, data={}, broodId=null, conta
   if(ts) ts.addEventListener("change", () => { t = ts.value; root.querySelector("#xf").innerHTML = evExtraFields(t,xd({})); });
   const ab = root.querySelector("#allBtn"); if(ab) ab.addEventListener("click", () => root.querySelectorAll(".checks input").forEach(c=>c.checked=true));
   root.querySelector("#ok").addEventListener("click", async () => {
-    const tm = readTime(root,"e"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     const extra = readExtra(root,t);
+    /* Häutung mit geschätztem Datum: Schlupftag + Richtwerte, fehlende frühere Häutungen gleich mit */
+    if(t==="haeutung" && extra._estM){
+      const ids = editing ? [ev.individualId] : (chooseInds ? [...root.querySelectorAll(".checks input:checked")].map(c=>c.value) : indIds);
+      if(!ids.length || !ids[0]){ toast("Bitte mindestens ein Tier wählen"); return; }
+      let n = 0;
+      for(const id of ids){
+        const i = S.individuals[id], plan = i && estMoultPlan(i, extra.to); if(!plan) continue;
+        const note = tr(`geschätzt (Schlupf ${dDE(plan.h)} + Richtwerte)`);
+        for(const [st, dd] of plan.steps){
+          const tmx = makeTime("tag", dd);
+          if(st===extra.to){ if(editing) await store.put("events", {...ev, type:t, ...tmx, data:{to:st, est:true}, note:val(root,"eNote")||note});
+                             else await store.put("events", {type:t, individualId:id, broodId:i.broodId, ...tmx, data:{to:st, est:true}, note}); }
+          else if(!evOf(id).some(e=>e.type==="haeutung" && e.data?.to===st && (!editing || e.id!==ev.id))) await store.put("events", {type:t, individualId:id, broodId:i.broodId, ...tmx, data:{to:st, est:true}, note});
+        }
+        n++;
+      }
+      if(!n){ toast("Für diese Art fehlen Richtwerte oder ein Schlupfdatum. Richtwerte unter Mehr → Arten."); return; }
+      closeSheet(); toast(editing ? "Geschätzt gespeichert" : `${n} × geschätzt gespeichert`); return;
+    }
+    delete extra._estM;
+    const tm = readTime(root,"e"); if(!tm){ toast("Bitte ein Datum wählen"); return; }
     if((t==="haeutung"||t==="stadium") && !extra.to){ toast("Bitte Stadium wählen"); return; }
     const est = !!extra._est, estD = extra._estD; delete extra._est; delete extra._estD;
     if(est && !(estD>=0 && estD<=365)){ toast("Bitte die Tage bis zur Verpuppung eintragen"); return; }
@@ -2786,6 +2808,15 @@ function instarDays(sp){
     const m = sp ? speciesStageDays(sp.id, k) : []; if(m.length >= 3) return {k, d:Math.round(median(m)), src:"Daten"};
     return def[ix] ? {k, d:def[ix], src:"Richtwert"} : {k, d:null, src:""};
   });
+}
+/* Geschätzte Häutungstermine einer Raupe bis zum Stadium „to“: Schlupftag + Richtwerte, bei Bedarf auf heute gestaucht */
+function estMoultPlan(i, to){
+  const D = instarDays(speciesOfInd(i)), ti = LARK.indexOf(to), h = hatchGuess(i);
+  if(!h || ti < 1 || D.slice(0, ti).some(x=>!x.d)) return null;
+  const today = todayISO(); let off = 0; const offs = [];
+  for(let s = 0; s < ti; s++){ off += D[s].d; offs.push([LARK[s+1], off]); }
+  const span = Math.max(0, Math.round((ms(today)-ms(h.d))/864e5)), k = off > span ? span/off : 1;
+  return {h:h.d, steps: offs.map(([st, o]) => { let dd = addDays(h.d, Math.round(o*k)); if(dd > today) dd = today; return [st, dd]; })};
 }
 /* Schlupftag einer Raupe: eigener Schlupf-Eintrag, sonst Datum im Boxnamen (z. B. „Box 21.10.“), sonst Start des Zuchtansatzes */
 function hatchGuess(i){
