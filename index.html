@@ -596,7 +596,7 @@ button.kpi:active{transform:scale(.98)}
 <script>
 "use strict";
 /* ============ Konstanten ============ */
-const APP_VERSION = "5.44.0";
+const APP_VERSION = "5.45.0";
 /* Läuft das Raupenbuch als Android-App (Capacitor)? Dann gibt es native Plugins statt Browser-Funktionen. */
 const NATIVE = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 const WEB_URL = "https://sparxfuna.github.io/raupenbuch/", APK_URL = "https://github.com/SparxFuna/raupenbuch/releases/latest/download/raupenbuch.apk";
@@ -2262,7 +2262,8 @@ VIEWS.box = r => {
   let h = `<div class="pagehead"><span class="muted small">${c?esc(BOXK[boxKind(c)].l):"Box"}</span><div style="display:flex;align-items:center;gap:12px">${boxGlyph(c, L)}<h1 style="margin:0">${c?esc(c.name):"Ohne Box"}</h1></div>${loc?`<div class="meta"><span class="pill">${esc(loc.name)}</span></div>`:""}</div>`;
   h += `<div class="stats"><button class="stat" style="text-align:left;font:inherit;color:inherit;cursor:pointer" data-act="boxCount" data-id="${key}"><b>${L.length}</b><span>${L.length===1?"Tier drin":"Tiere drin"}</span><span class="small" style="color:var(--accent)">korrigieren</span></button>${gone.length?`<div class="stat"><b>${gone.length}</b><span>nicht mehr drin</span><span class="small">${esc(Object.entries(out).map(([k,n])=>`${n} ${OUTL[k]||k}`).join(", "))}</span></div>`:""}</div>`;
   if(L.length) h += `<div style="display:flex;flex-wrap:wrap;gap:6px">${stageChips(L)}</div>`;
-  h += `<div class="btns">${L.length?`<button class="btn primary" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}<button class="btn" data-act="boxCount" data-id="${key}">Anzahl korrigieren</button></div>`;
+  const LV = L.filter(i=>STG(currentStage(i))==="larva");
+  h += `<div class="btns">${LV.length?`<button class="btn primary" data-act="moultMany" data-box="${key}" data-brood="${LV[0].broodId}">Häutung</button>`:""}${L.length?`<button class="btn ${LV.length?"":"primary"}" data-act="moveMany" data-from="${key}">Umsetzen</button><button class="btn" data-act="giveMany" data-from="${key}">Entfernen</button>`:""}${c?`<button class="btn" data-act="moveMany" data-to="${c.id}">Tiere hierher</button>`:""}<button class="btn" data-act="boxCount" data-id="${key}">Anzahl korrigieren</button></div>`;
   // Tiere nach Schlupftag gruppiert, je Gruppe aufklappbar
   const byDay = {}; L.forEach(i => (byDay[hatchDay(i)||"_"] ||= []).push(i));
   const days = Object.keys(byDay).sort((a,b)=> a==="_" ? 1 : b==="_" ? -1 : a.localeCompare(b));
@@ -2840,6 +2841,15 @@ ACTS.moultMany = d => {
     if(root.querySelector("#mEst").checked) estInfo();
   };
   fill(false);
+  /* Aus einer Box geöffnet: Stadium passend zur Box vorwählen und alle Raupen dieser Box ankreuzen */
+  if(d.box){
+    const inBox = larv(bid).filter(i=>boxKey(i)===d.box);
+    const low = LAR.find(k=>inBox.some(i=>currentStage(i)===k)); const nx = low && LAR[LAR.indexOf(low)+1];
+    if(nx){ root.querySelector("#mTo").value = nx; fill(true); }
+    root.querySelectorAll("#mList input").forEach(x => { x.checked = boxKey(S.individuals[x.value])===d.box; });
+    root.querySelector(`#mBoxes [data-box="${d.box}"]`)?.classList.add("on");
+    root.querySelector("#mN").value = checked().length;
+  }
   root.querySelector("#mList").addEventListener("change", () => { root.querySelector("#mN").value = checked().length; });
   const mb = root.querySelector("#mB"); if(mb) mb.addEventListener("change", () => { bid = mb.value; fill(false); });
   root.querySelector("#mTo").addEventListener("change", () => fill(true));
